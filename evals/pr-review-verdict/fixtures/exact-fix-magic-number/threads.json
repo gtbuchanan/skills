@@ -1,0 +1,8 @@
+[
+  {
+    "body": "Magic number 300 here — extract a named constant so the units are obvious.",
+    "id": "T-poll",
+    "line": 11,
+    "path": "worker/poll.go"
+  }
+]

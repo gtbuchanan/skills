@@ -1,0 +1,10 @@
+[
+  {
+    "action": "resolve",
+    "line": 20,
+    "path": "src/cache.ts",
+    "rootCommentId": 14001,
+    "threadId": "PRRT_FAILresolve",
+    "verdict": "exact-fix"
+  }
+]

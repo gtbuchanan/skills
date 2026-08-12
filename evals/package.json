@@ -1,0 +1,11 @@
+{
+  "name": "@gtbuchanan/skills-evals",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#lib/*": "./lib/*"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

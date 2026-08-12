@@ -1,0 +1,5 @@
+--- a/src/auth.ts
++++ b/src/auth.ts
+@@ -37,7 +37,7 @@ export function verifyToken(provided: string, expected: string) {
+-  return provided === expected;
++  return timingSafeEqual(Buffer.from(provided), Buffer.from(expected));

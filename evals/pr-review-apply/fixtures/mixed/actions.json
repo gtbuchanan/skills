@@ -1,0 +1,19 @@
+[
+  {
+    "action": "resolve",
+    "line": 39,
+    "path": "src/auth.ts",
+    "rootCommentId": 11001,
+    "threadId": "PRRT_mixedA",
+    "verdict": "exact-fix"
+  },
+  {
+    "action": "reply",
+    "line": 88,
+    "path": "api/user.py",
+    "replyBody": "Thanks — the single fetch is covered, but notify_batch at L120 still dereferences a possibly-null user.",
+    "rootCommentId": 11002,
+    "threadId": "PRRT_mixedB",
+    "verdict": "partial"
+  }
+]

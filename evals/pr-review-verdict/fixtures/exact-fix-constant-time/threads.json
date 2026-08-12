@@ -1,0 +1,8 @@
+[
+  {
+    "body": "This uses `===` for the token comparison, which leaks timing information. Please use a constant-time comparison.",
+    "id": "T-auth",
+    "line": 39,
+    "path": "src/auth.ts"
+  }
+]

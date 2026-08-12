@@ -1,0 +1,9 @@
+--- a/worker/poll.go
++++ b/worker/poll.go
+@@ -8,6 +8,8 @@ package worker
++const pollIntervalSeconds = 300
++
+ func (w *Worker) loop() {
+-    time.Sleep(300 * time.Second)
++    time.Sleep(pollIntervalSeconds * time.Second)
+ }

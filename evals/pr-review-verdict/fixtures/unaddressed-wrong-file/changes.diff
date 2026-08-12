@@ -1,0 +1,6 @@
+--- a/ui/header.tsx
++++ b/ui/header.tsx
+@@ -3,7 +3,7 @@ export function Header() {
+-  return <h1>Dashboard</h1>;
++  return <h1>{title}</h1>;
+ }

@@ -1,0 +1,13 @@
+--- a/db/pool.ts
++++ b/db/pool.ts
+@@ -12,6 +12,9 @@ export async function run(sql: string) {
+   const conn = await pool.acquire();
+-  const rows = await conn.query(sql);
+-  conn.release();
+-  return rows;
++  try {
++    return await conn.query(sql);
++  } finally {
++    pool.drain();
++  }
+ }

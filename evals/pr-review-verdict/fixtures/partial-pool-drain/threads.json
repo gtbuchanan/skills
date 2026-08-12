@@ -1,0 +1,8 @@
+[
+  {
+    "body": "The connection isn't released if the query throws — wrap this in try/finally.",
+    "id": "T-pool",
+    "line": 14,
+    "path": "db/pool.ts"
+  }
+]

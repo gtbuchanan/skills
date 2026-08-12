@@ -1,0 +1,9 @@
+--- a/api/report.py
++++ b/api/report.py
+@@ -40,8 +40,9 @@ class ReportService:
+-    def summarize(self, account_id):
+-        account = self.repo.find(account_id)
+-        return account.balance
++    def summarize(self, account_id: int) -> Decimal:
++        account = self.repo.find(account_id)
++        return account.balance

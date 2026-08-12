@@ -1,0 +1,8 @@
+[
+  {
+    "body": "`user` can be null when the lookup misses — this throws on `.email`. Guard it in both `notify` and `notify_batch`.",
+    "id": "T-user",
+    "line": 83,
+    "path": "api/user.py"
+  }
+]

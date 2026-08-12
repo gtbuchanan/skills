@@ -1,0 +1,7 @@
+# Only package manifests + source need to reach the build context; everything
+# below is host-specific, generated, or huge.
+node_modules
+artifacts
+.agents
+.claude/skills
+.git

@@ -1,0 +1,19 @@
+# Agent Skills
+.agents/skills/
+.claude/skills/
+skills-lock.json
+
+# Agent skills from npm packages (managed by skills-npm)
+**/skills/npm-*
+
+# skill-creator eval workspaces (sibling to each skill directory)
+**/skills/*-workspace/
+
+# Node dependencies
+node_modules/
+
+# Generated artifacts
+*.tsbuildinfo
+.turbo/
+artifacts/
+dist/

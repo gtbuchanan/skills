@@ -1,0 +1,8 @@
+[
+  {
+    "body": "This search handler fires on every keystroke — please debounce it.",
+    "id": "T-form",
+    "line": 15,
+    "path": "ui/form.tsx"
+  }
+]

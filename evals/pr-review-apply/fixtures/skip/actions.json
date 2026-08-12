@@ -1,0 +1,19 @@
+[
+  {
+    "action": "resolve",
+    "line": 11,
+    "path": "worker/poll.go",
+    "rootCommentId": 13001,
+    "threadId": "PRRT_skipDo",
+    "verdict": "exact-fix"
+  },
+  {
+    "action": "reply",
+    "line": 15,
+    "path": "ui/form.tsx",
+    "replyBody": "Still not debounced — could you wrap the handler?",
+    "rootCommentId": 13002,
+    "threadId": "PRRT_skipHold",
+    "verdict": "partial"
+  }
+]

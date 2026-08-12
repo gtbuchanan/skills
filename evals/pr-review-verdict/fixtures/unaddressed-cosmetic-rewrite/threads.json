@@ -1,0 +1,8 @@
+[
+  {
+    "body": "This builds the query by concatenating `email` straight into the SQL string — that's an injection vector. Use a parameterized query.",
+    "id": "T-sql",
+    "line": 24,
+    "path": "db/users.ts"
+  }
+]

@@ -1,0 +1,8 @@
+[
+  {
+    "body": "`account` may be null here and this will throw on `.balance`. Please null-check before use.",
+    "id": "T-report",
+    "line": 42,
+    "path": "api/report.py"
+  }
+]

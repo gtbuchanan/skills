@@ -1,0 +1,23 @@
+[
+  {
+    "commit_id": "{{ sha:order }}",
+    "id": 5001,
+    "state": "CHANGES_REQUESTED",
+    "submitted_at": "2026-01-10T12:00:00Z",
+    "user": { "login": "reviewer" }
+  },
+  {
+    "commit_id": "{{ sha:baseline }}",
+    "id": 5002,
+    "state": "CHANGES_REQUESTED",
+    "submitted_at": "2026-02-20T12:00:00Z",
+    "user": { "login": "reviewer" }
+  },
+  {
+    "commit_id": "{{ sha:constant-time }}",
+    "id": 5003,
+    "state": "APPROVED",
+    "submitted_at": "2026-03-05T12:00:00Z",
+    "user": { "login": "someone-else" }
+  }
+]

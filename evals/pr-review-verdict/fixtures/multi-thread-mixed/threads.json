@@ -1,0 +1,20 @@
+[
+  {
+    "body": "This uses `===` for the token comparison, which leaks timing information. Please use a constant-time comparison.",
+    "id": "T-auth",
+    "line": 39,
+    "path": "src/auth.ts"
+  },
+  {
+    "body": "`notify` can dereference a null user here — guard against a missing lookup result.",
+    "id": "T-user",
+    "line": 88,
+    "path": "api/user.py"
+  },
+  {
+    "body": "This search handler fires on every keystroke — please debounce it.",
+    "id": "T-form",
+    "line": 15,
+    "path": "ui/form.tsx"
+  }
+]

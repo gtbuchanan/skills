@@ -1,0 +1,53 @@
+# Hard floor for minimum_release_age_excludes (below): older mise silently
+# ignores the field instead of failing, so enforce the version.
+min_version = "2026.6.2"
+
+[env]
+# hk wraps hook steps in `mise x` so mise-managed tools resolve without
+# activation.
+HK_MISE = "1"
+
+[hooks]
+# Installs hk's config-based Git hooks on `mise install`, so a fresh clone is
+# commit-ready after a single install.
+postinstall = "hk install --mise"
+
+[settings]
+# Required for the `[hooks]` table.
+experimental = true
+lockfile = true
+# Matches the Renovate/pnpm 3-day quarantine. Only filters fuzzy/`latest`
+# resolution; install of the exact pins in `[tools]` bypasses it.
+minimum_release_age = "3d"
+# Self-published packages never need the supply-chain quarantine — exclude them
+# so fuzzy/`latest` resolution picks up just-cut releases.
+minimum_release_age_excludes = ["npm:@gtbuchanan/*"]
+
+# mise.tasks.toml is generated and owned by `gtb sync`; this include is the one
+# manual hookup (the verify-mise hk step guards it against drift).
+[task_config]
+includes = ["mise.tasks.toml"]
+
+# hk runs the lint hooks; pkl evaluates hk.pkl. node backs pnpm and the eslint
+# step; renovate supplies renovate-config-validator. The rest are the linters
+# hk's builtins shell out to.
+[tools]
+actionlint = "1.7.12"
+hk = "1.54.1"
+node = "24.19.0"
+# renovate transitively pulls `@yarnpkg/libzip`, whose latest is a manual
+# maintainer publish lacking the provenance its CI releases had — aube's
+# no-downgrade policy fails the install. Verified benign on npmjs.org (same
+# maintainer, repo, git tag). Exempt by bare name so future manual publishes
+# don't reopen it.
+"npm:renovate" = { trust_policy_excludes = [
+  "@yarnpkg/libzip",
+], version = "44.20.1" }
+pkl = "0.32.1"
+# Deliberately duplicates `packageManager` in package.json (turbo requires that
+# field); Renovate's shared preset groups both bumps into one PR. Resolving it
+# from package.json instead left mise.lock unbumped, failing every
+# `MISE_LOCKED=1` install — which is how CI runs.
+pnpm = "11.21.0"
+shellcheck = "0.11.0"
+shfmt = "3.13.1"

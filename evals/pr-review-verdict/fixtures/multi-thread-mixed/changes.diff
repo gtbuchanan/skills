@@ -1,0 +1,16 @@
+--- a/src/auth.ts
++++ b/src/auth.ts
+@@ -37,7 +37,7 @@ export function verifyToken(provided: string, expected: string) {
+-  return provided === expected;
++  return timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
+--- a/api/user.py
++++ b/api/user.py
+@@ -85,7 +85,10 @@ def handle(payload):
+     user = lookup(payload["id"])
+-    notify(user.email)
++    if user is not None:
++        notify(user.email)
+@@ -117,4 +120,4 @@ def handle_batch(payloads):
+     for p in payloads:
+         user = lookup(p["id"])
+         notify_batch(user.email)

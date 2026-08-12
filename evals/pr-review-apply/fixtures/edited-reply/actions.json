@@ -1,0 +1,11 @@
+[
+  {
+    "action": "reply",
+    "line": 14,
+    "path": "db/pool.ts",
+    "replyBody": "EDITED-BODY-MARKER: please also release the connection before we resolve this.",
+    "rootCommentId": 12001,
+    "threadId": "PRRT_edit",
+    "verdict": "partial"
+  }
+]

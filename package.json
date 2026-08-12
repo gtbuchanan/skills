@@ -1,0 +1,53 @@
+{
+  "name": "@gtbuchanan/skills",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#evals/*": "./evals/*",
+    "#scripts/*": "./scripts/*"
+  },
+  "scripts": {
+    "coverage:codecov:upload": "gtb task coverage:codecov:upload",
+    "coverage:vitest:merge": "gtb task coverage:vitest:merge",
+    "deploy:skills": "gtb task deploy:skills",
+    "eval": "node scripts/run-evals-process.ts",
+    "eval:docker": "node scripts/run-evals-docker.ts",
+    "lint:eslint": "gtb task lint:eslint",
+    "prepare": "gtb prepare",
+    "skills:sync": "node scripts/sync-skills.mjs",
+    "test:vitest:fast": "gtb task test:vitest:fast",
+    "test:vitest:slow": "gtb task test:vitest:slow",
+    "typecheck:ts": "gtb task typecheck:ts && gtb task typecheck:ts -p evals/tsconfig.json",
+    "verify": "gtb verify"
+  },
+  "devDependencies": {
+    "@anthropic-ai/claude-agent-sdk": "catalog:",
+    "@gtbuchanan/cli": "catalog:",
+    "@gtbuchanan/eslint-config": "catalog:",
+    "@gtbuchanan/tsconfig": "catalog:",
+    "@gtbuchanan/vitest-config": "catalog:",
+    "@pnpm/lockfile.types": "catalog:",
+    "@types/cross-spawn": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "cross-spawn": "catalog:",
+    "eslint": "catalog:",
+    "jiti": "catalog:",
+    "promptfoo": "catalog:",
+    "skills": "catalog:",
+    "skills-npm": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:",
+    "valibot": "catalog:",
+    "vitest": "catalog:",
+    "yaml": "catalog:"
+  },
+  "optionalDependencies": {
+    "@libsql/android-arm64": "catalog:"
+  },
+  "packageManager": "pnpm@11.21.0",
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=11.0.0"
+  }
+}

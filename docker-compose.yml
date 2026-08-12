@@ -1,0 +1,21 @@
+# Local promptfoo results server + UI. Eval containers (run by
+# scripts/run-evals-docker.ts) join the same network and `--share` their
+# results here; browse them at http://localhost:3000.
+#
+# SQLite-backed and unauthenticated — local/trusted use only.
+#
+#   docker compose up -d      # start the server
+#   docker compose down       # stop it (results persist in artifacts/promptfoo)
+---
+networks:
+  default:
+    name: skills-eval-net
+services:
+  promptfoo-server:
+    container_name: promptfoo-server
+    image: ghcr.io/promptfoo/promptfoo:latest
+    ports:
+      - '3000:3000'
+    restart: unless-stopped
+    volumes:
+      - ./artifacts/promptfoo:/home/promptfoo/.promptfoo

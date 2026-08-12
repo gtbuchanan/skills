@@ -1,0 +1,29 @@
+/// Pre-commit config for this repo. Adopts the shared @gtbuchanan/hk-config
+/// `recommended` preset, adds eslint (lints the skills' Markdown and the JS/
+/// JSON/YAML config around them) and a guard against drift in the config
+/// `gtb sync` generates. Tool versions come from mise.toml.
+amends "package://github.com/jdx/hk/releases/download/v1.54.1/hk@1.54.1#/Config.pkl"
+
+import "package://github.com/gtbuchanan/tooling/releases/download/hk-config@0.2.4/hk-config@0.2.4#/Defaults.pkl"
+
+// eslint args shared by the step's check/fix; only `--fix` differs.
+local eslintArgs = "--max-warnings=0 --no-warn-ignored {{files}}"
+
+local allSteps = new Mapping<String, Step> {
+  ...Defaults.recommended
+
+  ["eslint"] {
+    check = "pnpm exec eslint \(eslintArgs)"
+    fix = "pnpm exec eslint --fix \(eslintArgs)"
+  }
+
+  // `gtb sync` owns turbo.json, the tsconfigs, mise.tasks.toml and the
+  // generated package.json scripts. Gate on the files it writes, plus the
+  // mise.toml include that loads its task file.
+  ["verify"] {
+    glob = List("mise.toml", "mise.tasks.toml", "package.json", "tsconfig*.json", "turbo.json")
+    check = "pnpm exec gtb verify"
+  }
+}
+
+hooks = Defaults.hooksFor(allSteps)

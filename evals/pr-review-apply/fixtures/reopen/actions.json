@@ -1,0 +1,13 @@
+[
+  {
+    "action": "reply",
+    "line": 44,
+    "path": "api/order.py",
+    "reopen": true,
+    "replyBody": "`amount` still isn't validated before the charge at L44 — REOPEN-BODY-MARKER.",
+    "resolvedByOther": true,
+    "rootCommentId": 15001,
+    "threadId": "PRRT_reopenA",
+    "verdict": "unaddressed"
+  }
+]

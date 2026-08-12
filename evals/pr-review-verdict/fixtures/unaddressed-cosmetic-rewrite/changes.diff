@@ -1,0 +1,8 @@
+--- a/db/users.ts
++++ b/db/users.ts
+@@ -20,8 +20,9 @@ export async function findByEmail(email: string) {
+-  const q = "SELECT * FROM users WHERE email = '" + email + "'";
+-  return db.query(q);
++  const trimmedEmail = email.trim();
++  const sql = `SELECT * FROM users WHERE email = '${trimmedEmail}'`;
++  return db.query(sql);

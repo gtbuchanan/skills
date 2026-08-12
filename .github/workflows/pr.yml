@@ -1,0 +1,30 @@
+---
+jobs:
+  ci:
+    name: CI
+    secrets: inherit
+    # Runs turbo `build:ci`, whose `check` now depends on test:vitest:fast —
+    # this is what puts the suite in front of a merge. e2e is off: the repo has
+    # no e2e/ directory or vitest.config.e2e.ts for that job to run.
+    # `check` covers the fast tier only, so the slow tier needs its own flag to
+    # reach the gate at all.
+    uses: gtbuchanan/tooling/.github/workflows/ci.yml@main
+    with:
+      run-e2e: false
+      run-slow-tests: true
+
+  pre-commit:
+    name: Pre-Commit
+    # The eslint step shells out to `pnpm exec`, so it needs node_modules.
+    uses: gtbuchanan/tooling/.github/workflows/pre-commit.yml@main
+    with:
+      use-pnpm: true
+
+name: PR
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read

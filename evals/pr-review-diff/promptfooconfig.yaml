@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+#
+# Read-path eval for pr-review-diff. Runs the REAL skill via claude-agent-sdk,
+# shadowing both `gh` and `git` with fakes (bin/*-stub.ts) that serve canned PR
+# data from fixtures/scenario and record every call to
+# artifacts/skill-evals/pr-review-diff.calls.jsonl. diff-check.ts asserts the
+# skill stayed read-only, queried the right endpoints, scoped the diff to the
+# last-review baseline, and emitted a correct action list (skip-only threads
+# dropped, a resolved-by-other thread the fix missed reopened; verdict→action
+# mapping and ids intact).
+#
+# pr-review-verdict is included because pr-review-diff delegates the judgment to
+# it — this exercises the real composition, not a stubbed verdict.
+#
+# Runs only under the eval runner, where the fakes sit at the front of PATH and
+# the real CLIs are unreachable — so interception is deterministic and a call the
+# suite forgot to stub fails instead of reaching the live service.
+
+---
+defaultTest:
+  assert:
+    - type: skill-used
+      value: pr-review-diff
+    - type: javascript
+      value: file://diff-check.ts
+
+description: pr-review-diff — read path via claude-agent-sdk with fake gh + git
+
+# Serial so the shared append-only call log can't interleave between runs.
+evaluateOptions:
+  maxConcurrency: 1
+
+extensions:
+  - file://setup.ts:extensionHook
+
+prompts:
+  - |
+    You reviewed pull request #42 of acme/widgets and the author has since pushed
+    changes. Following up as the reviewer, run the analysis: find the diff since
+    your last submitted review, pull your review threads, and classify each
+    against the new diff. This is analysis only — do not write anything to the PR.
+    End your reply with the machine-usable action list pr-review-diff produces for
+    pr-review-apply — the JSON array mapping each thread to its action with the
+    ids pr-review-apply needs — not the raw verdict output.
+
+providers:
+  - config:
+      apiKeyRequired: false
+      append_allowed_tools:
+        - 'Bash(gh:*)'
+        - 'Bash(git:*)'
+
+      path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
+      setting_sources: ['project']
+      skills: ['pr-review-diff', 'pr-review-verdict']
+      working_dir: '{{ env.EVAL_WORKSPACE }}'
+    id: anthropic:claude-agent-sdk
+    label: pr-review-diff
+tests:
+  - description: mixed threads — drop self-resolved and already-acked, map exact-fix→resolve, partial→reply, and reopen a resolved-by-other thread the fix missed
+    vars: {}

@@ -1,0 +1,13 @@
+--- a/api/user.py
++++ b/api/user.py
+@@ -80,6 +80,8 @@ class UserService:
+     def notify(self, user_id):
+         user = self.repo.find(user_id)
++        if user is None:
++            return
+         send_email(user.email)
+@@ -96,4 +98,4 @@ class UserService:
+     def notify_batch(self, ids):
+         for uid in ids:
+             user = self.repo.find(uid)
+             send_email(user.email)

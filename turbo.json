@@ -1,0 +1,180 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    "mise.lock",
+    "mise.toml"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "check",
+        "test:slow",
+        "deploy:skills"
+      ]
+    },
+    "build:ci": {
+      "dependsOn": [
+        "check"
+      ]
+    },
+    "check": {
+      "dependsOn": [
+        "typecheck",
+        "lint",
+        "test:vitest:fast"
+      ]
+    },
+    "coverage:codecov:upload": {
+      "env": [
+        "CI",
+        "CODECOV_TOKEN"
+      ],
+      "inputs": [
+        "dist/coverage/vitest/**/lcov.info"
+      ],
+      "outputs": [
+        "dist/coverage/codecov/.uploaded"
+      ]
+    },
+    "coverage:merge": {
+      "dependsOn": [
+        "coverage:vitest:merge"
+      ]
+    },
+    "coverage:vitest:merge": {
+      "dependsOn": [
+        "test:vitest:fast",
+        "test:vitest:slow"
+      ],
+      "inputs": [
+        "dist/test-results/vitest/merge/blob-*.json"
+      ],
+      "outputs": [
+        "dist/coverage/vitest/merged/**"
+      ]
+    },
+    "deploy:skills": {
+      "dependsOn": [
+        "lint:eslint"
+      ],
+      "inputs": [
+        "$TURBO_ROOT$/skills-npm.config.ts",
+        "skills/**"
+      ],
+      "outputs": []
+    },
+    "lint": {
+      "dependsOn": [
+        "lint:eslint"
+      ]
+    },
+    "lint:eslint": {
+      "dependsOn": [
+        "typecheck:ts",
+        "transit"
+      ],
+      "inputs": [
+        "$TURBO_ROOT$/eslint.config.*",
+        "bin/**",
+        "src/**",
+        "test/**",
+        "e2e/**",
+        "evals/**",
+        "scripts/**",
+        "skills/**",
+        "eslint.config.*"
+      ],
+      "outputs": [
+        "dist/.eslintcache"
+      ]
+    },
+    "test:slow": {
+      "dependsOn": [
+        "test:vitest:slow"
+      ]
+    },
+    "test:vitest:fast": {
+      "dependsOn": [
+        "transit"
+      ],
+      "env": [
+        "CI"
+      ],
+      "inputs": [
+        "bin/**",
+        "src/**",
+        "test/**",
+        "scripts/**",
+        "vitest.config.*",
+        "!vitest.config.e2e.*"
+      ],
+      "outputs": [
+        "dist/coverage/vitest/fast/**",
+        "dist/test-results/vitest/merge/blob-fast.json"
+      ]
+    },
+    "test:vitest:slow": {
+      "dependsOn": [
+        "transit"
+      ],
+      "env": [
+        "CI"
+      ],
+      "inputs": [
+        "bin/**",
+        "src/**",
+        "test/**",
+        "scripts/**",
+        "vitest.config.*",
+        "!vitest.config.e2e.*"
+      ],
+      "outputs": [
+        "dist/coverage/vitest/slow/**",
+        "dist/test-results/vitest/merge/blob-slow.json"
+      ]
+    },
+    "transit": {
+      "dependsOn": [
+        "^transit"
+      ]
+    },
+    "typecheck": {
+      "dependsOn": [
+        "typecheck:ts"
+      ]
+    },
+    "typecheck:ts": {
+      "dependsOn": [
+        "transit"
+      ],
+      "inputs": [
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "bin/**",
+        "evals/**",
+        "scripts/**",
+        "src/**",
+        "test/**",
+        "e2e/**",
+        "*.cjs",
+        "*.cts",
+        "*.js",
+        "*.jsx",
+        "*.mjs",
+        "*.mts",
+        "*.ts",
+        "*.tsx",
+        ".*.cjs",
+        ".*.cts",
+        ".*.js",
+        ".*.jsx",
+        ".*.mjs",
+        ".*.mts",
+        ".*.ts",
+        ".*.tsx",
+        "tsconfig.json",
+        "tsconfig.*.json"
+      ],
+      "outputs": []
+    }
+  }
+}

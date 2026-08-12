@@ -1,0 +1,107 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+#
+# Write-path eval for pr-review-apply. Runs the REAL skill via claude-agent-sdk
+# against pre-approved action-list fixtures, but shadows the `gh` CLI with a
+# fake (bin/gh-stub.ts) so NOTHING is written to a real PR. The stub records
+# every invocation's argv to artifacts/skill-evals/pr-review-apply.calls.jsonl,
+# and apply-check.ts asserts the skill made the right GitHub calls.
+#
+# Runs only under the eval runner, where the fake gh sits at the front of PATH
+# and the real gh is unreachable — so interception is deterministic and a call
+# the suite forgot to stub fails instead of reaching GitHub. setup.ts just sets
+# STUB_LOG.
+#
+# The confirmation gate is NOT exercised here (we feed an approved list and tell
+# the skill not to ask); its interaction behavior stays human-verified.
+
+---
+defaultTest:
+  assert:
+    - type: skill-used
+      value: pr-review-apply
+    - type: javascript
+      value: file://apply-check.ts
+
+  # Keep array vars (expectResolve, expectReply, …) intact instead of expanding
+  # each into separate test cases.
+  options:
+    disableVarExpansion: true
+description: pr-review-apply — write path via claude-agent-sdk with a fake gh
+
+# Serial so the shared append-only call log can't interleave between tests.
+evaluateOptions:
+  maxConcurrency: 1
+
+extensions:
+  - file://setup.ts:extensionHook
+
+prompts:
+  - |
+    You are following up on GitHub pull request #42 of acme/widgets as the
+    reviewer. The reviewer has already reviewed and APPROVED the actions listed
+    in {{fixture}}/actions.json — read that file. Carry out each approved action
+    now against the PR, doing exactly what its `action` field specifies.
+    {{approvalNote}}
+    Treat the list as approved and do not ask for confirmation. When finished,
+    report what you did and clearly flag anything that failed.
+
+providers:
+  - config:
+      apiKeyRequired: false
+      append_allowed_tools:
+        - 'Read(evals/pr-review-apply/fixtures/**)'
+        - 'Bash(gh:*)'
+      ask_user_question:
+        behavior: first_option
+
+      path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
+      setting_sources: ['project']
+      skills: ['pr-review-apply']
+      working_dir: '{{ env.EVAL_WORKSPACE }}'
+    id: anthropic:claude-agent-sdk
+    label: pr-review-apply
+tests:
+  - description: mixed — resolve an exact-fix thread and reply on a partial one
+    vars:
+      approvalNote: ''
+      expectReply:
+        - { bodyIncludes: 'notify_batch', id: 11002 }
+
+      expectResolve: ['PRRT_mixedA']
+      fixture: evals/pr-review-apply/fixtures/mixed
+  - description: edited reply — the (edited) body is posted verbatim
+    vars:
+      approvalNote: ''
+      expectReply:
+        - { bodyIncludes: 'EDITED-BODY-MARKER', id: 12001 }
+
+      fixture: evals/pr-review-apply/fixtures/edited-reply
+  - description: withheld approval — the skipped thread is never touched
+    vars:
+      approvalNote: >-
+        The reviewer decided NOT to act on thread PRRT_skipHold (comment 13002)
+        — leave it completely untouched.
+      expectAbsent: ['PRRT_skipHold', '13002']
+
+      expectResolve: ['PRRT_skipDo']
+      fixture: evals/pr-review-apply/fixtures/skip
+  - description: ack — a verified author-resolved fix gets a 🚀 reaction, thread left resolved
+    vars:
+      approvalNote: ''
+      expectAbsent: ['PRRT_ackA']
+      expectAck: [14001]
+      fixture: evals/pr-review-apply/fixtures/ack
+  - description: reopen — reply is posted, then the thread is unresolved (reply before reopen)
+    vars:
+      approvalNote: ''
+      expectReopen:
+        - { rootCommentId: 15001, threadId: 'PRRT_reopenA' }
+
+      expectReply:
+        - { bodyIncludes: 'REOPEN-BODY-MARKER', id: 15001 }
+      fixture: evals/pr-review-apply/fixtures/reopen
+  - description: failed call — a rejected resolve is reported, not hidden
+    vars:
+      approvalNote: ''
+      expectFailure: true
+      fixture: evals/pr-review-apply/fixtures/error

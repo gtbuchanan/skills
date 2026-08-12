@@ -1,0 +1,138 @@
+{
+  "data": {
+    "repository": {
+      "pullRequest": {
+        "reviewThreads": {
+          "nodes": [
+            {
+              "comments": {
+                "nodes": [
+                  {
+                    "author": {
+                      "login": "reviewer"
+                    },
+                    "body": "This uses `===` for the token comparison, which leaks timing information. Please use a constant-time comparison.",
+                    "createdAt": "2026-02-20T12:00:00Z",
+                    "databaseId": 9001,
+                    "reactionGroups": []
+                  }
+                ]
+              },
+              "id": "PRRT_open_auth",
+              "isOutdated": true,
+              "isResolved": false,
+              "line": 19,
+              "originalLine": 19,
+              "path": "src/auth.ts",
+              "resolvedBy": null,
+              "viewerCanUnresolve": false
+            },
+            {
+              "comments": {
+                "nodes": [
+                  {
+                    "author": {
+                      "login": "reviewer"
+                    },
+                    "body": "`notify` can dereference a null user here — guard against a missing lookup result.",
+                    "createdAt": "2026-02-20T12:05:00Z",
+                    "databaseId": 9002,
+                    "reactionGroups": []
+                  }
+                ]
+              },
+              "id": "PRRT_open_user",
+              "isOutdated": true,
+              "isResolved": false,
+              "line": 7,
+              "originalLine": 7,
+              "path": "api/user.py",
+              "resolvedBy": null,
+              "viewerCanUnresolve": false
+            },
+            {
+              "comments": {
+                "nodes": [
+                  {
+                    "author": {
+                      "login": "reviewer"
+                    },
+                    "body": "Remove this leftover debug console.log before merging.",
+                    "createdAt": "2026-01-10T12:00:00Z",
+                    "databaseId": 9003,
+                    "reactionGroups": []
+                  }
+                ]
+              },
+              "id": "PRRT_resolved_log",
+              "isOutdated": false,
+              "isResolved": true,
+              "line": 2,
+              "originalLine": 2,
+              "path": "src/log.ts",
+              "resolvedBy": {
+                "login": "reviewer"
+              },
+              "viewerCanUnresolve": true
+            },
+            {
+              "comments": {
+                "nodes": [
+                  {
+                    "author": {
+                      "login": "reviewer"
+                    },
+                    "body": "Close the pool in a finally block so a mid-request error can't leak the connection.",
+                    "createdAt": "2026-02-20T12:10:00Z",
+                    "databaseId": 9004,
+                    "reactionGroups": [
+                      {
+                        "content": "ROCKET",
+                        "viewerHasReacted": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              "id": "PRRT_resolved_acked",
+              "isOutdated": false,
+              "isResolved": true,
+              "line": 10,
+              "originalLine": 10,
+              "path": "db/pool.ts",
+              "resolvedBy": {
+                "login": "author"
+              },
+              "viewerCanUnresolve": true
+            },
+            {
+              "comments": {
+                "nodes": [
+                  {
+                    "author": {
+                      "login": "reviewer"
+                    },
+                    "body": "`amount` is charged without validation here — reject non-positive or non-numeric amounts before the charge.",
+                    "createdAt": "2026-02-20T12:15:00Z",
+                    "databaseId": 9005,
+                    "reactionGroups": []
+                  }
+                ]
+              },
+              "id": "PRRT_resolved_by_author",
+              "isOutdated": false,
+              "isResolved": true,
+              "line": 8,
+              "originalLine": 8,
+              "path": "api/order.py",
+              "resolvedBy": {
+                "login": "author"
+              },
+              "viewerCanUnresolve": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}

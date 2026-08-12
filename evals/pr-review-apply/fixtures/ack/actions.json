@@ -1,0 +1,11 @@
+[
+  {
+    "action": "ack",
+    "line": 19,
+    "path": "db/pool.ts",
+    "resolvedByOther": true,
+    "rootCommentId": 14001,
+    "threadId": "PRRT_ackA",
+    "verdict": "exact-fix"
+  }
+]

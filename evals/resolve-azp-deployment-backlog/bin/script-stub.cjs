@@ -29,13 +29,33 @@ const cliArgsIndex = 2;
  */
 const authFailPipelineId = 900_911;
 
-// Three superseded runs, newest first; only their distinctness matters.
+/*
+ * Three superseded runs, newest first. Each carries a run name (build number)
+ * alongside its build id, and the two are unrelated — a report quoting the name
+ * cannot have been reconstructed from the id, which is what lets the checker's
+ * "did it use the visible name?" assertion actually fail.
+ */
 const olderRunCount = 3;
 const olderRunBaseId = 900_100;
-const olderRunIds = Array.from(
-  { length: olderRunCount },
-  (_unused, index) => olderRunBaseId + olderRunCount - index,
-);
+const olderRunBaseNumber = 95;
+const olderRuns = Array.from({ length: olderRunCount }, (_unused, index) => ({
+  buildNumber: `2026.5.${String(olderRunBaseNumber + olderRunCount - index)}`,
+  id: olderRunBaseId + olderRunCount - index,
+}));
+
+/*
+ * Names for the fictional pipelines the eval prompts reference — the real
+ * script reads these off each run's definition, so the double must too.
+ * Mirrors the catalog in bin/az-stub.ts, which this file cannot import (it is
+ * overlaid standalone); keep the two in sync. 900003 is named here but
+ * deliberately absent from that catalog: its test supplies the id directly, and
+ * leaving it unresolvable by name keeps that case honest.
+ */
+const pipelines = [
+  { id: 900_001, name: 'web-frontend' },
+  { id: 900_002, name: 'api-service' },
+  { id: 900_003, name: 'payments-api' },
+];
 
 const argv = process.argv.slice(cliArgsIndex);
 
@@ -122,24 +142,53 @@ if (opts.pipelineId === authFailPipelineId) {
   process.exit(1);
 }
 
-const latestRunId = 900_999;
+const latestRun = { buildNumber: '2026.5.99', id: 900_999 };
 
-process.stdout.write(`Latest run: 2026.5.99 (id ${String(latestRunId)})\n`);
-process.stdout.write(`Older runs:  ${olderRunIds.join(', ')}\n`);
+/**
+ * Mirrors the real script's Format-Run: run name first, build id second.
+ * @param {{ buildNumber: string, id: number }} run
+ * @returns {string}
+ */
+const formatRun = run => `${run.buildNumber} (build ${String(run.id)})`;
+
+const pipelineName =
+  pipelines.find(entry => entry.id === opts.pipelineId)?.name ??
+  `pipeline-${String(opts.pipelineId)}`;
+
+/*
+ * Same console shape as the real script, because the agent's report is written
+ * from whatever it reads here: pipeline name, then each run by its name with
+ * the id trailing, then the portal link.
+ */
+process.stdout.write(
+  `Pipeline: ${pipelineName} (definition ${String(opts.pipelineId)})\n`,
+);
+process.stdout.write(`Branch:   ${opts.branch}\n\n`);
+process.stdout.write(`Latest in-progress run: ${formatRun(latestRun)}\n`);
+process.stdout.write(
+  `  ${opts.organization}/${opts.project}/_build/results?buildId=${String(latestRun.id)}\n\n`,
+);
+process.stdout.write(
+  `Superseded in-progress runs (${String(olderRuns.length)}):\n`,
+);
+for (const run of olderRuns) {
+  process.stdout.write(`  ${formatRun(run)}\n`);
+}
 
 const approvals = opts.approveLatest ? 1 : 0;
 const summary =
-  `${String(olderRunIds.length)} reject, ${String(approvals)} approve ` +
-  `(pipeline ${String(opts.pipelineId)}, ${opts.branch})`;
+  `${String(olderRuns.length)} reject, ${String(approvals)} approve ` +
+  `(${pipelineName}, ${opts.branch})`;
 if (opts.whatIf) {
-  process.stdout.write(`What if: ${summary}\n`);
+  process.stdout.write(`\nWhat if: ${summary}\n`);
   process.exit(0);
 }
 
-for (const index of olderRunIds.keys()) {
-  process.stdout.write(`  stub-approval-${String(index)}  rejected\n`);
+process.stdout.write('\nApproval results:\n');
+for (const run of olderRuns) {
+  process.stdout.write(`  rejected  ${formatRun(run)}\n`);
 }
 if (opts.approveLatest) {
-  process.stdout.write('  stub-approval-latest  approved\n');
+  process.stdout.write(`  approved  ${formatRun(latestRun)}\n`);
 }
 process.exit(0);

@@ -77,13 +77,22 @@ const NameListSchema = v.array(v.string());
 const CsvNamesSchema = v.pipe(v.string(), v.transform(splitNames));
 const RunNamesSchema = v.union([NameListSchema, CsvNamesSchema]);
 
-const VarsSchema = v.object({
-  approveLatest: v.optional(LooseBooleanSchema),
+/*
+ * Split out because checkReport reads only these — narrowing its parameter
+ * keeps the function honest about what it depends on, and lets a test state an
+ * expectation without also inventing a pipeline id it never looks at.
+ */
+const ReportVarsSchema = v.object({
   expectAuthFix: v.optional(LooseBooleanSchema),
-  expectLiveRun: v.optional(LooseBooleanSchema),
   expectPipelineName: v.optional(v.string(), ''),
   expectRunNames: v.optional(RunNamesSchema, []),
   expectRunUrl: v.optional(v.string(), ''),
+});
+
+const VarsSchema = v.object({
+  ...ReportVarsSchema.entries,
+  approveLatest: v.optional(LooseBooleanSchema),
+  expectLiveRun: v.optional(LooseBooleanSchema),
   pipelineId: v.optional(PipelineIdSchema, 0),
 });
 
@@ -139,13 +148,20 @@ const escapeRegExp = (value: string): string =>
  * `web-frontend` from `web-frontend-canary`, so a report naming the wrong thing
  * would still pass. Require the match to end where the expected value ends.
  *
- * Only characters that would extend the value itself disqualify it. Trailing
- * punctuation stays legal on purpose: an agent ends sentences with a period and
- * wraps links in Markdown, and rejecting `2026.5.99.` would fail good reports —
- * an assertion that cries wolf gets deleted, which is worse than a loose one.
+ * The period is the awkward one, because it plays both roles: it separates
+ * segments inside a name (`2026.5.99.1`, `web-frontend.canary` — different
+ * things entirely) and it ends a sentence. Banning it outright would reject
+ * `Approved run 2026.5.99.`, a perfectly good report, and an assertion that
+ * cries wolf gets deleted. So reject a period only when something name-like
+ * follows it, which is what distinguishes a continuation from punctuation.
  */
+const nameChar = String.raw`[\p{L}\p{N}_\-]`;
+
 const hasMention = (text: string, value: string): boolean =>
-  new RegExp(String.raw`${escapeRegExp(value)}(?![\w\-])`, 'v').test(text);
+  new RegExp(
+    String.raw`${escapeRegExp(value)}(?!${nameChar}|\.${nameChar})`,
+    'v',
+  ).test(text);
 
 /**
  * Checks the agent's own prose report, which is what the user actually reads —
@@ -154,7 +170,7 @@ const hasMention = (text: string, value: string): boolean =>
  */
 export const checkReport = (
   text: string,
-  vars: v.InferOutput<typeof VarsSchema>,
+  vars: v.InferOutput<typeof ReportVarsSchema>,
 ): string[] => {
   const problems = [];
 
@@ -217,7 +233,16 @@ export default function assertBacklogRuns(
 
   problems.push(...checkRunOrder(scriptCalls, vars));
 
-  const text = typeof output === 'string' ? output : JSON.stringify(output);
+  /*
+   * JSON.stringify returns undefined — not a string — for undefined, which
+   * would turn a failed assertion into a TypeError on the first .includes.
+   * Guard the input rather than the result: TypeScript types stringify as
+   * always returning string, so a ?? on its result reads as dead code, while
+   * `output` is genuinely unknown here. An absent report then reads as "said
+   * nothing", which is a plain failure rather than a crash.
+   */
+  const text =
+    typeof output === 'string' ? output : JSON.stringify(output ?? '');
   problems.push(...checkReport(text, vars));
 
   return fromProblems(problems);

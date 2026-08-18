@@ -64,6 +64,31 @@ test('rejects a pipeline name that is only a prefix of the reported one', ({ exp
   expect(problems[0]).toMatch(/never called the pipeline "web-frontend"/v);
 });
 
+test('rejects a run name extended by a dotted segment', ({ expect }) => {
+  /*
+   * `2026.5.99.1` is a different run, but the character separating it from the
+   * expected value is the same `.` that ends a sentence — so the matcher has to
+   * tell a name continuation from punctuation, not just allow or ban periods.
+   */
+  const problems = checkReport(
+    goodReport.replace('2026.5.99 (build', '2026.5.99.1 (build'),
+    vars,
+  );
+
+  expect(problems).toHaveLength(1);
+  expect(problems[0]).toMatch(/never named 2026\.5\.99/v);
+});
+
+test('rejects a pipeline name extended by a dotted segment', ({ expect }) => {
+  const problems = checkReport(
+    goodReport.replace('web-frontend pipeline', 'web-frontend.canary pipeline'),
+    vars,
+  );
+
+  expect(problems).toHaveLength(1);
+  expect(problems[0]).toMatch(/never called the pipeline "web-frontend"/v);
+});
+
 test('rejects a link pointing at a different build', ({ expect }) => {
   /*
    * Only the URL is altered — the run label keeps its own build id — so this

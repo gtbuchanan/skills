@@ -33,7 +33,7 @@ includes = ["mise.tasks.toml"]
 # hk's builtins shell out to.
 [tools]
 actionlint = "1.7.12"
-hk = "1.54.1"
+hk = "1.55.0"
 node = "24.19.0"
 # renovate transitively pulls `@yarnpkg/libzip`, whose latest is a manual
 # maintainer publish lacking the provenance its CI releases had — aube's

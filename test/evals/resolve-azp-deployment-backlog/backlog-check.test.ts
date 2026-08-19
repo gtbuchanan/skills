@@ -89,6 +89,27 @@ test('rejects a pipeline name extended by a dotted segment', ({ expect }) => {
   expect(problems[0]).toMatch(/never called the pipeline "web-frontend"/v);
 });
 
+test('rejects a run name carrying a dotted prefix', ({ expect }) => {
+  // Anchoring only the end would accept `archived.2026.5.99` as `2026.5.99`.
+  const problems = checkReport(
+    goodReport.replace('run 2026.5.99', 'run archived.2026.5.99'),
+    vars,
+  );
+
+  expect(problems).toHaveLength(1);
+  expect(problems[0]).toMatch(/never named 2026\.5\.99/v);
+});
+
+test('rejects a pipeline name carrying a hyphenated prefix', ({ expect }) => {
+  const problems = checkReport(
+    goodReport.replace('the web-frontend', 'the canary-web-frontend'),
+    vars,
+  );
+
+  expect(problems).toHaveLength(1);
+  expect(problems[0]).toMatch(/never called the pipeline "web-frontend"/v);
+});
+
 test('rejects a link pointing at a different build', ({ expect }) => {
   /*
    * Only the URL is altered — the run label keeps its own build id — so this

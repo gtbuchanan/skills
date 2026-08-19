@@ -153,13 +153,19 @@ const escapeRegExp = (value: string): string =>
  * things entirely) and it ends a sentence. Banning it outright would reject
  * `Approved run 2026.5.99.`, a perfectly good report, and an assertion that
  * cries wolf gets deleted. So reject a period only when something name-like
- * follows it, which is what distinguishes a continuation from punctuation.
+ * sits on the other side of it, which distinguishes a continuation from
+ * punctuation.
+ *
+ * Both ends need the same treatment, since `canary-web-frontend` and
+ * `archived.2026.5.99` are as wrong as the suffixed forms. The surrounding
+ * characters a real report uses — spaces, brackets, backticks, quotes — are
+ * none of these, so the boundary costs nothing legitimate.
  */
 const nameChar = String.raw`[\p{L}\p{N}_\-]`;
 
 const hasMention = (text: string, value: string): boolean =>
   new RegExp(
-    String.raw`${escapeRegExp(value)}(?!${nameChar}|\.${nameChar})`,
+    String.raw`(?<!${nameChar}|${nameChar}\.)${escapeRegExp(value)}(?!${nameChar}|\.${nameChar})`,
     'v',
   ).test(text);
 

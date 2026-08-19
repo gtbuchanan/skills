@@ -7,8 +7,11 @@
 # each invocation to a per-pipeline file that backlog-check.ts asserts against —
 # so this exercises the agent's decisions (resolve the pipeline id, dry-run
 # first, and pass -ApproveLatest only when the newest should ship) without
-# mutating a real pipeline. The pipeline names and ids are fictional so a stray
-# real call could not target an actual definition.
+# mutating a real pipeline. The checker also reads the agent's own report, to
+# hold it to every handle the portal shows — pipeline name, run names, and the
+# link to the run that shipped — rather than bare definition and build ids. The
+# pipeline names and ids are fictional so a stray real call could not target an
+# actual definition.
 #
 # Parallel-safe: every test uses a distinct pipeline id, so each writes to its
 # own log file (….runs/script-<id>.jsonl) with no shared state, and the auth-fail
@@ -80,7 +83,9 @@ tests:
     vars:
       approveLatest: true
       expectLiveRun: true
-
+      expectPipelineName: web-frontend
+      expectRunNames: ['2026.5.99']
+      expectRunUrl: https://dev.azure.com/example-org/default-project/_build/results?buildId=900999
       pipelineId: 900001
       userMessage: >-
         i've got like 15 main builds piled up at the cd approval gate for the
@@ -90,7 +95,11 @@ tests:
     vars:
       approveLatest: false
       expectLiveRun: true
-
+      # payments-api appears nowhere but the stub's output, so unlike the two
+      # named-pipeline tests this one proves the agent actually read it.
+      expectPipelineName: payments-api
+      expectRunNames: ['2026.5.99']
+      expectRunUrl: https://dev.azure.com/example-org/default-project/_build/results?buildId=900999
       pipelineId: 900003
       userMessage: >-
         clear the pending approval backlog on azp pipeline 900003 / main, leave
@@ -99,7 +108,9 @@ tests:
     vars:
       approveLatest: true
       expectLiveRun: true
-
+      expectPipelineName: api-service
+      expectRunNames: ['2026.5.99']
+      expectRunUrl: https://dev.azure.com/example-org/default-project/_build/results?buildId=900999
       pipelineId: 900002
       userMessage: >-
         fast-forward the deploy queue on api-service — only the latest commit

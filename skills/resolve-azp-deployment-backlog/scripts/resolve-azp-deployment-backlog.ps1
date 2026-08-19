@@ -13,6 +13,12 @@
   in-progress run (the "latest"). Pass -ApproveLatest to also approve that
   newest run in the same operation.
 
+  Everything it prints names runs the way the Azure DevOps UI does — the
+  pipeline name and the run name (build number) first, the numeric definition
+  and build ids second, plus a direct link to the latest run. A bare build id
+  is only meaningful after pasting it into a URL, which is exactly the lookup
+  the caller should not have to do.
+
   Auth: mints a bearer token from the active `az login` session via
   `az account get-access-token` — no PAT required. If that call fails with
   AADSTS500011 ("resource principal ... was not found"), consent the Azure
@@ -80,6 +86,21 @@ param(
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
+<#
+  Renders a run the way the portal labels it: run name first, numeric build id
+  second. Both matter — the name is what the caller recognises in the UI and in
+  the approval email, the id is what a REST call or a support ticket needs — but
+  leading with the id forces a URL lookup just to learn which run is meant.
+  Falls back to the id alone if a run somehow carries no build number.
+#>
+function Format-Run {
+  param([Parameter(Mandatory)]$Run)
+
+  $name = $Run.buildNumber
+  if ([string]::IsNullOrWhiteSpace($name)) { return "build $($Run.id)" }
+  "$name (build $($Run.id))"
+}
+
 # Azure DevOps AAD app id — token audience for ADO REST.
 $adoResource = '499b84ac-1321-427f-aa17-267ca6975798'
 $token = az account get-access-token --resource $adoResource --query accessToken -o tsv --only-show-errors
@@ -99,25 +120,48 @@ if (-not $runs) {
 
 $sortedRuns = @($runs | Sort-Object id -Descending)
 $absoluteLatest = $sortedRuns[0]
+
+# Every build carries its definition, so the pipeline's display name comes free
+# with the runs query — no extra call to turn the caller's definition id back
+# into something they recognise.
+$pipelineName = $absoluteLatest.definition.name
+if ([string]::IsNullOrWhiteSpace($pipelineName)) { $pipelineName = "definition $PipelineId" }
+Write-Host "Pipeline: $pipelineName (definition $PipelineId)"
+Write-Host "Branch:   $Branch"
+
 $inProgressRuns = @($sortedRuns | Where-Object { $_.status -eq 'inProgress' })
 if (-not $inProgressRuns) {
-  Write-Host "No in-progress runs found for pipeline $PipelineId on $Branch."
+  Write-Host "No in-progress runs found on $Branch."
   return
 }
 
 $latestInProgress = $inProgressRuns[0]
 $latestRunId = [int]$latestInProgress.id
-$olderRunIds = @($inProgressRuns | Select-Object -Skip 1 | ForEach-Object { [int]$_.id })
+$latestRunLabel = Format-Run $latestInProgress
+$olderRuns = @($inProgressRuns | Select-Object -Skip 1)
+$olderRunIds = @($olderRuns | ForEach-Object { [int]$_.id })
 
-Write-Host ("Latest in-progress: {0} (id {1})" -f $latestInProgress.buildNumber, $latestRunId)
-$olderDisplay = $olderRunIds.Count -gt 0 ? ($olderRunIds -join ', ') : '(none)'
-Write-Host "Older in-progress: $olderDisplay"
+Write-Host ''
+Write-Host "Latest in-progress run: $latestRunLabel"
+# The runs payload already links each build in the portal; echoing it saves the
+# caller from turning a build id back into a URL by hand.
+$latestRunUrl = $latestInProgress._links.web.href
+if ($latestRunUrl) { Write-Host "  $latestRunUrl" }
+
+Write-Host ''
+Write-Host ("Superseded in-progress runs ({0}):" -f $olderRuns.Count)
+if ($olderRuns.Count -eq 0) {
+  Write-Host '  (none)'
+}
+else {
+  foreach ($r in $olderRuns) { Write-Host "  $(Format-Run $r)" }
+}
 
 # Block -ApproveLatest if a strictly newer run has already completed —
 # approving here would ship code that's already been superseded.
 $blockApproval = $false
 if ([int]$absoluteLatest.id -gt $latestRunId) {
-  Write-Warning ("Newer run already completed: {0} (id {1}, status={2}, result={3}). The latest in-progress run is NOT the absolute latest." -f $absoluteLatest.buildNumber, [int]$absoluteLatest.id, $absoluteLatest.status, $absoluteLatest.result)
+  Write-Warning ("Newer run already completed: {0} — status={1}, result={2}. The latest in-progress run is NOT the absolute latest." -f (Format-Run $absoluteLatest), $absoluteLatest.status, $absoluteLatest.result)
   if ($ApproveLatest) {
     Write-Warning '-ApproveLatest will be ignored to avoid shipping a superseded run.'
     $blockApproval = $true
@@ -140,15 +184,17 @@ if ($toReject.Count -eq 0 -and $toApprove.Count -eq 0) {
   return
 }
 
+# These comments land in the approval history, where a human reads them later
+# and has no way to look up a bare build id in passing.
 $updates = @()
 foreach ($a in $toReject) {
-  $updates += @{ approvalId = $a.id; status = 'rejected'; comment = "Superseded by run $latestRunId" }
+  $updates += @{ approvalId = $a.id; status = 'rejected'; comment = "Superseded by run $latestRunLabel" }
 }
 foreach ($a in $toApprove) {
-  $updates += @{ approvalId = $a.id; status = 'approved'; comment = "Approved as latest $Branch run ($latestRunId)" }
+  $updates += @{ approvalId = $a.id; status = 'approved'; comment = "Approved as latest $Branch run $latestRunLabel" }
 }
 
-$summary = "$($toReject.Count) reject, $($toApprove.Count) approve (pipeline $PipelineId, $Branch)"
+$summary = "$($toReject.Count) reject, $($toApprove.Count) approve ($pipelineName, $Branch)"
 # -WhatIf always routes through ShouldProcess so the dry-run preview prints and
 # nothing mutates; -Force bypasses the interactive prompt only for a real run.
 $proceed = if (-not $WhatIfPreference -and $Force) { $true }
@@ -159,6 +205,24 @@ if (-not $proceed) {
 
 $body = ConvertTo-Json @($updates) -Depth 4
 $result = Invoke-RestMethod -Method Patch -Headers $headers -ContentType 'application/json' -Uri "$base/pipelines/approvals?api-version=7.1" -Body $body
+
+# Approval ids are opaque GUIDs that appear nowhere in the portal, so report
+# each outcome against the run it gated. The mapping comes from the pending
+# approvals already fetched rather than the PATCH response, so it holds even if
+# the response omits the owning run.
+$runsById = @{}
+foreach ($r in $inProgressRuns) { $runsById[[string]$r.id] = $r }
+$runByApproval = @{}
+foreach ($a in $relevant) { $runByApproval[[string]$a.id] = $runsById[[string]$a.pipeline.owner.id] }
+
+Write-Host ''
+Write-Host 'Approval results:'
 foreach ($a in $result.value) {
-  Write-Host ("  {0,-36}  {1}" -f $a.id, $a.status)
+  $run = $runByApproval[[string]$a.id]
+  # An approval we never sent coming back in the response is an anomaly, and
+  # there is no run name to show for it. Say so plainly and keep the GUID —
+  # unlike the normal rows, it is the only handle that identifies the record.
+  $label = $run ? (Format-Run $run) : "unmapped approval $($a.id)"
+  Write-Host ("  {0,-9} {1}" -f $a.status, $label)
+  Write-Verbose ("approval {0} -> {1}" -f $a.id, $label)
 }

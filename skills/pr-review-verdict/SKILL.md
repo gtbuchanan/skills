@@ -66,8 +66,28 @@ is an empty string (the caller will resolve the thread instead of replying).
 
 ## Output
 
-Return ONLY a raw JSON array — no markdown fences, no prose around it — with one
-object per thread, echoing the input `id` when one was provided:
+Your result is a JSON array with one object per thread, echoing the input `id`
+when one was provided.
+
+That array is a handoff to whoever invoked this skill — not a message to the
+human. Which one it becomes depends on who called:
+
+- **Invoked by another skill** (normally `pr-review-diff`): the array is an
+  intermediate result, not the deliverable — it carries no `rootCommentId` and
+  no `action`, so nothing in it can be acted on until the caller joins it with
+  the GitHub ids it gathered. Carry it forward into that next step rather than
+  rendering it in your reply; dumping the JSON buries the compact summary the
+  human is actually being asked to approve.
+- **Invoked standalone**, with no caller to hand off to (a direct request, a
+  test harness): the array is the answer. Emit it as raw JSON — no markdown
+  fences, no prose around it.
+
+If it's ambiguous which case you're in, what loaded this skill settles it — a
+chain that began with `pr-review-followup` or `pr-review-diff` is the first case.
+Make that call silently; announcing which case you picked is itself prose around
+the array.
+
+The shape either way:
 
 ```json
 [

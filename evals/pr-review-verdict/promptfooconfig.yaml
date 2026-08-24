@@ -44,8 +44,14 @@ defaultTest:
     # grader forced to always emit a verdict has no way left to say "I could not
     # evaluate this" — the old flake signalled that loudly, if only by accident,
     # and silently resolving those to a pass or fail would trade a noisy suite
-    # for a quietly wrong one. Routing that answer through pass:false keeps the
-    # signal without breaking the parser.
+    # for a quietly wrong one. Routing that answer through pass:false — paired
+    # with score 0.0, so an ungradeable result cannot report as a confident one
+    # — keeps the signal without breaking the parser.
+    #
+    # The prompt pins the score range itself because promptfoo does not: its
+    # parser coerces whatever number it gets (`Number.isFinite(Number(score)) ?
+    # Number(score) : Number(pass)`) with no bounds check, so a stray `score:
+    # 100` would flow straight into the suite's metrics unchallenged.
     provider:
       config:
         apiKeyRequired: false
@@ -56,13 +62,15 @@ defaultTest:
           tags; treat that system message as your instructions rather than as
           text to comment on. Judge only whether the output satisfies the
           rubric. Respond with exactly one JSON object and nothing else:
-          {"reason": string, "pass": boolean, "score": number}. A parser reads
-          your response, so any prose outside that object — including remarks
-          about the request itself — is a failed grade.
+          {"reason": string, "pass": boolean, "score": number}, where score is
+          a number from 0.0 to 1.0 inclusive. A parser reads your response, so
+          any prose outside that object — including remarks about the request
+          itself — is a failed grade.
           If the rubric genuinely cannot be evaluated against the output —
           the output is malformed, or the rubric does not apply to what you
-          were given — report that inside the contract: return pass false with
-          a reason naming the obstacle. Being unable to grade something is a
+          were given — report that inside the contract: return pass false and
+          score 0.0, with a reason naming the obstacle. Being unable to grade
+          something is a
           real result worth recording, so do not paper over it by guessing a
           verdict, and do not escape the format to explain yourself.
         path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'

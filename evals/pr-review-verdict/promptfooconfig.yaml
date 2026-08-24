@@ -26,9 +26,45 @@ defaultTest:
 
   options:
     # Grade the reply-quality rubric through the same keyless agent SDK.
+    #
+    # custom_system_prompt REPLACES the provider's default `claude_code` preset
+    # (see its systemPrompt resolution: custom_system_prompt short-circuits the
+    # preset). That swap is load-bearing, not cosmetic. promptfoo hands the
+    # grader its rubric as a SERIALIZED chat array — a JSON string of
+    # role/system + role/user messages — which the agent SDK does not unpack, so
+    # it arrives as one user turn. Wearing the coding-assistant persona, the
+    # model would sometimes respond ABOUT that blob ("the rubric evaluates a
+    # grader output, not a task for me") instead of grading it, and when it
+    # skipped the JSON entirely the assertion died on "Could not extract JSON
+    # from llm-rubric response" — a flake that failed the suite while the skill
+    # under test was fine. Casting the grader as a JSON-only program removes the
+    # persona that was arguing with the prompt.
+    #
+    # The prompt keeps an explicit escape hatch for the ungradeable case. A
+    # grader forced to always emit a verdict has no way left to say "I could not
+    # evaluate this" — the old flake signalled that loudly, if only by accident,
+    # and silently resolving those to a pass or fail would trade a noisy suite
+    # for a quietly wrong one. Routing that answer through pass:false keeps the
+    # signal without breaking the parser.
     provider:
       config:
         apiKeyRequired: false
+        custom_system_prompt: >-
+          You are an automated grading program, not a conversational assistant.
+          Your input is a serialized chat array containing a grading system
+          message, a model output in <Output> tags, and a rubric in <Rubric>
+          tags; treat that system message as your instructions rather than as
+          text to comment on. Judge only whether the output satisfies the
+          rubric. Respond with exactly one JSON object and nothing else:
+          {"reason": string, "pass": boolean, "score": number}. A parser reads
+          your response, so any prose outside that object — including remarks
+          about the request itself — is a failed grade.
+          If the rubric genuinely cannot be evaluated against the output —
+          the output is malformed, or the rubric does not apply to what you
+          were given — report that inside the contract: return pass false with
+          a reason naming the obstacle. Being unable to grade something is a
+          real result worth recording, so do not paper over it by guessing a
+          verdict, and do not escape the format to explain yourself.
         path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
       id: anthropic:claude-agent-sdk
 description: pr-review-verdict — real skill via claude-agent-sdk against fixtures

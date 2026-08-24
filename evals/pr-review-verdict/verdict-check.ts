@@ -88,32 +88,112 @@ type ParsedVerdicts =
   | { reason: string };
 
 /**
- * Extracts the verdict array the skill embeds in its prose output.
+ * The bracket-balanced span starting at `start`, or undefined when it never
+ * closes. Brackets inside string literals neither open nor close a span, so a
+ * `reply` quoting `users[0]` cannot truncate the array it sits in.
  */
-const parseVerdictList = (text: string): ParsedVerdicts => {
-  const match = /\[[\s\S]*\]/v.exec(text);
-  if (!match) return { reason: 'no JSON array found in output' };
+const arraySpan = (text: string, start: number): string | undefined => {
+  let depth = 0;
+  let isInString = false;
+  let isEscaped = false;
 
-  let raw: unknown;
-  try {
-    raw = JSON.parse(match[0]);
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return { reason: `invalid JSON: ${detail}` };
+  for (let index = start; index < text.length; index += 1) {
+    const char = text[index];
+
+    if (isInString) {
+      if (isEscaped) isEscaped = false;
+      else if (char === '\\') isEscaped = true;
+      else if (char === '"') isInString = false;
+      continue;
+    }
+
+    if (char === '"') {
+      isInString = true;
+      continue;
+    }
+
+    if (char === '[') {
+      depth += 1;
+      continue;
+    }
+
+    if (char !== ']') continue;
+
+    depth -= 1;
+    if (depth === 0) return text.slice(start, index + 1);
   }
 
-  const result = v.safeParse(VerdictListSchema, raw);
-  if (!result.success) return { reason: 'result is not a non-empty array' };
+  return undefined;
+};
 
-  /*
-   * minLength(1) guarantees an entry at runtime, but the parsed type stays a
-   * plain array. Destructure here, next to the schema that makes it true, so
-   * callers get a non-optional entry without an assertion.
-   */
-  const [first] = result.output;
-  if (first === undefined) return { reason: 'result is not a non-empty array' };
+/**
+ * Every bracket-balanced array in `text` that parses as JSON, in the order they
+ * start, plus the first parse failure seen along the way.
+ *
+ * Collecting candidates is what makes prose around the array harmless. The
+ * skill is told to emit the array bare and usually does, but a run that leads
+ * with `Read threads [1] and [2].` puts the first `[` in the preamble — and a
+ * match spanning the first `[` to the last `]` would drag that text into the
+ * parse and fail a run whose array was fine. Here `[1]` is simply a candidate
+ * that loses to the verdict schema, and the scan moves on.
+ */
+const scanJsonArrays = (
+  text: string,
+): { arrays: unknown[][]; parseError: string | undefined } => {
+  const arrays: unknown[][] = [];
+  let parseError: string | undefined;
 
-  return { first, list: result.output };
+  for (
+    let index = text.indexOf('[');
+    index !== -1;
+    index = text.indexOf('[', index + 1)
+  ) {
+    const span = arraySpan(text, index);
+    if (span === undefined) continue;
+
+    try {
+      const parsed: unknown = JSON.parse(span);
+      if (!Array.isArray(parsed)) continue;
+      arrays.push(parsed);
+      // Resume past this array so its own contents aren't rescanned.
+      index += span.length - 1;
+    } catch (error) {
+      parseError ??= error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  return { arrays, parseError };
+};
+
+/**
+ * Extracts the verdict array the skill embeds in its prose output.
+ *
+ * A truncated or otherwise broken array deliberately falls through to a
+ * failure: emitting invalid JSON breaks the skill's stated contract, and
+ * salvaging it here would hide the defect this suite exists to catch.
+ */
+const parseVerdictList = (text: string): ParsedVerdicts => {
+  const { arrays, parseError } = scanJsonArrays(text);
+
+  for (const candidate of arrays) {
+    const result = v.safeParse(VerdictListSchema, candidate);
+    if (!result.success) continue;
+
+    /*
+     * minLength(1) guarantees an entry at runtime, but the parsed type stays a
+     * plain array. Destructure here, next to the schema that makes it true, so
+     * callers get a non-optional entry without an assertion.
+     */
+    const [first] = result.output;
+    if (first === undefined) continue;
+
+    return { first, list: result.output };
+  }
+
+  if (parseError !== undefined) return { reason: `invalid JSON: ${parseError}` };
+  if (arrays.length > 0) return { reason: 'result is not a non-empty array' };
+
+  return { reason: 'no JSON array found in output' };
 };
 
 /**

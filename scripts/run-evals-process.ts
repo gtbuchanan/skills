@@ -15,7 +15,7 @@
  * runs first and aborts if any danger CLI is reachable.
  *
  *   pnpm eval                 # all suites, bounded-parallel
- *   pnpm eval pr-review-diff  # filter to one skill
+ *   pnpm eval gtb-pr-review-diff  # filter to one skill
  *   pnpm eval --repeat 3      # flags forwarded to promptfoo
  *
  * Auth: reads the local keyless Claude session (~/.claude) or ANTHROPIC_API_KEY,

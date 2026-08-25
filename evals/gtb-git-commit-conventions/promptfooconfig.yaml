@@ -1,0 +1,133 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+#
+# Eval for gtb-git-commit-conventions. Runs the REAL skill via claude-agent-sdk
+# against real repositories seeded by setup.ts, and commit-check.ts reads the
+# resulting commit objects back with git.
+#
+# Nothing is stubbed here, and nothing needs to be: git is the tool under
+# observation, the repositories are local and disposable, and the suite asserts
+# on what the agent actually committed rather than on a log of intercepted
+# calls. `gh` is still unreachable — the runner shadows it repo-wide — so a
+# scenario cannot accidentally reach a real forge.
+#
+# The agent is allowed to edit files as well as run git, deliberately: the
+# revert scenario has to be able to hand-write an undo, or asserting that it
+# used `git revert` instead would prove nothing.
+
+---
+defaultTest:
+  assert:
+    - type: skill-used
+      value: gtb-git-commit-conventions
+    - type: javascript
+      value: file://commit-check.ts
+
+  # Keep array vars (disjointGroups, trailers, …) intact instead of expanding
+  # each into separate test cases.
+  options:
+    disableVarExpansion: true
+description: gtb-git-commit-conventions — commits written into real seeded repositories
+
+# Serial so per-test re-seeding cannot race another test's repository.
+evaluateOptions:
+  maxConcurrency: 1
+
+extensions:
+  - file://setup.ts:extensionHook
+
+prompts:
+  - |
+    You are working in the git repository at ./{{ repo }}, relative to your
+    working directory. Everything relevant is inside that repository — do not
+    look outside it, and leave every other directory alone.
+
+    {{ task }}
+
+    Use git directly to do it. When you are finished, briefly report what you
+    did and why you divided the work the way you did.
+
+providers:
+  - config:
+      apiKeyRequired: false
+      append_allowed_tools:
+        - 'Bash(git:*)'
+        - 'Edit(scenarios/**)'
+        - 'Read(scenarios/**)'
+        - 'Write(scenarios/**)'
+      ask_user_question:
+        behavior: first_option
+
+      path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
+      setting_sources: ['project']
+      skills: ['gtb-git-commit-conventions']
+      working_dir: '{{ env.EVAL_WORKSPACE }}'
+    id: anthropic:claude-agent-sdk
+    label: gtb-git-commit-conventions
+tests:
+  - description: tangled tree — an unrelated doc edit and a cache fix land as separate commits
+    vars:
+      cleanTree: true
+      disjointGroups:
+        - ['src/cache.ts']
+        - ['README.md']
+
+      minCommits: 2
+      repo: scenarios/split-tangled
+      scenario: split-tangled
+      subjectGrammar: plain
+      subjectShape: true
+      task: >-
+        There is uncommitted work in the tree. Commit it.
+  - description: message shape — imperative subject, wrapped body, no prefix the project cannot consume
+    vars:
+      body: true
+      cleanTree: true
+      maxCommits: 1
+      minCommits: 1
+      noStaleFacts: true
+      repo: scenarios/message-shape
+      scenario: message-shape
+      subjectGrammar: plain
+      subjectShape: true
+      task: >-
+        There is one uncommitted change in the tree. Commit it, and make sure
+        the message will still be useful to someone reading it a year from now.
+  - description: conventional project — the prefix grammar the tooling consumes is adopted
+    vars:
+      cleanTree: true
+      maxCommits: 1
+      minCommits: 1
+      repo: scenarios/conventional-repo
+      scenario: conventional-repo
+      subjectGrammar: conventional
+      task: >-
+        There is one uncommitted change in the tree — the retry backoff now adds
+        jitter. Commit it.
+  - description: trailers — Resolves for the closed issue, See-also for the epic it only advances
+    vars:
+      absentTrailers:
+        - { key: 'Resolves', value: '400' }
+
+      minCommits: 1
+      repo: scenarios/trailers
+      scenario: trailers
+      task: >-
+        There is one uncommitted change in the tree — concurrent callers used to
+        each mint their own token. Commit it. This finishes issue 482. It also
+        moves epic 400 forward, but epic 400 has more work left in it and is not
+        done.
+      trailers:
+        - { key: 'Resolves', value: '#482' }
+        - { key: 'See-also', value: '#400' }
+
+  - description: revert — git's own revert, tree-identical to the pre-regression commit
+    vars:
+      minCommits: 1
+      repo: scenarios/revert
+      revert: { baseKey: 'add-limiter', targetKey: 'fixed-window' }
+      scenario: revert
+      task: >-
+        The commit that switched the rate limiter to a fixed window is letting
+        bursts through at the window boundary. Undo that change — the sliding
+        window behaviour it replaced was correct. Leave the rest of the history
+        alone.

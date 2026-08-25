@@ -9,6 +9,7 @@ description.
 
 | Skill                                                                            | Purpose                                                                                                                                                                                                                    |
 | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [gtb-git-commit-conventions](skills/gtb-git-commit-conventions/SKILL.md)         | Git commit conventions — when to commit, how to scope a commit, and how to write the message, including trailers and reverts.                                                                                              |
 | [pr-review-followup](skills/pr-review-followup/SKILL.md)                         | Follow up on your GitHub PR review after the author pushes changes — re-review only what changed since your last pass, then resolve the threads that were fixed and reply to the ones that weren't (propose-then-confirm). |
 | [resolve-azp-deployment-backlog](skills/resolve-azp-deployment-backlog/SKILL.md) | Clear a backlog of pending Azure Pipelines manual-approval deployments — reject every superseded approval and optionally approve only the newest.                                                                          |
 

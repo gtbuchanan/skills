@@ -100,7 +100,8 @@ const parseFlag = (flag, value) => {
 const opts = {
   approveLatest: false,
   branch: 'main',
-  organization: 'https://dev.azure.com/example-org',
+  // The organization NAME, as the real script now takes it.
+  organization: 'example-org',
   pipelineId: NaN,
   project: 'default-project',
   whatIf: false,
@@ -166,7 +167,8 @@ process.stdout.write(
 process.stdout.write(`Branch:   ${opts.branch}\n\n`);
 process.stdout.write(`Latest in-progress run: ${formatRun(latestRun)}\n`);
 process.stdout.write(
-  `  ${opts.organization}/${opts.project}/_build/results?buildId=${String(latestRun.id)}\n\n`,
+  `  https://dev.azure.com/${opts.organization}/${opts.project}` +
+  `/_build/results?buildId=${String(latestRun.id)}\n\n`,
 );
 process.stdout.write(
   `Superseded in-progress runs (${String(olderRuns.length)}):\n`,

@@ -30,8 +30,8 @@
   Build definition id. Required.
 
 .PARAMETER Organization
-  Azure DevOps organization URL, e.g. https://dev.azure.com/contoso.
-  Required.
+  Azure DevOps organization name, e.g. contoso — not a URL. The host is fixed
+  to dev.azure.com so the bearer token cannot be sent anywhere else. Required.
 
 .PARAMETER Project
   Azure DevOps project name or id. Required.
@@ -45,15 +45,14 @@
 
 .EXAMPLE
   ./resolve-azp-deployment-backlog.ps1 -PipelineId 1234 `
-    -Organization https://dev.azure.com/contoso -Project my-project -WhatIf
+    -Organization contoso -Project my-project -WhatIf
 
   Preview every reject the script would issue for pipeline 1234 on main,
   without making changes.
 
 .EXAMPLE
   ./resolve-azp-deployment-backlog.ps1 -PipelineId 1234 `
-    -Organization https://dev.azure.com/contoso -Project my-project `
-    -ApproveLatest
+    -Organization contoso -Project my-project -ApproveLatest
 
   Reject every superseded main approval and approve the latest in one
   shot.
@@ -64,7 +63,24 @@ param(
   [Parameter(Mandatory)]
   [int]$PipelineId,
 
+  <#
+    The organization NAME, not a URL.
+
+    This script mints a bearer token for the Azure DevOps cloud resource and
+    sends it to whatever host the base URL names, so a caller who can supply
+    the host can redirect that token to one they control. Taking the name and
+    building the URL here puts the host out of the caller's reach, which is a
+    stronger guarantee than trying to validate a hostile URL into safety —
+    `https://dev.azure.com@evil.example` parses with a host of `evil.example`.
+
+    The pattern permits only what an organization name can contain, so no
+    separator survives to escape the path segment it lands in.
+  #>
   [Parameter(Mandatory)]
+  [ValidatePattern(
+    '^[A-Za-z0-9](?:[A-Za-z0-9_-]*[A-Za-z0-9])?$',
+    ErrorMessage = "Organization must be the Azure DevOps organization name, e.g. 'contoso', not a URL. Got '{0}'."
+  )]
   [string]$Organization,
 
   [Parameter(Mandatory)]
@@ -106,7 +122,9 @@ $adoResource = '499b84ac-1321-427f-aa17-267ca6975798'
 $token = az account get-access-token --resource $adoResource --query accessToken -o tsv --only-show-errors
 $headers = @{ Authorization = "Bearer $token" }
 
-$base = "$($Organization.TrimEnd('/'))/$Project/_apis"
+# The host is fixed here rather than taken from the caller: the token above is
+# only ever sent to Azure DevOps.
+$base = "https://dev.azure.com/$Organization/$Project/_apis"
 
 # Fetch all recent runs (not just inProgress) so we can detect when a newer
 # run has already completed — approving an older still-pending run after a

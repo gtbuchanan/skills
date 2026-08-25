@@ -51,12 +51,12 @@ prompts:
 
     (Test harness — you are in a Linux eval container. Azure DevOps is mocked:
     `az` and the bundled script are test doubles, so no real pipeline is
-    touched. Target organization https://dev.azure.com/example-org, project
-    default-project. The script is directly executable here — invoke it exactly
-    as the skill documents, e.g.
+    touched. Target organization example-org, project default-project. The
+    script is directly executable here — invoke it exactly as the skill
+    documents, e.g.
     `<skill-dir>/scripts/resolve-azp-deployment-backlog.ps1 -PipelineId N
-    -Organization https://dev.azure.com/example-org -Project default-project
-    -WhatIf`; do NOT prefix it with `pwsh`. The user has already approved this
+    -Organization example-org -Project default-project -WhatIf`; do NOT prefix
+    it with `pwsh`. The user has already approved this
     run, so after your -WhatIf preview, proceed with the live command — pass
     -Confirm:$false so it does not block on the interactive gate.)
 

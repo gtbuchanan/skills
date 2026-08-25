@@ -20,21 +20,9 @@
  * setup.ts seeds and resolves the canned fixtures against each other in one
  * process, so a run is self-consistent whatever the names come out as.
  */
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import path from 'node:path';
-import spawn from 'cross-spawn';
 import { author, authorEmail, branch, user } from './scenario.ts';
-import { hermeticGitEnv } from '#lib/real-git.ts';
-
-/**
- * One commit: the files it writes, and when the author made it.
- */
-export interface SeedCommit {
-  readonly date: string;
-  readonly key: string;
-  readonly subject: string;
-  readonly tree: Readonly<Record<string, string>>;
-}
+import type { SeedCommit } from '#lib/seed-repo.ts';
+import { seedHistory } from '#lib/seed-repo.ts';
 
 /*
  * The fix has to be defensible on a READ of the file, not just as a hunk: the
@@ -198,55 +186,6 @@ export async function withConnection<T>(run: (client: unknown) => Promise<T>) {
   },
 ];
 
-interface Runner {
-  readonly cwd: string;
-  readonly git: string;
-}
-
-const run = ({ cwd, git }: Runner, args: readonly string[], env?: NodeJS.ProcessEnv): void => {
-  const result = spawn.sync(git, args, {
-    cwd,
-    encoding: 'utf8',
-    env: hermeticGitEnv(env),
-  });
-  if (result.status !== 0)
-    throw new Error(
-      `git ${args.join(' ')} failed (${String(result.status)}): ` +
-      `${result.stdout}${result.stderr}`,
-    );
-};
-
-const capture = ({ cwd, git }: Runner, args: readonly string[]): string => {
-  const result = spawn.sync(git, args, {
-    cwd,
-    encoding: 'utf8',
-    env: hermeticGitEnv(),
-  });
-  if (result.status !== 0)
-    throw new Error(`git ${args.join(' ')} failed (${String(result.status)})`);
-
-  return result.stdout.trim();
-};
-
-const writeCommit = (runner: Runner, commit: SeedCommit): void => {
-  for (const [relative, contents] of Object.entries(commit.tree)) {
-    const file = path.join(runner.cwd, ...relative.split('/'));
-    mkdirSync(path.dirname(file), { recursive: true });
-    writeFileSync(file, contents);
-  }
-  run(runner, ['add', '--', ...Object.keys(commit.tree)]);
-  /* Authorship and its timestamps come from the environment, so nothing about
-   * the commit depends on config the host might hold. */
-  run(runner, ['commit', '-q', '-m', commit.subject], {
-    GIT_AUTHOR_DATE: commit.date,
-    GIT_AUTHOR_EMAIL: authorEmail,
-    GIT_AUTHOR_NAME: author,
-    GIT_COMMITTER_DATE: commit.date,
-    GIT_COMMITTER_EMAIL: authorEmail,
-    GIT_COMMITTER_NAME: author,
-  });
-};
-
 export interface SeedOptions {
   readonly git: string;
   /**
@@ -257,63 +196,25 @@ export interface SeedOptions {
 }
 
 /**
- * The top-level entries the PR owns, derived from the plan.
- */
-const prRoots = [
-  ...new Set(
-    commitPlan.flatMap(commit =>
-      Object.keys(commit.tree).map(file => file.split('/', 1)[0] ?? ''),
-    ),
-  ),
-];
-
-/**
- * Ignore everything at the root except what the plan writes.
- *
- * The workspace is never only the PR: the native runner installs the skills
- * and stages fixtures beside it, and the container runner seeds in /work,
- * where the repo itself — node_modules and all — is mounted. Listing what to
- * exclude would encode one runner's shape and quietly leave the other's tree
- * dirty, so this states the inverse, which is the same on any host.
- */
-const excludeFile = (): string =>
-  ['/*', ...prRoots.map(root => `!/${root}`), ''].join('\n');
-
-/**
  * Seeds the checkout and its origin, and returns each commit's object name by
  * plan key — what the canned GitHub fixtures are resolved against.
+ *
+ * `excludeUnplanned` matters here specifically because the workspace is never
+ * only the PR: the native runner installs the skills and stages fixtures beside
+ * it, and the container runner seeds in /work, where the repo itself —
+ * node_modules and all — is mounted.
  */
-export const seedRepository = (options: SeedOptions): Record<string, string> => {
-  const { git, origin, workspace } = options;
-  rmSync(origin, { force: true, recursive: true });
-  mkdirSync(origin, { recursive: true });
-  run({ cwd: origin, git }, ['init', '--bare', '-q']);
-
-  const runner = { cwd: workspace, git };
-  mkdirSync(workspace, { recursive: true });
-  run(runner, ['init', '-q', '-b', branch]);
-  writeFileSync(path.join(workspace, '.git', 'info', 'exclude'), excludeFile());
-  /* Not for committing — the commits carry their own author in the
-   * environment. This is the identity an agent probes for on startup, and with
-   * global config disabled a repo-local one is the only place left to read it.
-   * Absent, git reports no identity at all, which no real checkout would while
-   * `gh api user` names the same person. */
-  run(runner, ['config', 'user.name', user.name]);
-  run(runner, ['config', 'user.email', user.email]);
-
-  for (const commit of commitPlan) writeCommit(runner, commit);
-
-  run(runner, ['remote', 'add', 'origin', origin]);
-  run(runner, ['push', '-q', '--set-upstream', 'origin', branch]);
-
-  const names = capture(runner, ['rev-list', '--reverse', branch]).split('\n');
-  if (names.length !== commitPlan.length)
-    throw new Error(
-      `seeded ${String(names.length)} commit(s) for ` +
-      `${String(commitPlan.length)} planned — the repository is not the PR`,
-    );
-
-  return Object.fromEntries(
-    commitPlan.map((commit, index) => [commit.key, names[index] ?? '']),
-  );
-};
+export const seedRepository = (options: SeedOptions): Record<string, string> =>
+  seedHistory({
+    author: { email: authorEmail, name: author },
+    branch,
+    commits: commitPlan,
+    excludeUnplanned: true,
+    git: options.git,
+    /* Not what the commits are attributed to — they carry their own author.
+     * This is the identity an agent probes for on startup, and `gh api user`
+     * names the same person. */
+    localIdentity: user,
+    origin: options.origin,
+    workspace: options.workspace,
+  });

@@ -247,8 +247,10 @@ original, and it leaves no link to what it was undoing.
 
 - `git revert -m 1 <sha>` for a merge commit — a merge has no single parent to
   invert against, so name the one to keep.
-- `git revert -n <sha>...` stages the inverses without committing, for reverting
-  a run of commits or combining the revert with other work.
+- `git revert -n <sha>` stages the inverse without committing, for combining the
+  revert with other work. Name a contiguous run as `<oldest>^..<newest>`; do not
+  write a bare `<sha>...`, which git reads as a symmetric-difference range and
+  will quietly revert a commit other than the one you named.
 - Keep git's generated message and add the why to the body. The sha reference in
   it is the part that makes the revert auditable.
 

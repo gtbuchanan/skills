@@ -93,9 +93,20 @@ export const short = (sha: string): string => sha.slice(0, shaAbbrev);
  */
 export const universalProblems = (commit: NewCommit): string[] => {
   const lines = commit.message.split('\n');
-  const overlong = lines
-    .slice(linesBeforeBody)
-    .filter(line => line.length > bodyLimit && !trailerLine.test(line));
+  /*
+   * The wrap exemption belongs to the FINAL block only. Exempting every
+   * trailer-shaped line would let a long `Note: …` mid-body escape the check,
+   * and such a line is ordinary prose — nothing parses it as a trailer, so
+   * nothing justifies letting it run long.
+   */
+  const lastBlank = lines.lastIndexOf('');
+  const finalBlock = lastBlank === -1 ? lines.length : lastBlank + 1;
+  const overlong = lines.filter(
+    (line, index) =>
+      index >= linesBeforeBody &&
+      line.length > bodyLimit &&
+      !(index >= finalBlock && trailerLine.test(line)),
+  );
 
   return [
     ...(commit.subject.length > subjectLimit

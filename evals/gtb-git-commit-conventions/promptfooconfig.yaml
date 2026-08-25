@@ -122,6 +122,10 @@ tests:
 
   - description: revert — git's own revert, tree-identical to the pre-regression commit
     vars:
+      # "Leave the rest of the history alone" is part of the task, so exactly
+      # one new commit and nothing left in the tree.
+      cleanTree: true
+      maxCommits: 1
       minCommits: 1
       repo: scenarios/revert
       revert: { baseKey: 'add-limiter', targetKey: 'fixed-window' }

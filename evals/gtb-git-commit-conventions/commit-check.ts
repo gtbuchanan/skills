@@ -30,7 +30,7 @@ import {
   staleFactProblems,
   universalProblems,
 } from './message-rules.ts';
-import { scenarioPath } from './scenarios.ts';
+import { scenarioPath, scenarios } from './scenarios.ts';
 import { baselinesPath } from './setup.ts';
 import type { AssertionResult } from '#lib/assert.ts';
 import { fromProblems } from '#lib/assert.ts';
@@ -133,12 +133,21 @@ const parsedTrailers = (runner: GitRunner, message: string): string[] => {
   return parsed === '' ? [] : parsed.split('\n');
 };
 
+/**
+ * Key compared case-insensitively, as git treats it, but the value exactly: a
+ * substring match would let `Resolves: #4820` satisfy a required `#482`, which
+ * is a different issue entirely.
+ */
 const hasTrailer = (lines: readonly string[], want: Trailer): boolean =>
-  lines.some(
-    line =>
-      line.toLowerCase().startsWith(`${want.key.toLowerCase()}:`) &&
-      line.includes(want.value),
-  );
+  lines.some((line) => {
+    const at = line.indexOf(':');
+    if (at === -1) return false;
+
+    return (
+      line.slice(0, at).toLowerCase() === want.key.toLowerCase() &&
+      line.slice(at + 1).trim() === want.value
+    );
+  });
 
 const trailerProblems = (
   runner: GitRunner,
@@ -210,6 +219,30 @@ const revertProblems = (
   ];
 };
 
+/**
+ * The pending work has to actually reach the history.
+ *
+ * Without this every other check is satisfiable by a degenerate answer: restore
+ * the working tree to the baseline and make the required number of
+ * `--allow-empty` commits. The count, subject, grouping and clean-tree checks
+ * all pass, because an empty commit touches no files and a reverted tree is
+ * clean. Comparing HEAD's content against what the scenario seeded is what ties
+ * the assertions to the work they are supposed to be about.
+ */
+const pendingProblems = (runner: GitRunner, scenario: string): string[] => {
+  const seeded = scenarios.find(entry => entry.key === scenario);
+  if (seeded === undefined) return [];
+
+  return Object.entries(seeded.pending).flatMap(([relative, contents]) => {
+    const shown = probeGit(runner, ['show', `HEAD:${relative}`]);
+    if (shown.status !== 0) return [`${relative} never reached the history`];
+
+    return shown.stdout === contents
+      ? []
+      : [`${relative} at HEAD does not match the work the scenario staged`];
+  });
+};
+
 const countProblems = (commits: readonly NewCommit[], vars: Vars): string[] => {
   const count = String(commits.length);
 
@@ -253,6 +286,7 @@ const scenarioProblems = (
     ...(!isBodied && vars.body
       ? ['no commit carries a body explaining the change']
       : []),
+    ...pendingProblems(runner, vars.scenario),
     ...disjointProblems(commits, vars.disjointGroups),
     ...(isWantingTrailers ? trailerProblems(runner, commits, vars) : []),
     ...(vars.revert === undefined

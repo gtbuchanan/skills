@@ -136,6 +136,29 @@ export const captureGit = (
 };
 
 /**
+ * Resolves a tree key against the repository it belongs to, refusing one that
+ * lands outside it.
+ *
+ * Keys come from a suite's own plan rather than from anything untrusted, so
+ * this is not a sandbox — it is a guard against an authoring slip. Git does
+ * object to an outside path, but not until `git add`, by which point the file
+ * is already written: a run would silently overwrite something beside the tree
+ * the runner and the agent both work in. Refusing before the write puts the
+ * error where the mistake was made.
+ */
+const resolveInTree = (cwd: string, relative: string): string => {
+  const root = path.resolve(cwd);
+  const file = path.resolve(root, ...relative.split('/'));
+  if (!file.startsWith(root + path.sep))
+    throw new Error(
+      `commit tree key "${relative}" resolves outside the workspace ` +
+      `(${file}) — a plan may only write inside the repository it seeds.`,
+    );
+
+  return file;
+};
+
+/**
  * Writes one commit's tree and records it.
  *
  * Authorship and both timestamps come from the environment rather than config,
@@ -146,8 +169,13 @@ export const writeCommit = (
   commit: SeedCommit,
   author: SeedIdentity,
 ): void => {
-  for (const [relative, contents] of Object.entries(commit.tree)) {
-    const file = path.join(runner.cwd, ...relative.split('/'));
+  /* Every key is resolved before anything is written, so a plan with one bad
+   * key leaves no half-written tree behind. */
+  const planned = Object.entries(commit.tree).map(([relative, contents]) => ({
+    contents,
+    file: resolveInTree(runner.cwd, relative),
+  }));
+  for (const { contents, file } of planned) {
     mkdirSync(path.dirname(file), { recursive: true });
     writeFileSync(file, contents);
   }

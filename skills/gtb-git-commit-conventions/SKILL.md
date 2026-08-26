@@ -1,10 +1,14 @@
 ---
 name: gtb-git-commit-conventions
 description: >-
-  Git commit conventions: when to commit, how to scope commits, and how to write
-  the message. Load at the start of any work in a Git repository — commit
-  boundaries get decided while the work happens, not at the end — and on any
-  request to commit, amend, reword, split, or squash.
+  Git commit conventions — how to scope a commit, when to make one, and how to
+  write the message, plus trailers, fixups, and reverts. Use whenever work in a
+  Git repository is going to produce commits: implementing a feature, fixing a
+  bug, refactoring, acting on review feedback, or untangling changes already
+  piled up in the working tree. Also use for any explicit request to commit,
+  write or reword a commit message, amend, split, squash, fixup, or revert.
+  Autonomous selection alone is unreliable for this skill — see the README for
+  the accompanying instruction it needs.
 ---
 
 # Git commit guidelines

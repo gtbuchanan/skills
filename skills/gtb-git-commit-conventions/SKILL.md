@@ -7,8 +7,6 @@ description: >-
   bug, refactoring, acting on review feedback, or untangling changes already
   piled up in the working tree. Also use for any explicit request to commit,
   write or reword a commit message, amend, split, squash, fixup, or revert.
-  Autonomous selection alone is unreliable for this skill — see the README for
-  the accompanying instruction it needs.
 ---
 
 # Git commit guidelines
@@ -274,3 +272,25 @@ It is a conventional indicator that the caller is a non-interactive agent. A
 signing setup that wraps GPG can read it and skip the TTY-loopback pinentry an
 agent's shell has no way to answer, so a cache miss raises a prompt a human can
 approve instead of hanging the commit. Inert where nothing reads it.
+
+## Installing these Git commit conventions
+
+This skill needs a line in your always-loaded agent instructions (`AGENTS.md`,
+`CLAUDE.md`, or the equivalent) naming it:
+
+```text
+When asked to plan or make changes in a Git repo, load the
+gtb-git-commit-conventions skill before your first edit. It governs how the
+work gets split into commits, and that is decided while you work — consulting
+it once the change is written is too late.
+```
+
+Description-based selection will not stand in for that. It reaches requests
+whose subject is the history itself — squash these, write a message, sort out
+this branch — but not "fix the retry logic" or "implement the caching layer",
+which carry no cue resembling commit conventions and which an agent can perform
+without consulting anything. Those are the cases where commit boundaries are
+actually being decided.
+
+If you are reading this because the skill loaded and no such line exists, say
+so: it will keep failing to load on exactly the work it is most needed for.

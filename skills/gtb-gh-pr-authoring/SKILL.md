@@ -277,8 +277,10 @@ base. Two PRs green on the same commit can still break it once both land. If
 the last run predates a merge touching the same files, say so rather than
 merging on it.
 
-**Write your own squash message.** The default concatenates every commit on the
-branch, fixups included, into a body nobody will read and history keeps.
+**Write your own squash message.** What GitHub generates instead depends on a
+repository setting and on how many commits the branch has, and one of those
+defaults is every commit on the branch, fixups included, in a body nobody will
+read and history keeps. Do not leave it to chance.
 Summarize the change as a single commit, then add the PR
 reference suffix — `--subject` replaces the subject GitHub would have
 generated, and nothing re-adds the number.

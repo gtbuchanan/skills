@@ -122,15 +122,24 @@ const checkStdin = (
         : [`${describe(command)} was handed no body on stdin`];
     }
 
-    return includes
-      .filter(needle => hits.every(hit => !hit.stdin.includes(needle)))
-      .map(
-        needle =>
-          `body handed to ${describe(command)} is missing "${needle}"` +
-          (hits.every(hit => hit.stdin === '')
-            ? ' (nothing was piped to it at all)'
-            : ''),
-      );
+    /* One body has to carry all of them. Checking each needle against any hit
+       would let two separate calls satisfy a requirement neither one meets —
+       a squash message with the trailers and a PR body with the summary would
+       pass for a merge body that has only one of them. */
+    if (hits.some(hit => includes.every(needle => hit.stdin.includes(needle))))
+      return [];
+
+    const missing = includes.filter(
+      needle => hits.every(hit => !hit.stdin.includes(needle)),
+    );
+    return [
+      `no single body handed to ${describe(command)} carries all of ` +
+      describe(includes) +
+      (missing.length > 0 ? ` (never seen at all: ${describe(missing)})` : '') +
+      (hits.every(hit => hit.stdin === '')
+        ? ' — nothing was piped to it at all'
+        : ''),
+    ];
   });
 
 /**

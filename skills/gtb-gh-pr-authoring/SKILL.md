@@ -185,9 +185,10 @@ pick the result up when it lands.
 gh pr checks --watch
 ```
 
-Exit 0 means every check passed, 1 means at least one failed. Prefer the plain
-watch over `--fail-fast`: learning about one failure per push costs another
-full matrix each time.
+Exit 0 means every check passed and 1 means at least one failed; 8 means they
+are still pending, which a completed `--watch` should not give you. Prefer the
+plain watch over `--fail-fast`: learning about one failure per push costs
+another full matrix each time.
 
 Immediately after a push, before any workflow has registered, `gh pr checks`
 reports that the branch has no checks rather than waiting for some to appear.

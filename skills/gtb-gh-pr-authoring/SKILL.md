@@ -211,11 +211,13 @@ specifics across two of them.
 
 ```sh
 gh pr view <number> --json reviews,comments
-gh api repos/{owner}/{repo}/pulls/<number>/comments
+gh api --paginate repos/{owner}/{repo}/pulls/<number>/comments
 ```
 
 `--json comments` never includes the inline comments, and its ids belong to a
-different space — they 404 against the review-comment endpoint.
+different space — they 404 against the review-comment endpoint. Ask for every
+page of them: without `--paginate` a busy PR hands back the first page and the
+rest of the findings simply are not there.
 
 `gh` fills in `{owner}` and `{repo}` from the current repository, but some
 shells read braces as their own. PowerShell is one, and eats them unless the

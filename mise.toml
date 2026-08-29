@@ -34,7 +34,7 @@ includes = ["mise.tasks.toml"]
 [tools]
 actionlint = "1.7.12"
 hk = "1.56.0"
-node = "24.19.0"
+node = "24.20.0"
 # renovate transitively pulls `@yarnpkg/libzip`, whose latest is a manual
 # maintainer publish lacking the provenance its CI releases had — aube's
 # no-downgrade policy fails the install. Verified benign on npmjs.org (same

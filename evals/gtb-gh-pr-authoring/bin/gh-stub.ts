@@ -38,8 +38,17 @@
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { type ReviewCommentEntry, repoSlug, viewer } from '../scenarios.ts';
+import * as v from 'valibot';
+import {
+  type DependentPr,
+  type PullRequest,
+  type ReviewCommentEntry,
+  baseBranch,
+  repoSlug,
+  viewer,
+} from '../scenarios.ts';
 import { locateScenario } from '../world.ts';
+import { parseJson } from '#lib/calls.ts';
 import { appendJsonl, argv, joined, writeLine } from '#lib/stub.ts';
 
 /**
@@ -73,11 +82,64 @@ const located = locateScenario(process.cwd());
 const scenario = located.scenario;
 
 /**
- * An asynchronous merge finishes in a later process than the one that started
- * it, so the fact has to outlive both. The checkout is where they can agree.
+ * What earlier calls did, so later ones can answer consistently.
+ *
+ * Each invocation is its own process, so anything a call changes — a PR opened,
+ * promoted or merged — has to outlive it or the next `pr view` contradicts the
+ * one before. The checkout is where they can agree. Without this the double
+ * answers impossibly: a PR it just reported creating cannot be viewed, one it
+ * marked ready is still a draft, and one it merged is still open.
  */
-const mergedMarker = path.join(located.dir, '.eval-merged');
-const isMerged = (): boolean => existsSync(mergedMarker);
+const statePath = path.join(located.dir, '.eval-state.json');
+
+interface OpenedPr {
+  readonly baseRefName: string;
+  readonly body: string;
+  readonly headRefName: string;
+  readonly title: string;
+}
+
+interface State {
+  readonly merged: number[];
+  readonly opened: Record<string, OpenedPr>;
+  readonly ready: number[];
+}
+
+const emptyState: State = { merged: [], opened: {}, ready: [] };
+
+const OpenedPrSchema = v.object({
+  baseRefName: v.string(),
+  body: v.string(),
+  headRefName: v.string(),
+  title: v.string(),
+});
+
+const NumberListSchema = v.array(v.number());
+const OpenedMapSchema = v.record(v.string(), OpenedPrSchema);
+
+const StateSchema = v.object({
+  merged: v.optional(NumberListSchema, []),
+  opened: v.optional(OpenedMapSchema, {}),
+  ready: v.optional(NumberListSchema, []),
+});
+
+const readState = (): State => {
+  if (!existsSync(statePath)) return emptyState;
+
+  /*
+  A half-written or hand-edited file is not worth failing a call over.
+  */
+  const parsed = v.safeParse(StateSchema, parseJson(readFileSync(statePath, 'utf8')));
+  return parsed.success ? parsed.output : emptyState;
+};
+
+const writeState = (next: State): void => {
+  writeFileSync(statePath, `${JSON.stringify(next)}\n`);
+};
+
+const state = readState();
+
+const isMerged = (number: number): boolean => state.merged.includes(number);
 
 /**
  * Stops the call, naming what was not canned — see the header.
@@ -157,36 +219,57 @@ const readiness = (reviews: readonly { readonly state: string }[]): Record<strin
  * PR being merged — its own number and head, and a base pointing at the branch
  * that is about to disappear.
  */
+const ownRecord = (own: PullRequest): Record<string, unknown> => ({
+  ...own,
+  ...readiness(scenario.reviews),
+  comments: scenario.comments,
+  isDraft: own.isDraft && !state.ready.includes(own.number),
+  reviews: scenario.reviews,
+  state: isMerged(own.number) ? 'MERGED' : 'OPEN',
+  url: prUrl(own.number),
+});
+
+const openedRecord = (
+  number: number,
+  opened: OpenedPr,
+): Record<string, unknown> => ({
+  ...opened,
+  ...readiness([]),
+  comments: [],
+  isDraft: !state.ready.includes(number),
+  number,
+  reviews: [],
+  state: isMerged(number) ? 'MERGED' : 'OPEN',
+  url: prUrl(number),
+});
+
+const dependentRecord = (dependent: DependentPr): Record<string, unknown> => ({
+  ...readiness([]),
+  baseRefName: scenario.branch,
+  body: '',
+  comments: [],
+  headRefName: dependent.headRefName,
+  isDraft: false,
+  number: dependent.number,
+  reviews: [],
+  state: isMerged(dependent.number) ? 'MERGED' : 'OPEN',
+  title: dependent.title,
+  url: prUrl(dependent.number),
+});
+
 const prRecordFor = (number: number | undefined): Record<string, unknown> => {
   const own = scenario.pr;
-  if (own !== undefined && (number === undefined || number === own.number)) {
-    return {
-      ...own,
-      ...readiness(scenario.reviews),
-      comments: scenario.comments,
-      reviews: scenario.reviews,
-      state: isMerged() ? 'MERGED' : 'OPEN',
-      url: prUrl(own.number),
-    };
-  }
+  if (own !== undefined && (number === undefined || number === own.number))
+    return ownRecord(own);
+  if (number === undefined) return refuse('no pull request named');
+
+  const opened = state.opened[String(number)];
+  if (opened !== undefined) return openedRecord(number, opened);
 
   const dependent = scenario.dependents.find(other => other.number === number);
-  if (dependent === undefined)
-    return refuse(`no pull request ${String(number ?? 0)}`);
-
-  return {
-    ...readiness([]),
-    baseRefName: scenario.branch,
-    body: '',
-    comments: [],
-    headRefName: dependent.headRefName,
-    isDraft: false,
-    number: dependent.number,
-    reviews: [],
-    state: 'OPEN',
-    title: dependent.title,
-    url: prUrl(dependent.number),
-  };
+  return dependent === undefined
+    ? refuse(`no pull request ${String(number)}`)
+    : dependentRecord(dependent);
 };
 
 /**
@@ -198,6 +281,7 @@ const prRecordFor = (number: number | undefined): Record<string, unknown> => {
 const allRecords = (): Record<string, unknown>[] => [
   ...(scenario.pr === undefined ? [] : [prRecordFor(scenario.pr.number)]),
   ...scenario.dependents.map(dependent => prRecordFor(dependent.number)),
+  ...Object.keys(state.opened).map(number => prRecordFor(Number(number))),
 ];
 
 /**
@@ -206,9 +290,14 @@ const allRecords = (): Record<string, unknown>[] => [
 const listRecords = (): Record<string, unknown>[] => {
   const flag = argv.indexOf('--base');
   const base = flag === -1 ? undefined : argv[flag + 1];
+  /* `pr list` shows open PRs unless told otherwise, so a merged one has no
+     business appearing in the answer a dependent check is read from. */
+  const wanted = argv.includes('--state') ? argv[argv.indexOf('--state') + 1] : 'open';
 
   return allRecords().filter(
-    record => base === undefined || record['baseRefName'] === base,
+    record =>
+      (base === undefined || record['baseRefName'] === base) &&
+      (wanted === 'all' || record['state'] === wanted?.toUpperCase()),
   );
 };
 
@@ -261,17 +350,37 @@ if (joined.includes('api user')) {
 } else if (/\/pulls\/\d+\/comments/v.test(joined)) {
   writeLine(JSON.stringify(scenario.reviewComments.map(toWireComment)));
 } else if (joined.includes('pr create')) {
+  const flag = argv.indexOf('--title');
+  const base = argv.indexOf('--base');
+  writeState({
+    ...state,
+    opened: {
+      ...state.opened,
+      [String(createdPrNumber)]: {
+        baseRefName: base === -1 ? baseBranch : argv[base + 1] ?? baseBranch,
+        body: stdin,
+        headRefName: scenario.branch,
+        title: flag === -1 ? '' : argv[flag + 1] ?? '',
+      },
+    },
+    ready: argv.includes('--draft')
+      ? state.ready
+      : [...state.ready, createdPrNumber],
+  });
   writeLine(prUrl(createdPrNumber));
 } else if (joined.includes('pr ready')) {
-  writeLine(
-    `✓ Pull request ${repoSlug}#${String(namedNumber() ?? 0)} is marked as ready`,
-  );
+  const number = namedNumber() ?? scenario.pr?.number ?? createdPrNumber;
+  writeState({ ...state, ready: [...state.ready, number] });
+  writeLine(`✓ Pull request ${repoSlug}#${String(number)} is marked as ready`);
 } else if (joined.includes('pr edit')) {
   writeLine(prUrl(namedNumber() ?? 0));
 } else if (joined.includes('pr comment')) {
   writeLine(`${prUrl(namedNumber() ?? 0)}#issuecomment-1`);
 } else if (joined.includes('merge-async')) {
-  writeFileSync(mergedMarker, 'merged\n');
+  writeState({
+    ...state,
+    merged: [...state.merged, namedNumber() ?? scenario.pr?.number ?? 0],
+  });
   writeLine(JSON.stringify({ status: 'pending' }));
 } else if (joined.includes('pr merge')) {
   if (scenario.isStackMember === true) {
@@ -281,7 +390,11 @@ if (joined.includes('api user')) {
     );
     process.exit(1);
   }
-  writeLine(`✓ Merged pull request ${repoSlug}#${String(namedNumber() ?? 0)}`);
+  /* --auto only defers the merge when something is outstanding; nothing here
+     is, so it lands now and the record has to say so. */
+  const number = namedNumber() ?? scenario.pr?.number ?? createdPrNumber;
+  writeState({ ...state, merged: [...state.merged, number] });
+  writeLine(`✓ Merged pull request ${repoSlug}#${String(number)}`);
 } else {
   refuse('no canned response');
 }

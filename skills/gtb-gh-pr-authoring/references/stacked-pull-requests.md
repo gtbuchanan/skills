@@ -55,11 +55,12 @@ read and the merge cannot be the thing that merges. The endpoint takes no
 branch-deletion flag, so a branch that disappears anyway went to the
 repository's `deleteBranchOnMerge`.
 
-**A member above the one that merged is retargeted for you.** That is what the
-stack is for: GitHub moves it onto the new base and leaves it open. A plain
-stack — one that is only a base pointer, with no `gh stack` behind it — gets
-none of that, which is why `SKILL.md` has you retarget those by hand before
-deleting anything.
+**A member above the one that merged is moved for you.** GitHub retargets it
+onto the new base either way — that much is not what the stack buys you. What a
+real stack adds is the rebase: the member's commits are replayed onto the new
+base, so it arrives ready rather than carrying work the base already has. A
+plain stack — only a base pointer, with no `gh stack` behind it — gets the
+pointer moved and nothing else, so it still wants restacking by hand.
 
 **That move is a rebase, so the member's commits lose their signatures.** They
 are replayed as new objects the original signatures do not cover, and an author

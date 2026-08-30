@@ -138,12 +138,21 @@ tests:
       task: >-
         Review feedback has come in on pull request 23. Work through all of it,
         push what you change, and answer the reviewer.
-  - description: merging — the stacked PR retargeted first, then a squash carrying the reference and the branch's trailers
+  - description: merging — the branch never deleted out from under the dependent, and a squash carrying the reference and the branch's trailers
     vars:
       forbidCalls:
         - ['pr merge', '--rebase']
         - ['pr merge', '--auto']
         - ['pr merge', '--admin']
+
+      # The rule is an invariant, not a sequence: the branch ends up gone, and
+      # nothing is still pointing at it when that happens. Retargeting #9 and
+      # then merging with --delete-branch satisfies it; so does merging, letting
+      # GitHub move #9, and deleting afterwards. Only the unsafe order is
+      # forbidden — a --delete-branch merge before #9 has been retargeted.
+      forbidOrder:
+        - after: ['pr edit', '9', '--base']
+          before: ['pr merge', '--delete-branch']
 
       repo: scenarios/merge-stacked
       # `pr list` without the flag: listing every open PR and reading
@@ -151,16 +160,18 @@ tests:
       # that it looked before merging, not which spelling it used.
       requireCalls:
         - ['pr list']
-        - ['pr edit', '9', '--base']
         - ['pr merge', '--squash']
-        - ['pr merge', '--delete-branch']
         - ['pr merge', '(#7)']
+
+      # However it got there, the branch does not outlive the PR.
+      requireOneOf:
+        - ['pr merge', '--delete-branch']
+        - ['push', '--delete']
+        - ['push', ':add-rate-limiter']
 
       requireOrder:
         - after: ['pr merge']
           before: ['pr list']
-        - after: ['pr merge']
-          before: ['pr edit', '9', '--base']
 
       requireStdin:
         - command: ['pr merge']

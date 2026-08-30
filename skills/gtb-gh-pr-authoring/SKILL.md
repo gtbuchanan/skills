@@ -302,25 +302,38 @@ final paragraph:
 git log <base>..<head> --format='%(trailers:only,unfold)'
 ```
 
-**Delete the branch in the same command.** As a follow-up step it gets skipped
-— the merge output is misread, the second command never runs, and nothing
-complains.
+**The branch has to go, and nothing may still be pointing at it when it does.**
+Those are the two things that matter; the order that gets you there is a
+detail. Deleting a branch some other PR is still based on closes that PR rather
+than moving it, and leaving the branch behind means it outlives the PR it
+belonged to.
 
-**But check for dependents first.** Merging moves them for you — GitHub
-retargets a dependent onto the merged PR's base on its own — but
-`--delete-branch` does not wait for that to happen. The branch goes while the
-dependent is still pointing at it, and that PR is closed rather than moved.
-Retargeting one yourself is only worth doing ahead of the deletion; afterwards
-it is work GitHub already did.
+**Check for dependents before you merge**, because the answer decides which
+order to use:
 
 ```sh
 gh pr list --base <branch> --state open --json number,title,headRefName
-gh pr edit <dependent-number> --base <base-branch>
 ```
 
-Retarget first and the race is settled before the branch moves. A stacking tool
-and a hand-rolled stack are the same hazard here, because only the base pointer
-matters.
+**With none, delete in the same command.** `--delete-branch` on the merge is
+one step that cannot be forgotten, and a follow-up step is exactly what gets
+skipped when the merge output is misread.
+
+**With any, the deletion has to wait for them.** Merging retargets a dependent
+onto the merged PR's base on its own, but `--delete-branch` does not wait for
+that, so the branch goes while the PR still points at it. Either retarget them
+yourself first and then merge with `--delete-branch`, or merge without it, let
+GitHub move them, and delete the branch afterwards. What you cannot do is
+delete while something still points there — and having merged, do not retarget
+by hand out of habit, since that is work GitHub has already done.
+
+```sh
+gh pr edit <dependent-number> --base <base-branch>
+git push origin --delete <branch>
+```
+
+A stacking tool and a hand-rolled stack are the same hazard here, because only
+the base pointer matters.
 
 **If one has already been closed this way, reopen it rather than replacing
 it.** Reopening is refused outright while the base branch is missing, and

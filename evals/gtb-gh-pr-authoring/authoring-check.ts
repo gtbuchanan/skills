@@ -12,6 +12,10 @@
  *
  *   requireCalls   — [[...substrings]] all of which must appear in ONE command
  *   forbidCalls    — the same shape, for calls that must never be made
+ *   requireOneOf   — clauses of which at least one must appear, for a rule the
+ *                    skill states as an outcome that several commands reach
+ *   forbidOrder    — { before, after } that must NOT occur in that order, for
+ *                    the unsafe half of a rule whose safe orders are several
  *   requireOrder   — { before, after } pairs; before's first match must precede
  *                    after's, which is how "push the fixes, then reply" and
  *                    "retarget dependents, then merge" are checked
@@ -51,8 +55,10 @@ const StdinSchema = v.object({
 
 const VarsSchema = v.object({
   forbidCalls: v.optional(ClauseListSchema, []),
+  forbidOrder: v.optional(v.array(OrderSchema), []),
   minCommits: v.optional(v.number(), 0),
   requireCalls: v.optional(ClauseListSchema, []),
+  requireOneOf: v.optional(ClauseListSchema, []),
   requireOrder: v.optional(v.array(OrderSchema), []),
   requireStdin: v.optional(v.array(StdinSchema), []),
   scenario: v.string(),
@@ -90,6 +96,47 @@ const checkPresence = (
     .filter(clause => calls.some(call => isMatch(call, clause)))
     .map(clause => `called what it must not: ${describe(clause)}`),
 ];
+
+/**
+ * A rule satisfied more than one way: some listed clause has to appear.
+ *
+ * For an invariant the skill states as an outcome rather than a command — the
+ * branch ends up deleted, however it got there — where insisting on one
+ * spelling would fail a run that reached the same place by another route.
+ */
+const checkOneOf = (
+  calls: readonly Call[],
+  vars: v.InferOutput<typeof VarsSchema>,
+): string[] => {
+  if (vars.requireOneOf.length === 0) return [];
+  const isHit = vars.requireOneOf.some(clause =>
+    calls.some(call => isMatch(call, clause)),
+  );
+
+  return isHit
+    ? []
+    : [
+        'did none of: ' +
+        vars.requireOneOf.map(clause => describe(clause)).join(' / '),
+      ];
+};
+
+/**
+ * An ordering that must not happen — the unsafe half of a rule whose safe
+ * orders are several.
+ */
+const checkForbiddenOrder = (
+  calls: readonly Call[],
+  vars: v.InferOutput<typeof VarsSchema>,
+): string[] =>
+  vars.forbidOrder.flatMap(({ after, before }) => {
+    const beforeIndex = calls.findIndex(call => isMatch(call, before));
+    if (beforeIndex === -1) return [];
+    const afterIndex = calls.findIndex(call => isMatch(call, after));
+    return afterIndex === -1 || afterIndex > beforeIndex
+      ? [`${describe(before)} happened before ${describe(after)}`]
+      : [];
+  });
 
 const checkOrder = (
   calls: readonly Call[],
@@ -193,7 +240,9 @@ export default function assertAuthoringCalls(
 
   return fromProblems([
     ...checkPresence(calls, vars),
+    ...checkOneOf(calls, vars),
     ...checkOrder(calls, vars),
+    ...checkForbiddenOrder(calls, vars),
     ...checkStdin(calls, vars),
     ...checkCommits(vars),
   ]);

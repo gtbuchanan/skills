@@ -306,9 +306,12 @@ git log <base>..<head> --format='%(trailers:only,unfold)'
 — the merge output is misread, the second command never runs, and nothing
 complains.
 
-**But check for dependents first.** Deleting the branch closes any PR still
-based on it rather than moving it — nothing retargets a plain dependent on your
-behalf, and it is left pointing at a branch that no longer exists.
+**But check for dependents first.** Merging moves them for you — GitHub
+retargets a dependent onto the merged PR's base on its own — but
+`--delete-branch` does not wait for that to happen. The branch goes while the
+dependent is still pointing at it, and that PR is closed rather than moved.
+Retargeting one yourself is only worth doing ahead of the deletion; afterwards
+it is work GitHub already did.
 
 ```sh
 gh pr list --base <branch> --state open --json number,title,headRefName

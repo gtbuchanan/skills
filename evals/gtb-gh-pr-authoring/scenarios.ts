@@ -127,6 +127,11 @@ export interface Scenario {
    * The seeded history, oldest first. Pushed to the scenario's origin.
    */
   readonly commits: readonly SeedCommit[];
+  /**
+   * The checks have not finished. A scenario whose task says so has to set
+   * this, or `gh pr checks` reports success and contradicts its own premise.
+   */
+  readonly checksPending?: boolean | undefined;
   readonly deleteBranchOnMerge: boolean;
   readonly dependents: readonly DependentPr[];
   readonly extra?: ExtraCommit | undefined;
@@ -336,6 +341,7 @@ export const scenarios: readonly Scenario[] = [
   },
   {
     branch: 'bump-parser',
+    checksPending: true,
     comments: [],
     commits: [
       {

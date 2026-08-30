@@ -103,9 +103,14 @@ interface State {
   readonly merged: number[];
   readonly opened: Record<string, OpenedPr>;
   readonly ready: number[];
+  /**
+   * Bases changed by `pr edit --base`, so a retarget the double reported
+   * making is still there when the next `pr view` asks.
+   */
+  readonly retargeted: Record<string, string>;
 }
 
-const emptyState: State = { merged: [], opened: {}, ready: [] };
+const emptyState: State = { merged: [], opened: {}, ready: [], retargeted: {} };
 
 const OpenedPrSchema = v.object({
   baseRefName: v.string(),
@@ -117,10 +122,13 @@ const OpenedPrSchema = v.object({
 const NumberListSchema = v.array(v.number());
 const OpenedMapSchema = v.record(v.string(), OpenedPrSchema);
 
+const BaseMapSchema = v.record(v.string(), v.string());
+
 const StateSchema = v.object({
   merged: v.optional(NumberListSchema, []),
   opened: v.optional(OpenedMapSchema, {}),
   ready: v.optional(NumberListSchema, []),
+  retargeted: v.optional(BaseMapSchema, {}),
 });
 
 const readState = (): State => {
@@ -140,6 +148,9 @@ const writeState = (next: State): void => {
 const state = readState();
 
 const isMerged = (number: number): boolean => state.merged.includes(number);
+
+const baseOf = (number: number, fallback: string): string =>
+  state.retargeted[String(number)] ?? fallback;
 
 /**
  * Stops the call, naming what was not canned — see the header.
@@ -195,6 +206,11 @@ const namedNumber = (): number | undefined => {
  */
 const createdPrNumber = 101;
 
+/**
+ * gh's documented exit status for checks that have not finished.
+ */
+const checksPendingExit = 8;
+
 const prUrl = (number: number): string =>
   `https://github.com/${repoSlug}/pull/${String(number)}`;
 
@@ -204,13 +220,15 @@ const prUrl = (number: number): string =>
  * suite says is approved and green should answer that question when asked.
  */
 const readiness = (reviews: readonly { readonly state: string }[]): Record<string, unknown> => ({
+  autoMergeRequest: undefined,
   mergeable: 'MERGEABLE',
+  mergeStateStatus: scenario.checksPending === true ? 'BLOCKED' : 'CLEAN',
   reviewDecision: reviews.some(review => review.state === 'APPROVED')
     ? 'APPROVED'
     : 'REVIEW_REQUIRED',
-  statusCheckRollup: [
-    { conclusion: 'SUCCESS', name: 'build', status: 'COMPLETED' },
-  ],
+  statusCheckRollup: scenario.checksPending === true
+    ? [{ conclusion: undefined, name: 'build', status: 'IN_PROGRESS' }]
+    : [{ conclusion: 'SUCCESS', name: 'build', status: 'COMPLETED' }],
 });
 
 /**
@@ -222,6 +240,7 @@ const readiness = (reviews: readonly { readonly state: string }[]): Record<strin
 const ownRecord = (own: PullRequest): Record<string, unknown> => ({
   ...own,
   ...readiness(scenario.reviews),
+  baseRefName: baseOf(own.number, own.baseRefName),
   comments: scenario.comments,
   isDraft: own.isDraft && !state.ready.includes(own.number),
   reviews: scenario.reviews,
@@ -235,6 +254,7 @@ const openedRecord = (
 ): Record<string, unknown> => ({
   ...opened,
   ...readiness([]),
+  baseRefName: baseOf(number, opened.baseRefName),
   comments: [],
   isDraft: !state.ready.includes(number),
   number,
@@ -245,7 +265,7 @@ const openedRecord = (
 
 const dependentRecord = (dependent: DependentPr): Record<string, unknown> => ({
   ...readiness([]),
-  baseRefName: scenario.branch,
+  baseRefName: baseOf(dependent.number, scenario.branch),
   body: '',
   comments: [],
   headRefName: dependent.headRefName,
@@ -319,6 +339,18 @@ const templates = scenario.template === undefined
   : [{ body: scenario.template, filename: 'pull_request_template.md' }];
 
 /**
+ * Everything `repo view` can answer, as one record for `pick` to narrow.
+ */
+const repoRecord: Record<string, unknown> = {
+  deleteBranchOnMerge: scenario.deleteBranchOnMerge,
+  mergeCommitAllowed: true,
+  nameWithOwner: repoSlug,
+  pullRequestTemplates: templates,
+  rebaseMergeAllowed: true,
+  squashMergeAllowed: true,
+};
+
+/**
  * `gh` prints a bare scalar when `--jq` selects one, and JSON otherwise. The
  * stub does not run jq, so it emulates the selections the skill actually makes.
  */
@@ -327,20 +359,25 @@ const isSelectsBody = joined.includes('.body');
 if (joined.includes('api user')) {
   writeLine(viewer);
 } else if (joined.includes('repo view')) {
-  if (joined.includes('pullRequestTemplates')) {
-    if (isSelectsBody) writeLine(scenario.template ?? '');
-    else writeLine(JSON.stringify(pick({ pullRequestTemplates: templates })));
-  } else if (joined.includes('deleteBranchOnMerge')) {
-    const isValue = scenario.deleteBranchOnMerge;
-    if (joined.includes('--jq')) writeLine(String(isValue));
-    else writeLine(JSON.stringify(pick({ deleteBranchOnMerge: isValue })));
+  /* One record, then `pick` narrows it. Answering each field from its own
+     branch meant asking for two at once returned only one of them. */
+  if (isSelectsBody && joined.includes('pullRequestTemplates')) {
+    writeLine(scenario.template ?? '');
+  } else if (joined.includes('deleteBranchOnMerge') && joined.includes('--jq')) {
+    writeLine(String(scenario.deleteBranchOnMerge));
   } else {
-    writeLine(JSON.stringify(pick({ nameWithOwner: repoSlug })));
+    writeLine(JSON.stringify(pick(repoRecord)));
   }
 } else if (joined.includes('pr list')) {
   const listed = listRecords().map(record => pick(record));
   writeLine(JSON.stringify(listed));
 } else if (joined.includes('pr checks')) {
+  /* A scenario whose task says the checks are still running has to say so
+     here too, or the agent reads the contradiction and acts on the world. */
+  if (scenario.checksPending === true) {
+    writeLine('build\tpending\t0\thttps://github.com/acme/widgets/runs/1');
+    process.exit(checksPendingExit);
+  }
   writeLine('All checks were successful');
 } else if (joined.includes('pr view')) {
   const viewed = pick(prRecordFor(namedNumber()));
@@ -373,7 +410,15 @@ if (joined.includes('api user')) {
   writeState({ ...state, ready: [...state.ready, number] });
   writeLine(`✓ Pull request ${repoSlug}#${String(number)} is marked as ready`);
 } else if (joined.includes('pr edit')) {
-  writeLine(prUrl(namedNumber() ?? 0));
+  const flag = argv.indexOf('--base');
+  const number = namedNumber() ?? scenario.pr?.number ?? 0;
+  if (flag !== -1) {
+    writeState({
+      ...state,
+      retargeted: { ...state.retargeted, [String(number)]: argv[flag + 1] ?? baseBranch },
+    });
+  }
+  writeLine(prUrl(number));
 } else if (joined.includes('pr comment')) {
   writeLine(`${prUrl(namedNumber() ?? 0)}#issuecomment-1`);
 } else if (joined.includes('merge-async')) {

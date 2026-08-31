@@ -39,14 +39,12 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import * as v from 'valibot';
-import {
-  type DependentPr,
-  type PullRequest,
-  type ReviewCommentEntry,
-  baseBranch,
-  repoSlug,
-  viewer,
-} from '../scenarios.ts';
+import { baseBranch, repoSlug, viewer } from '../scenarios.ts';
+import type {
+  DependentPr,
+  PullRequest,
+  ReviewCommentEntry,
+} from '../shapes.ts';
 import { locateScenario } from '../world.ts';
 import { parseJson } from '#lib/calls.ts';
 import { appendJsonl, argv, joined, writeLine } from '#lib/stub.ts';

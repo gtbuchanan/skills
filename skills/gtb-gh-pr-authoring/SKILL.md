@@ -108,6 +108,8 @@ either body flag is present. Fill the sections yourself and pass the result:
 gh pr create --draft --title 'Fix scheduler retry backoff' --body-file -
 ```
 
+Where the repository has none, the next section is the shape to write instead.
+
 **Write the title as a commit subject, not a PR headline.** Squashed — the
 typical case — it becomes the first line of a permanent commit, so the commit
 subject rules apply, prefix grammar included. Fast-forwarded instead, it never
@@ -141,6 +143,48 @@ what makes the description the reliable place for it.
 **Promote to ready only when told to.** `gh pr ready <number>` invites human
 reviewers. Green checks are not the signal for it, and neither is a clean bot
 pass.
+
+## The default GitHub pull request description
+
+**With no template to fill in, write prose and stop.** The default description
+is one to three sentences saying what the change does and why, then the closing
+reference:
+
+```text
+The backoff reset on every poll, so a wedged job retried forever at the floor
+delay. Compute it from the attempt count instead.
+
+Resolves: #482
+```
+
+Headings are what a large change earns, not the form a small one is poured into
+— much of what the largest repositories ship as a template renders nothing at
+all, and their merged pull requests look the same. A heading over two lines of
+text is furniture.
+
+**When the change is large enough that a reviewer has to navigate it**, add
+headings from this set, in this order, and no others:
+
+- `## Summary` — what changed, once one paragraph no longer holds it.
+- `## Testing` — what you ran and what you saw.
+- `## Notes for reviewers` — where to start, what to read hardest, what you are
+  unsure of.
+
+The set is closed because a description whose shape changes from one pull
+request to the next costs the reader the only thing a convention buys them,
+which is knowing where to look without reading first. A change that seems to
+need a fourth heading usually wanted splitting.
+
+**Leave a section out rather than filling it.** A heading over "N/A", or over a
+sentence restating the summary, teaches the next reader to skip headings — which
+is what makes the ones carrying something invisible.
+
+**Under `## Testing`, report only what you ran and what you observed.** Whether
+the suite passes is already on the pull request in a form a reviewer trusts more
+than prose, so pasting its output buys nothing; what they cannot see is the path
+you exercised by hand and the edge you decided to leave. If you did not exercise
+the change, say so — an unearned claim here is the one part of a description
+that cannot be checked against the diff.
 
 ## Splitting work across stacked GitHub pull requests
 

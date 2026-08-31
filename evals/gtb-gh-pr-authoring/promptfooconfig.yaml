@@ -87,6 +87,36 @@ tests:
       task: >-
         The work on this branch is finished and the branch is on the remote.
         Open a pull request for it against main.
+  - description: >-
+      opening — no repository template, so the skill's own default: prose, no
+      headings, and the closing reference
+    vars:
+      forbidCalls:
+        - ['pr ready']
+
+      # A heading over a change this size is the failure mode the default
+      # exists to prevent, and `## ` cannot appear in a body that has none.
+      # `N/A` catches the other half — a section kept but filled with filler.
+      forbidStdin:
+        - command: ['pr create']
+          includes: ['## ', 'N/A']
+
+      repo: scenarios/open-no-template
+      requireCalls:
+        - ['pr create', '--draft']
+        - ['pr create', '--body-file']
+        # Looked for a template before falling back — the default is the
+        # else-branch of that check, not a substitute for making it.
+        - ['repo view', 'pullRequestTemplates']
+
+      requireStdin:
+        - command: ['pr create']
+          includes: ['Resolves: #']
+
+      scenario: open-no-template
+      task: >-
+        The work on this branch is finished and the branch is on the remote. It
+        fixes issue 91. Open a pull request for it against main.
   - description: pushing — checks watched after the push, nothing promoted and no reviewer summoned
     vars:
       forbidCalls:

@@ -20,6 +20,8 @@ import type { Scenario } from './shapes.ts';
 import {
   cacheAfter,
   cacheBefore,
+  headerAfter,
+  headerBefore,
   limiterAfter,
   limiterBefore,
   parserBefore,
@@ -82,6 +84,35 @@ export const scenarios: readonly Scenario[] = [
     reviewComments: [],
     reviews: [],
     template,
+  },
+  /*
+   * The same opening, minus the template — `pullRequestTemplates` comes back
+   * empty and the description has to come from the skill's own default. Kept
+   * as its own scenario rather than a variant of open-draft because both run
+   * to a real `gh pr create`, and one checkout cannot be opened twice.
+   */
+  {
+    branch: 'fix-header-offset',
+    comments: [],
+    commits: [
+      {
+        date: '2026-05-06T09:00:00-05:00',
+        key: 'base',
+        subject: 'Add the header offset helper',
+        tree: { 'src/header.ts': headerBefore },
+      },
+      {
+        date: '2026-05-07T09:00:00-05:00',
+        key: 'fix',
+        subject: 'Count the header offset from the body start',
+        tree: { 'src/header.ts': headerAfter },
+      },
+    ],
+    deleteBranchOnMerge: true,
+    dependents: [],
+    key: 'open-no-template',
+    reviewComments: [],
+    reviews: [],
   },
   {
     branch: 'fix-cache-key',

@@ -108,6 +108,9 @@ either body flag is present. Fill the sections yourself and pass the result:
 gh pr create --draft --title 'Fix scheduler retry backoff' --body-file -
 ```
 
+Where the repository has none, write
+[the default description](#the-default-github-pull-request-description) instead.
+
 **Write the title as a commit subject, not a PR headline.** Squashed — the
 typical case — it becomes the first line of a permanent commit, so the commit
 subject rules apply, prefix grammar included. Fast-forwarded instead, it never
@@ -141,6 +144,52 @@ what makes the description the reliable place for it.
 **Promote to ready only when told to.** `gh pr ready <number>` invites human
 reviewers. Green checks are not the signal for it, and neither is a clean bot
 pass.
+
+## The default GitHub pull request description
+
+**With no template to fill in, write prose and stop.** The default description
+is one to three sentences saying what the change does and why, then the closing
+reference:
+
+```text
+The backoff reset on every poll, so a wedged job retried forever at the floor
+delay. Compute it from the attempt count instead.
+
+Resolves: #482
+```
+
+Headings are what a large change earns, not the form a small one is poured into
+— much of what the largest repositories ship as a template renders nothing at
+all, and their merged pull requests look the same. A heading over two lines of
+text is furniture.
+
+**When the change is large enough that a reviewer has to navigate it**, add
+headings from this set, in this order, and no others:
+
+- `## Summary` — what changed, once one paragraph no longer holds it.
+- `## Testing` — what you ran and what you saw.
+- `## Notes for reviewers` — where to start, what to read hardest, what you are
+  unsure of.
+
+The set is closed because a description whose shape changes from one pull
+request to the next costs the reader the only thing a convention buys them,
+which is knowing where to look without reading first. A change that seems to
+need a fourth heading usually wanted splitting.
+
+**Leave a section out rather than filling it.** A heading over "N/A", or over a
+sentence restating the summary, teaches the next reader to skip headings — which
+is what makes the ones carrying something invisible.
+
+**`## Testing` is for what the checks cannot show.** Whether the suite passes,
+whether it lints, whether it type-checks — all of that is already on the pull
+request in a form a reviewer trusts more than prose, so restating it pads the
+section and buries the one line that earned it. What they cannot see is the path
+you exercised by hand, the case you checked, the edge you decided to leave, and
+any suite CI does not run. Naming those is the whole job; naming a green check
+is filler that reads as diligence, which is what makes it easy to write.
+
+If you did not exercise the change, say so — an unearned claim here is the one
+part of a description that cannot be checked against the diff.
 
 ## Splitting work across stacked GitHub pull requests
 
@@ -325,52 +374,12 @@ gh pr list --base <branch> --state open --json number,title,headRefName
 one step that cannot be forgotten, and a follow-up step is exactly what gets
 skipped when the merge output is misread.
 
-**With any, the deletion has to wait for them.** Merging retargets a dependent
-onto the merged PR's base on its own, but `--delete-branch` does not wait for
-that, so the branch goes while the PR still points at it. Either retarget them
-yourself first and then merge with `--delete-branch`, or merge without it, let
-GitHub move them, and delete the branch afterwards. What you cannot do is
-delete while something still points there — and having merged, do not retarget
-by hand out of habit, since that is work GitHub has already done.
-
-```sh
-gh pr edit <dependent-number> --base <base-branch>
-git push origin --delete <branch>
-```
-
-**Retargeted is not restacked.** Moving the base pointer is the whole of what
-happens to a dependent here; its own branch still carries the commits that just
-merged, so its diff against the new base opens with work that has already
-landed. Replay it onto the new base yourself. The merged PR still reports the
-sha its branch was deleted at, which is where the dependent's own commits
-start:
-
-```sh
-gh pr view <merged-number> --json headRefOid --jq '.headRefOid'
-git rebase --onto <base-branch> <head-sha> <dependent-branch>
-git push --force-with-lease origin <dependent-branch>
-```
-
-A stacking tool and a hand-rolled stack are the same hazard for the deletion,
-because only the base pointer matters there. They part company over the
-restack: a real stack replays the dependent for you, and
-`references/stacked-pull-requests.md` covers what that costs.
-
-**If one has already been closed this way, reopen it rather than replacing
-it.** Reopening is refused outright while the base branch is missing, and
-`--delete-branch` took your local copy of it too — but the merged PR still
-reports the sha it was deleted at, so nothing is actually lost:
-
-```sh
-gh pr view <merged-number> --json headRefOid --jq '.headRefOid'
-git push origin <sha>:refs/heads/<deleted-branch>
-gh pr reopen <closed-number>
-gh pr edit <closed-number> --base <base>
-```
-
-That restores the same pull request — its number, its threads, its review
-history — which is the reason to do it rather than open a replacement and lose
-all of it. Delete the branch again once the reopened PR points elsewhere.
+**With any, move them before the branch goes.** Deleting a branch another PR is
+based on closes that PR rather than retargeting it, and merging on its own
+moves nothing — only the repository's own post-merge cleanup does, where it is
+set to delete the branch for you. So which order is safe depends on who deletes
+the branch, and the dependent still needs replaying afterwards. Read
+`references/stacked-pull-requests.md` before you merge.
 
 **If `gh pr merge` fails with "must be merged using the asynchronous merge REST
 API", the PR is in a stack.** Little of what follows applies unchanged — read
@@ -379,39 +388,9 @@ API", the PR is in a stack.** Little of what follows applies unchanged — read
 **Never enable auto-merge unless asked.** `--auto` is a bet that no more
 feedback is coming, and that is the human's bet to place. It also stretches the
 staleness window to an unknown length, since the merge lands at some later
-moment with nobody watching.
-
-**When it is asked for, the message goes in with it.** The merge runs
-unattended using whatever was supplied at enable time, so leaving `--subject`
-and `--body-file` off lands the default message permanently.
-
-```sh
-gh pr merge --auto --squash \
-  --subject 'Fix scheduler retry backoff (#1234)' \
-  --body-file -
-```
-
-**A stored message goes stale the moment the PR moves on.** Before making any
-further change, take auto-merge off with `gh pr merge --disable-auto`, then
-re-enable with the message rewritten against the code as it now stands.
-
-**`--delete-branch` does nothing once auto-merge is actually armed.** `gh`
-treats `--auto` as auto-merge only when the PR cannot merge yet; when nothing
-is outstanding it merges directly instead, and the flag behaves as it always
-does. So the same command deletes the branch or silently does not, depending on
-whether a requirement happened to be pending — and when it is pending, `gh` has
-returned long before the merge, so both the local and the remote branch stay.
-Whether that costs anything is a repository setting:
-
-```sh
-gh repo view --json deleteBranchOnMerge
-```
-
-Where the repository deletes head branches itself, `--auto` gives up nothing.
-Where it does not, the branch outlives the session that could have removed it,
-so settle it before enabling: take the wait and merge synchronously, or say in
-the handoff that the branch is left to sweep up. The local branch is left
-either way. The dependent-PR check still applies, and lands unattended.
+moment with nobody watching. When it is asked for, read
+`references/auto-merge.md` — the message it will land, and whether the branch
+survives, are both settled at enable time and cannot be fixed afterwards.
 
 **One expected failure is not a failure.** If `gh pr merge --delete-branch`
 succeeds but prints `fatal: 'main' is already used by worktree at ...`, the PR

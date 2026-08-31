@@ -13,7 +13,8 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { type Scenario, scenarios } from './scenarios.ts';
+import { scenarios } from './scenarios.ts';
+import type { Scenario } from './shapes.ts';
 
 /**
  * The file a seeded checkout is identified by, holding the scenario's key.

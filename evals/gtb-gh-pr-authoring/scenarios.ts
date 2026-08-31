@@ -16,9 +16,12 @@
  * Loaded by the stubs under plain `node`, whose type stripping only erases
  * annotations, so everything here stays erasable syntax.
  */
+import type { Scenario } from './shapes.ts';
 import {
   cacheAfter,
   cacheBefore,
+  headerAfter,
+  headerBefore,
   limiterAfter,
   limiterBefore,
   parserBefore,
@@ -29,7 +32,7 @@ import {
   tokenBefore,
   tokenizerBefore,
 } from './trees.ts';
-import type { SeedCommit, SeedIdentity } from '#lib/seed-repo.ts';
+import type { SeedIdentity } from '#lib/seed-repo.ts';
 
 /**
  * The authenticated account — what `gh api user` reports, and the identity the
@@ -53,102 +56,6 @@ export const repoSlug = 'acme/widgets';
  * The default branch every PR here targets.
  */
 export const baseBranch = 'main';
-
-/**
- * A submitted review, as `gh pr view --json reviews` returns it.
- */
-export interface ReviewEntry {
-  readonly author: { readonly login: string };
-  readonly body: string;
-  readonly state: string;
-}
-
-/**
- * A conversation comment on the PR — `--json comments`, never the inline ones.
- */
-export interface CommentEntry {
-  readonly author: { readonly login: string };
-  readonly body: string;
-}
-
-/**
- * An inline review comment. A thread root has no parent; the stub renders that
- * as the null the REST endpoint actually returns.
- */
-export interface ReviewCommentEntry {
-  readonly body: string;
-  readonly id: number;
-  readonly in_reply_to_id?: number | undefined;
-  readonly path: string;
-  readonly user: { readonly login: string };
-}
-
-/**
- * A pull request based on the scenario's branch — what the merge path has to
- * find and retarget before deleting anything.
- */
-export interface DependentPr {
-  readonly headRefName: string;
-  readonly number: number;
-  readonly title: string;
-}
-
-/**
- * The PR the scenario is about, when it already has one.
- */
-export interface PullRequest {
-  readonly baseRefName: string;
-  readonly body: string;
-  readonly headRefName: string;
-  readonly isDraft: boolean;
-  readonly number: number;
-  readonly title: string;
-}
-
-/**
- * An extra commit written after the history is seeded and pushed.
- *
- * Two things the shared seeder cannot express, both of which a scenario needs:
- * a commit that exists locally but not on the origin (so there is something to
- * push), and a message carrying trailers (so the squash path has something to
- * carry forward).
- */
-export interface ExtraCommit {
-  readonly push: boolean;
-  readonly subject: string;
-  readonly trailers: readonly string[];
-  readonly tree: Readonly<Record<string, string>>;
-}
-
-export interface Scenario {
-  readonly branch: string;
-  readonly comments: readonly CommentEntry[];
-  /**
-   * The seeded history, oldest first. Pushed to the scenario's origin.
-   */
-  readonly commits: readonly SeedCommit[];
-  /**
-   * The checks have not finished. A scenario whose task says so has to set
-   * this, or `gh pr checks` reports success and contradicts its own premise.
-   */
-  readonly checksPending?: boolean | undefined;
-  readonly deleteBranchOnMerge: boolean;
-  readonly dependents: readonly DependentPr[];
-  readonly extra?: ExtraCommit | undefined;
-  /**
-   * The PR belongs to a stack `gh stack` knows about, so `gh pr merge`
-   * refuses it and the asynchronous merge endpoint is the only way in.
-   */
-  readonly isStackMember?: boolean | undefined;
-  readonly key: string;
-  readonly pr?: PullRequest | undefined;
-  readonly reviewComments: readonly ReviewCommentEntry[];
-  readonly reviews: readonly ReviewEntry[];
-  /**
-   * The repository's PR template body, when it has one.
-   */
-  readonly template?: string | undefined;
-}
 
 /**
  * Every scenario, keyed by the name its checkout is seeded under.
@@ -177,6 +84,35 @@ export const scenarios: readonly Scenario[] = [
     reviewComments: [],
     reviews: [],
     template,
+  },
+  /*
+   * The same opening, minus the template — `pullRequestTemplates` comes back
+   * empty and the description has to come from the skill's own default. Kept
+   * as its own scenario rather than a variant of open-draft because both run
+   * to a real `gh pr create`, and one checkout cannot be opened twice.
+   */
+  {
+    branch: 'fix-header-offset',
+    comments: [],
+    commits: [
+      {
+        date: '2026-05-06T09:00:00-05:00',
+        key: 'base',
+        subject: 'Add the header offset helper',
+        tree: { 'src/header.ts': headerBefore },
+      },
+      {
+        date: '2026-05-07T09:00:00-05:00',
+        key: 'fix',
+        subject: 'Count the header offset from the body start',
+        tree: { 'src/header.ts': headerAfter },
+      },
+    ],
+    deleteBranchOnMerge: true,
+    dependents: [],
+    key: 'open-no-template',
+    reviewComments: [],
+    reviews: [],
   },
   {
     branch: 'fix-cache-key',

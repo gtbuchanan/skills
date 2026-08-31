@@ -21,6 +21,8 @@
  *                    "retarget dependents, then merge" are checked
  *   requireStdin   — { command, includes }: a call matching `command` must have
  *                    been handed a body containing `includes`
+ *   forbidStdin    — the same shape, for wording no such body may contain; used
+ *                    for the default description, whose rule is an absence
  *   minCommits     — commits the agent added over the seeded baseline tip, for
  *                    the one-finding-one-commit rule
  *
@@ -62,6 +64,7 @@ const StdinSchema = v.object({
 export const VarsSchema = v.object({
   forbidCalls: v.optional(ClauseListSchema, []),
   forbidOrder: v.optional(v.array(OrderSchema), []),
+  forbidStdin: v.optional(v.array(StdinSchema), []),
   minCommits: v.optional(v.number(), 0),
   requireCalls: v.optional(ClauseListSchema, []),
   requireOneOf: v.optional(ClauseListSchema, []),
@@ -201,6 +204,27 @@ export const checkStdin = (
     ];
   });
 
+/*
+ * Wording that must appear in no body at all, which is how a rule stated as an
+ * absence gets checked. Every hit is examined rather than one of them: a
+ * description that grew a heading is still wrong when some other call's body
+ * was clean.
+ */
+export const checkForbiddenStdin = (
+  calls: readonly Call[],
+  vars: v.InferOutput<typeof VarsSchema>,
+): string[] =>
+  vars.forbidStdin.flatMap(({ command, includes }) =>
+    calls
+      .filter(call => isMatch(call, command))
+      .flatMap(hit => includes.filter(needle => hit.stdin.includes(needle)))
+      .map(
+        needle =>
+          `a body handed to ${describe(command)} contains ${needle}, which ` +
+          'the default description rules out',
+      ),
+  );
+
 /**
  * Commits the agent added on top of the seeded tip.
  *
@@ -256,6 +280,7 @@ export default function assertAuthoringCalls(
     ...checkOrder(calls, vars),
     ...checkForbiddenOrder(calls, vars),
     ...checkStdin(calls, vars),
+    ...checkForbiddenStdin(calls, vars),
     ...checkCommits(vars),
   ]);
 }

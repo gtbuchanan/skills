@@ -54,6 +54,21 @@ export const parserBefore = [
   '',
 ].join('\n');
 
+export const headerBefore = [
+  'export const headerOffset = (message: string): number => {',
+  '  return message.indexOf(":");',
+  '};',
+  '',
+].join('\n');
+
+export const headerAfter = [
+  'export const headerOffset = (message: string): number => {',
+  String.raw`  const body = message.indexOf("\n\n");`,
+  '  return message.indexOf(":", body === -1 ? 0 : body);',
+  '};',
+  '',
+].join('\n');
+
 export const tokenizerBefore = [
   'export const tokenize = (source: string): string[] =>',
   '  source.split(/\s+/v).filter(Boolean);',

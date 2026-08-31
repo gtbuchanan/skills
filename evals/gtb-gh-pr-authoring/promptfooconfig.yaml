@@ -105,13 +105,21 @@ tests:
       requireCalls:
         - ['pr create', '--draft']
         - ['pr create', '--body-file']
-        # Looked for a template before falling back — the default is the
-        # else-branch of that check, not a substitute for making it.
         - ['repo view', 'pullRequestTemplates']
 
+      # The default is the else-branch of the template check, so the check has
+      # to come first. Requiring the call alone would pass a run that wrote the
+      # description from habit and looked the template up afterwards, which is
+      # the same output reached without the rule.
+      requireOrder:
+        - after: ['pr create']
+          before: ['repo view', 'pullRequestTemplates']
+
+      # The number, not just the trailer: `Resolves: #` alone passes a body
+      # that closed some other issue, and the task names this one.
       requireStdin:
         - command: ['pr create']
-          includes: ['Resolves: #']
+          includes: ['Resolves: #91']
 
       scenario: open-no-template
       task: >-

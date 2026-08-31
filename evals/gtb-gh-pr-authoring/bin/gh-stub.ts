@@ -220,14 +220,21 @@ const prUrl = (number: number): string =>
  * suite says is approved and green should answer that question when asked.
  */
 const readiness = (reviews: readonly { readonly state: string }[]): Record<string, unknown> => ({
-  autoMergeRequest: undefined,
+  /* eslint-disable-next-line unicorn/no-null --
+     JSON.stringify drops a key whose value is undefined, so an agent asking
+     for this one would read an absent field as an absent answer. gh states it
+     as an explicit null, and the difference is the whole point of asking. */
+  autoMergeRequest: null,
   mergeable: 'MERGEABLE',
   mergeStateStatus: scenario.checksPending === true ? 'BLOCKED' : 'CLEAN',
   reviewDecision: reviews.some(review => review.state === 'APPROVED')
     ? 'APPROVED'
     : 'REVIEW_REQUIRED',
   statusCheckRollup: scenario.checksPending === true
-    ? [{ conclusion: undefined, name: 'build', status: 'IN_PROGRESS' }]
+    /* eslint-disable-next-line unicorn/no-null --
+       Same again: a check still running reports its conclusion as null, and
+       the key has to survive serialisation to say so. */
+    ? [{ conclusion: null, name: 'build', status: 'IN_PROGRESS' }]
     : [{ conclusion: 'SUCCESS', name: 'build', status: 'COMPLETED' }],
 });
 

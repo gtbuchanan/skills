@@ -326,7 +326,7 @@ standard input, so the here-string is piped in rather than passed:
 ```powershell
 @'
 Applied in 2f8665e.
-'@ | gh api repos/{owner}/{repo}/pulls/<number>/comments/<root-id>/replies -F body=@-
+'@ | gh api 'repos/{owner}/{repo}/pulls/<number>/comments/<root-id>/replies' -F body=@-
 ```
 
 ## Merging a GitHub pull request

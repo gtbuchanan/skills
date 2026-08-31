@@ -2,11 +2,12 @@
 /*
  * Fake `gh` for the gtb-gh-pr-authoring eval.
  *
- * It never reaches the network: it records every invocation to $STUB_LOG and
- * answers from ../scenarios.ts, picking the world by walking up from the
- * working directory to the marker file the seed dropped. authoring-check.ts
- * reads the log to assert which calls the skill made, in what order, and with
- * what body.
+ * It never reaches the network: it answers from ../scenarios.ts, picking the
+ * world by walking up from the working directory to the marker file the seed
+ * dropped, and records every invocation to that scenario's own log under
+ * $STUB_LOG_DIR. One log per scenario rather than one for the suite is what
+ * lets the tests run concurrently. authoring-check.ts reads the scenario's log
+ * to assert which calls the skill made, in what order, and with what body.
  *
  * The body is the reason this stub logs more than argv. The skill is supposed
  * to pass prose on standard input (`--body-file -`), which keeps it out of the
@@ -73,11 +74,20 @@ const readStdin = (): string => {
 
 const stdin = isWantsStdin ? readStdin() : '';
 
-const stubLog = process.env['STUB_LOG'];
-if (stubLog) appendJsonl(stubLog, { argv, cmd: 'gh', stdin });
-
 const located = locateScenario(process.cwd());
 const scenario = located.scenario;
+
+/* Logged after the scenario is known, because the scenario is what names the
+   file: one log per checkout means concurrent tests never share a writer.
+   Unlike git-stub this is not defensive — a `gh` call outside every checkout
+   cannot be answered at all, so locateScenario has already thrown above. */
+const logDir = process.env['STUB_LOG_DIR'];
+if (logDir !== undefined)
+  appendJsonl(path.join(logDir, `${scenario.key}.jsonl`), {
+    argv,
+    cmd: 'gh',
+    stdin,
+  });
 
 /**
  * What earlier calls did, so later ones can answer consistently.

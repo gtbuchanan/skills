@@ -38,7 +38,7 @@ import { scenarioPath } from './world.ts';
 import type { AssertionResult } from '#lib/assert.ts';
 import { fromProblems } from '#lib/assert.ts';
 import { parseJson, readJsonl } from '#lib/calls.ts';
-import { skillsRoot, suiteCallLog } from '#lib/paths.ts';
+import { skillsRoot, suiteRunDir } from '#lib/paths.ts';
 import { resolveRealGit } from '#lib/real-git.ts';
 import { probeGit } from '#lib/seed-repo.ts';
 
@@ -270,7 +270,10 @@ export default function assertAuthoringCalls(
   context: { vars?: unknown },
 ): AssertionResult {
   const vars = v.parse(VarsSchema, context.vars ?? {});
-  const calls = readJsonl(suiteCallLog(import.meta.url), EntrySchema).map(
+  /* This scenario's own log, not a shared one: the stubs key a file per
+     checkout, so a concurrent test's calls are never in here to be matched. */
+  const logFile = path.join(suiteRunDir(import.meta.url), `${vars.scenario}.jsonl`);
+  const calls = readJsonl(logFile, EntrySchema).map(
     entry => ({ command: entry.argv.join(' '), stdin: entry.stdin }),
   );
 

@@ -10,8 +10,9 @@
  * Only that scenario is seeded, not all of them, which is what the beforeEach
  * context is read for. The checkouts are disjoint, so tests do not collide with
  * each other — but a test and its own `--repeat` runs share one, which is why
- * the suite is serial. That is the whole reason: not the shared call log, which
- * per-test truncation handles, and not the seeding, which is per-directory.
+ * `--repeat` still wants `--max-concurrency 1`. Distinct tests do not need it:
+ * they own separate checkouts and, since the stubs key one log file per
+ * scenario, separate records of what was asked.
  *
  * The baseline tip is recorded per scenario because the checker counts what the
  * agent added on top of it — reading a manifest the seed wrote rather than
@@ -24,12 +25,12 @@ import { author } from './scenarios.ts';
 import type { ExtraCommit, Scenario } from './shapes.ts';
 import { markerFile, scenarioByKey, scenarioPath } from './world.ts';
 import { parseJson } from '#lib/calls.ts';
-import { artifactPath, skillsRoot, suiteCallLog } from '#lib/paths.ts';
+import { artifactPath, skillsRoot, suiteRunDir } from '#lib/paths.ts';
 import { resolveRealGit } from '#lib/real-git.ts';
 import { type GitRunner, captureGit, runGit, seedHistory } from '#lib/seed-repo.ts';
-import { requireHarness, resetCallLog, truncateCallLog } from '#lib/setup.ts';
+import { requireHarness, resetRunDir } from '#lib/setup.ts';
 
-const logPath = suiteCallLog(import.meta.url);
+const logDir = suiteRunDir(import.meta.url);
 
 /**
  * Where the recorded baselines live, for the checker to read back.
@@ -155,15 +156,13 @@ export const extensionHook = (hookName: string, context: unknown): void => {
    * than guess — and this keeps the failure explicit either way. */
   if (hookName === 'beforeAll') {
     requireHarness('scenario repositories');
-    resetCallLog(logPath);
+    /* Cleared once for the run, not once per test: each scenario writes its
+     * own file, so a test never has to empty a log another one is writing to.
+     * That is what lets distinct tests run at the same time. */
+    resetRunDir(logDir);
     return;
   }
   if (hookName !== 'beforeEach') return;
-
-  /* The checker asserts with `some`/`findIndex` over the whole log, so it has
-   * to start empty for each test — otherwise a `--repeat` run's later repeats
-   * could be satisfied by an earlier repeat's calls. */
-  truncateCallLog(logPath);
 
   const key = v.parse(HookContextSchema, context).test.vars.scenario;
   const scenario = scenarioByKey(key);

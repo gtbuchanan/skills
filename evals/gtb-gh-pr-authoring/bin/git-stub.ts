@@ -12,10 +12,22 @@
  * it resolves the real binary explicitly rather than by name.
  */
 import spawn from 'cross-spawn';
+import { locateScenario } from '../world.ts';
 import { hermeticGitEnv, resolveRealGit } from '#lib/real-git.ts';
-import { argv, logCall } from '#lib/stub.ts';
+import { argv, logCallToDir } from '#lib/stub.ts';
 
-logCall('git');
+/* One log per scenario, keyed by the checkout the call was made in, so tests
+   can run concurrently without writing over each other's record.
+
+   Defensively, because this stub is a passthrough first and a recorder second:
+   `git --version` from outside every checkout is a legitimate call, and
+   locateScenario throws there. A call nothing can attribute is not worth
+   failing over — it is logged nowhere and passed through as normal. */
+try {
+  logCallToDir('git', `${locateScenario(process.cwd()).scenario.key}.jsonl`);
+} catch {
+  // outside a seeded checkout: nothing to attribute the call to
+}
 
 /* Hermetic for the agent's calls too, not just the seed's: a system config
  * naming a credential helper would otherwise let a `git push` authenticate as

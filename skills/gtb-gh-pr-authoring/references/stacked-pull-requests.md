@@ -104,19 +104,44 @@ it as a PR number.
 
 ## Deleting the branch under a dependent pull request
 
-**The deletion has to wait for the dependents.** Merging retargets a dependent
-onto the merged PR's base on its own, but `--delete-branch` does not wait for
-that, so the branch goes while the PR still points at it — and deleting a branch
-another PR is based on closes that PR rather than moving it. Either retarget
-them yourself first and then merge with `--delete-branch`, or merge without it,
-let GitHub move them, and delete the branch afterwards. What you cannot do is
-delete while something still points there — and having merged, do not retarget
-by hand out of habit, since that is work GitHub has already done.
+**Deleting a branch closes every pull request based on it.** Not retargets —
+closes. Merging the parent does nothing to a dependent on its own: its base
+still names the parent branch, and it sits there open until that branch goes,
+at which point it closes.
+
+**GitHub only moves a dependent when GitHub is the one deleting the branch.**
+The retarget belongs to the repository's own post-merge cleanup, not to the
+merge, so it fires where `deleteBranchOnMerge` is set and the merge leaves the
+branch to it. Delete the branch yourself — `--delete-branch`, or a push
+deletion afterwards — and no retarget happens at any point; the dependent
+simply closes.
+
+That leaves two orders that work, and one that reads plausible and destroys the
+dependent:
 
 ```sh
+gh repo view --json deleteBranchOnMerge   # which order is even available
+
+# Where the repository cleans up after itself: merge and leave the branch to it.
+gh pr merge <number> --squash --body-file -
+
+# Everywhere else: move the dependents first, and only then delete.
 gh pr edit <dependent-number> --base <base-branch>
 git push origin --delete <branch>
 ```
+
+Merging without `--delete-branch`, waiting for GitHub to move the dependents,
+and deleting the branch afterwards is the one to avoid. Nothing moves in the
+meantime, so the deletion arrives with the dependent still pointing at the
+branch and closes it — the same outcome as deleting immediately, reached slowly
+enough to look deliberate.
+
+**`deleteBranchOnMerge` states an intention, not an outcome.** A branch
+protection rule or a repository ruleset that restricts deletion stops the
+automatic cleanup, and the setting still reads `true`. The branch survives the
+merge, so a dependent relying on that cleanup to be retargeted is not moved
+either. Where a rule might cover the head branch, check what actually happened
+rather than what the setting promised.
 
 **Retargeted is not restacked.** Moving the base pointer is the whole of what
 happens to a dependent that no stacking tool is managing; its own branch still
@@ -163,6 +188,19 @@ git push origin <sha>:refs/heads/<deleted-branch>
 gh pr reopen <closed-number>
 gh pr edit <closed-number> --base <base>
 ```
+
+**Those four steps are an order, not a list.** Restoring the branch first is
+what makes the rest possible: while the ref is missing, reopening fails with
+`state cannot be changed. The <branch> branch has been deleted.` The obvious
+way round it — retarget the closed PR onto a branch that does exist, then
+reopen — is refused too, with `Cannot change the base branch of a closed pull
+request`. So there is no path that avoids putting the deleted ref back, and
+retargeting has to wait until the PR is open again.
+
+Restore the ref the closed PR's base actually names. In a deeper stack that is
+its immediate parent rather than whatever merged, and a split that took several
+branches at once needs each of them back before the PR at the bottom of the gap
+will reopen.
 
 That restores the same pull request — its number, its threads, its review
 history — which is the reason to do it rather than open a replacement and lose

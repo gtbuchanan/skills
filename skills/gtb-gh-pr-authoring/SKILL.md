@@ -374,11 +374,12 @@ gh pr list --base <branch> --state open --json number,title,headRefName
 one step that cannot be forgotten, and a follow-up step is exactly what gets
 skipped when the merge output is misread.
 
-**With any, the deletion has to wait for them**, and the dependent needs
-replaying onto its new base afterwards. Read
-`references/stacked-pull-requests.md` before you merge: deleting a branch
-another PR still points at closes that PR outright, which is the one outcome
-here that cannot be undone by trying again.
+**With any, move them before the branch goes.** Deleting a branch another PR is
+based on closes that PR rather than retargeting it, and merging on its own
+moves nothing — only the repository's own post-merge cleanup does, where it is
+set to delete the branch for you. So which order is safe depends on who deletes
+the branch, and the dependent still needs replaying afterwards. Read
+`references/stacked-pull-requests.md` before you merge.
 
 **If `gh pr merge` fails with "must be merged using the asynchronous merge REST
 API", the PR is in a stack.** Little of what follows applies unchanged — read

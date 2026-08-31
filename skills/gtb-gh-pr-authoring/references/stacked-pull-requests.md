@@ -123,7 +123,8 @@ dependent:
 gh repo view --json deleteBranchOnMerge   # which order is even available
 
 # Where the repository cleans up after itself: merge and leave the branch to it.
-gh pr merge <number> --squash --body-file -
+gh pr merge <number> --squash \
+  --subject 'Fix scheduler retry backoff (#1234)' --body-file -
 
 # Everywhere else: move the dependents first, and only then delete.
 gh pr edit <dependent-number> --base <base-branch>

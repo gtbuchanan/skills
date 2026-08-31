@@ -1,8 +1,8 @@
 # Stacked GitHub pull requests
 
-Everything that changes when a pull request is one of several stacked on each
-other. `SKILL.md` decides whether to split at all; this covers what changes once you
-have. Its rules hold for an ordinary PR, and these replace the ones they
+Everything that changes when a pull request has another one sitting on top of
+it — whether a stacking tool put it there or the branches were pointed at each
+other by hand. The ordinary PR rules still hold; these replace the ones they
 contradict.
 
 ## Creating a stack with gh stack link
@@ -91,7 +91,7 @@ PR, restack — and it costs more than it looks. The PRs above were not stack
 members when the merge happened, so none of them was rebased and each needs
 restacking by hand. And an ordinary PR merges through `gh pr merge`, which puts
 `--delete-branch` back in play with those PRs pointing at the branch it is
-about to delete, so retarget them first as `SKILL.md` describes.
+about to delete, so retarget them first as below.
 
 **`gh stack merge` is not a way round it either.** It merges a stack
 atomically, which is genuinely useful, but it exposes no subject or body flag,
@@ -99,3 +99,53 @@ so from the CLI what lands is the default message. The web UI does let you
 write one, so this is a gap in the extension rather than a limit on stacked
 merges. Give it a bare number and it reads that as a stack number before trying
 it as a PR number.
+
+## Deleting the branch under a dependent pull request
+
+**The deletion has to wait for the dependents.** Merging retargets a dependent
+onto the merged PR's base on its own, but `--delete-branch` does not wait for
+that, so the branch goes while the PR still points at it — and deleting a branch
+another PR is based on closes that PR rather than moving it. Either retarget
+them yourself first and then merge with `--delete-branch`, or merge without it,
+let GitHub move them, and delete the branch afterwards. What you cannot do is
+delete while something still points there — and having merged, do not retarget
+by hand out of habit, since that is work GitHub has already done.
+
+```sh
+gh pr edit <dependent-number> --base <base-branch>
+git push origin --delete <branch>
+```
+
+**Retargeted is not restacked.** Moving the base pointer is the whole of what
+happens to a dependent that no stacking tool is managing; its own branch still
+carries the commits that just merged, so its diff against the new base opens
+with work that has already landed. Replay it onto the new base yourself. The
+merged PR still reports the sha its branch was deleted at, which is where the
+dependent's own commits start:
+
+```sh
+gh pr view <merged-number> --json headRefOid --jq '.headRefOid'
+git rebase --onto <base-branch> <head-sha> <dependent-branch>
+git push --force-with-lease origin <dependent-branch>
+```
+
+A stacking tool and a hand-rolled stack are the same hazard for the deletion,
+because only the base pointer matters there. They part company over the restack:
+a real stack replays the dependent for you, at the cost in signatures described
+above.
+
+**If one has already been closed this way, reopen it rather than replacing
+it.** Reopening is refused outright while the base branch is missing, and
+`--delete-branch` took your local copy of it too — but the merged PR still
+reports the sha it was deleted at, so nothing is actually lost:
+
+```sh
+gh pr view <merged-number> --json headRefOid --jq '.headRefOid'
+git push origin <sha>:refs/heads/<deleted-branch>
+gh pr reopen <closed-number>
+gh pr edit <closed-number> --base <base>
+```
+
+That restores the same pull request — its number, its threads, its review
+history — which is the reason to do it rather than open a replacement and lose
+all of it. Delete the branch again once the reopened PR points elsewhere.

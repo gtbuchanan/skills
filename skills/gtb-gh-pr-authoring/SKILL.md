@@ -179,12 +179,16 @@ need a fourth heading usually wanted splitting.
 sentence restating the summary, teaches the next reader to skip headings — which
 is what makes the ones carrying something invisible.
 
-**Under `## Testing`, report only what you ran and what you observed.** Whether
-the suite passes is already on the pull request in a form a reviewer trusts more
-than prose, so pasting its output buys nothing; what they cannot see is the path
-you exercised by hand and the edge you decided to leave. If you did not exercise
-the change, say so — an unearned claim here is the one part of a description
-that cannot be checked against the diff.
+**`## Testing` is for what the checks cannot show.** Whether the suite passes,
+whether it lints, whether it type-checks — all of that is already on the pull
+request in a form a reviewer trusts more than prose, so restating it pads the
+section and buries the one line that earned it. What they cannot see is the path
+you exercised by hand, the case you checked, the edge you decided to leave, and
+any suite CI does not run. Naming those is the whole job; naming a green check
+is filler that reads as diligence, which is what makes it easy to write.
+
+If you did not exercise the change, say so — an unearned claim here is the one
+part of a description that cannot be checked against the diff.
 
 ## Splitting work across stacked GitHub pull requests
 

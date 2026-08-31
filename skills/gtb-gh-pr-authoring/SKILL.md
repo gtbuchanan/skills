@@ -338,8 +338,23 @@ gh pr edit <dependent-number> --base <base-branch>
 git push origin --delete <branch>
 ```
 
-A stacking tool and a hand-rolled stack are the same hazard here, because only
-the base pointer matters.
+**Retargeted is not restacked.** Moving the base pointer is the whole of what
+happens to a dependent here; its own branch still carries the commits that just
+merged, so its diff against the new base opens with work that has already
+landed. Replay it onto the new base yourself. The merged PR still reports the
+sha its branch was deleted at, which is where the dependent's own commits
+start:
+
+```sh
+gh pr view <merged-number> --json headRefOid --jq '.headRefOid'
+git rebase --onto <base-branch> <head-sha> <dependent-branch>
+git push --force-with-lease origin <dependent-branch>
+```
+
+A stacking tool and a hand-rolled stack are the same hazard for the deletion,
+because only the base pointer matters there. They part company over the
+restack: a real stack replays the dependent for you, and
+`references/stacked-pull-requests.md` covers what that costs.
 
 **If one has already been closed this way, reopen it rather than replacing
 it.** Reopening is refused outright while the base branch is missing, and

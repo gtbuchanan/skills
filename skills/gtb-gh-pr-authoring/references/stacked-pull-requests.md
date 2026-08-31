@@ -122,14 +122,30 @@ git push origin --delete <branch>
 happens to a dependent that no stacking tool is managing; its own branch still
 carries the commits that just merged, so its diff against the new base opens
 with work that has already landed. Replay it onto the new base yourself. The
-merged PR still reports the sha its branch was deleted at, which is where the
-dependent's own commits start:
+merged PR still reports the sha its branch was deleted at, which is the
+boundary to replay from:
 
 ```sh
 gh pr view <merged-number> --json headRefOid --jq '.headRefOid'
+git log --oneline <head-sha>..<dependent-branch>   # read before replaying
 git rebase --onto <base-branch> <head-sha> <dependent-branch>
 git push --force-with-lease origin <dependent-branch>
 ```
+
+**Read that range before you replay it.** `--onto` replays everything reachable
+from the dependent and not from `<head-sha>`, which is the dependent's own work
+only while the parent's history is the one the dependent forked from. Amend or
+force-push the parent after that, and the dependent still holds the pre-rewrite
+copies of the parent's commits — different shas, so unreachable from
+`<head-sha>`, so replayed too. What you get is the parent's work committed
+twice, once in each form, and conflicts where the rewrite touched anything.
+
+The range says which case you are in without your having to reconstruct the
+branch's history: if it lists only commits you recognise as the dependent's,
+the boundary is right. Anything else in there means the parent moved under it,
+and the sha to replay from is wherever the two histories actually diverge —
+`git merge-base <head-sha> <dependent-branch>` — with the duplicated commits
+dropped by hand.
 
 A stacking tool and a hand-rolled stack are the same hazard for the deletion,
 because only the base pointer matters there. They part company over the restack:

@@ -91,7 +91,9 @@ PR, restack — and it costs more than it looks. The PRs above were not stack
 members when the merge happened, so none of them was rebased and each needs
 restacking by hand. And an ordinary PR merges through `gh pr merge`, which puts
 `--delete-branch` back in play with those PRs pointing at the branch it is
-about to delete, so retarget them first as below.
+about to delete, so retarget them first, as
+[deleting the branch under a dependent](#deleting-the-branch-under-a-dependent-pull-request)
+describes.
 
 **`gh stack merge` is not a way round it either.** It merges a stack
 atomically, which is genuinely useful, but it exposes no subject or body flag,
@@ -131,8 +133,8 @@ git push --force-with-lease origin <dependent-branch>
 
 A stacking tool and a hand-rolled stack are the same hazard for the deletion,
 because only the base pointer matters there. They part company over the restack:
-a real stack replays the dependent for you, at the cost in signatures described
-above.
+a real stack replays the dependent for you, at the cost in signatures
+[the merge section](#merging-a-stacked-pull-request) covers.
 
 **If one has already been closed this way, reopen it rather than replacing
 it.** Reopening is refused outright while the base branch is missing, and

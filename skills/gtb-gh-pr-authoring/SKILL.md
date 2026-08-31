@@ -108,7 +108,8 @@ either body flag is present. Fill the sections yourself and pass the result:
 gh pr create --draft --title 'Fix scheduler retry backoff' --body-file -
 ```
 
-Where the repository has none, the next section is the shape to write instead.
+Where the repository has none, write
+[the default description](#the-default-github-pull-request-description) instead.
 
 **Write the title as a commit subject, not a PR headline.** Squashed — the
 typical case — it becomes the first line of a permanent commit, so the commit

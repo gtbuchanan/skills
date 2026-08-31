@@ -30,11 +30,16 @@ defaultTest:
     disableVarExpansion: true
 description: gtb-gh-pr-authoring — PR lifecycle against seeded repositories with a fake gh
 
-# Serial for one reason: each scenario owns a checkout, and `--repeat` runs a
-# test more than once, so concurrent repeats would seed the same checkout under
-# each other. Different tests never collide — their checkouts are disjoint.
+# Distinct tests are independent all the way down: each owns a checkout, and
+# the stubs key one call log per scenario, so nothing is shared for them to
+# race over. Seven agent sessions in sequence is most of this suite's runtime,
+# and almost all of that is waiting.
+#
+# `--repeat` is the exception and still needs `--max-concurrency 1` on the
+# command line: repeats of one test share that test's checkout, and would seed
+# it under each other.
 evaluateOptions:
-  maxConcurrency: 1
+  maxConcurrency: 4
 
 extensions:
   - file://setup.ts:extensionHook

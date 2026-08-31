@@ -191,8 +191,14 @@ plain watch over `--fail-fast`: learning about one failure per push costs
 another full matrix each time.
 
 Immediately after a push, before any workflow has registered, `gh pr checks`
-reports that the branch has no checks rather than waiting for some to appear.
-That is too early, not green.
+reports that the branch has no checks rather than waiting for some to appear —
+and exits 1 for it, the status a real failure gets. `--watch` does not help:
+the branch is read before the watch loop starts, so it returns rather than
+waiting for checks to appear. Exit 1 on its own therefore does not mean a check
+failed — read what it printed. "no checks reported" is too early rather than
+red, so watch again instead of reporting the push as broken. If it keeps saying
+it, the branch has nothing configured to run, which is worth saying plainly and
+is still not green.
 
 ## Acting on review feedback on a GitHub pull request
 

@@ -130,6 +130,23 @@ gh pr edit <dependent-number> --base <base-branch>
 git push origin --delete <branch>
 ```
 
+**That retarget is for dependents GitHub does not consider a stack.** A member
+of a real one refuses it — `Cannot change the base branch because the pull
+request is part of a stack` — so the move-them-first order is simply not
+available there, and the same PR cannot be merged with `gh pr merge` either.
+What a stack offers instead is that it maintains the chain itself, which is the
+thing being paid for. Check before assuming which kind you have, since the two
+look identical from the branch names:
+
+```sh
+gh api graphql -f query='query { repository(owner: "OWNER", name: "REPO") {
+  pullRequest(number: 123) { stackEntry { position stack { number size } } } } }'
+```
+
+A null `stackEntry` is a hand-rolled chain, and everything above applies. A
+position in a stack means the deletion hazard is GitHub's problem rather than
+yours — and that you cannot take it back by hand if it goes wrong.
+
 Merging without `--delete-branch`, waiting for GitHub to move the dependents,
 and deleting the branch afterwards is the one to avoid. Nothing moves in the
 meantime, so the deletion arrives with the dependent still pointing at the

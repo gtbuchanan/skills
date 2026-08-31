@@ -80,8 +80,26 @@ const gh = (dir: string, args: readonly string[], input = ''): Run => {
   };
 };
 
-const ghJson = (dir: string, args: readonly string[]): unknown =>
-  JSON.parse(gh(dir, args).stdout);
+/**
+ * The parsed answer to a call that was supposed to succeed.
+ *
+ * The status is checked rather than inferred from the output. Reading stdout
+ * alone drops half the contract, and the stub already has a path that prints
+ * and then fails — `pr checks` reports a pending run before exiting 8 — so a
+ * `pr view` that grew the same shape would keep every assertion built on this
+ * helper green. Today an empty stdout would at least throw out of `JSON.parse`,
+ * but that is an accident of the refusal writing nothing, not an assertion, and
+ * it reports a syntax error rather than the call that failed.
+ */
+const ghJson = (dir: string, args: readonly string[]): unknown => {
+  const result = gh(dir, args);
+  if (result.status !== 0)
+    throw new Error(
+      `gh ${args.join(' ')} exited ${String(result.status)}: ${result.stderr.trim()}`,
+    );
+
+  return JSON.parse(result.stdout);
+};
 
 /**
  * Opens the PR a scenario does not seed, the way the skill does.

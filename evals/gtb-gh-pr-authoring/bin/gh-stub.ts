@@ -288,7 +288,18 @@ const prRecordFor = (number: number | undefined): Record<string, unknown> => {
   const own = scenario.pr;
   if (own !== undefined && (number === undefined || number === own.number))
     return ownRecord(own);
-  if (number === undefined) return refuse('no pull request named');
+  if (number === undefined) {
+    /* Naming no number is not the same as naming nothing: gh answers for the
+       branch you are on. In a scenario that seeds no PR that is whichever one
+       this run opened, and refusing here fails an agent for doing the ordinary
+       thing — creating a PR and then reading it back. */
+    const entry = Object.entries(state.opened).find(
+      ([, pr]) => pr.headRefName === scenario.branch,
+    );
+    return entry === undefined
+      ? refuse('no pull request named')
+      : openedRecord(Number(entry[0]), entry[1]);
+  }
 
   const opened = state.opened[String(number)];
   if (opened !== undefined) return openedRecord(number, opened);

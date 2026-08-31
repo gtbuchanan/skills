@@ -1,0 +1,222 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+#
+# Eval for gtb-gh-pr-authoring. Runs the REAL skill via claude-agent-sdk against
+# genuine repositories seeded by setup.ts, with `gh` shadowed by a fake that
+# serves each scenario's GitHub world (bin/gh-stub.ts) and `git` shadowed by a
+# passthrough that only records (bin/git-stub.ts). authoring-check.ts reads the
+# resulting call log.
+#
+# git is real because this skill commits and pushes: `log`, `status` and `push`
+# are then true by construction, and the one-finding-one-commit rule can be
+# asserted against actual commits rather than against a claim. `gh` cannot be
+# real — the runner shadows it repo-wide precisely so a scenario cannot reach a
+# live forge — so its answers are canned, and an un-canned call fails loudly
+# rather than returning the empty success an agent would believe.
+#
+# Each test states its rule as expectations rather than prose: which calls must
+# appear, which must not, which must precede which, and what body was piped in.
+
+---
+defaultTest:
+  assert:
+    - type: skill-used
+      value: gtb-gh-pr-authoring
+    - type: javascript
+      value: file://authoring-check.ts
+
+  # Keep array vars (requireCalls, forbidCalls, …) intact instead of expanding
+  # each into separate test cases.
+  options:
+    disableVarExpansion: true
+description: gtb-gh-pr-authoring — PR lifecycle against seeded repositories with a fake gh
+
+# Serial for one reason: each scenario owns a checkout, and `--repeat` runs a
+# test more than once, so concurrent repeats would seed the same checkout under
+# each other. Different tests never collide — their checkouts are disjoint.
+evaluateOptions:
+  maxConcurrency: 1
+
+extensions:
+  - file://setup.ts:extensionHook
+
+prompts:
+  - |
+    You are working in the git repository at ./{{ repo }}, relative to your
+    working directory. Everything relevant is inside that repository — do not
+    look outside it, and leave every other directory alone.
+
+    {{ task }}
+
+    When you are finished, briefly report what you did.
+
+providers:
+  - config:
+      apiKeyRequired: false
+      append_allowed_tools:
+        - 'Bash(gh:*)'
+        - 'Bash(git:*)'
+        - 'Edit(scenarios/**)'
+        - 'Read(scenarios/**)'
+        - 'Write(scenarios/**)'
+      ask_user_question:
+        behavior: first_option
+
+      path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
+      setting_sources: ['project']
+      skills: ['gtb-gh-pr-authoring', 'gtb-git-commit-conventions']
+      working_dir: '{{ env.EVAL_WORKSPACE }}'
+    id: anthropic:claude-agent-sdk
+    label: gtb-gh-pr-authoring
+tests:
+  - description: opening — a draft PR whose body is the repository's template, filled in and piped
+    vars:
+      forbidCalls:
+        - ['pr ready']
+
+      repo: scenarios/open-draft
+      requireCalls:
+        - ['pr create', '--draft']
+        - ['pr create', '--body-file']
+        - ['repo view', 'pullRequestTemplates']
+
+      requireStdin:
+        - command: ['pr create']
+          includes: ['### Description']
+
+      scenario: open-draft
+      task: >-
+        The work on this branch is finished and the branch is on the remote.
+        Open a pull request for it against main.
+  - description: pushing — checks watched after the push, nothing promoted and no reviewer summoned
+    vars:
+      forbidCalls:
+        - ['pr ready']
+        - ['pr merge']
+        - ['pr comment']
+        - ['pr edit', '--add-reviewer']
+
+      repo: scenarios/push-watch
+      requireCalls:
+        - ['pr checks', '--watch']
+
+      requireOrder:
+        - after: ['pr checks', '--watch']
+          before: ['push']
+
+      scenario: push-watch
+      task: >-
+        The fix is committed locally but not yet on the remote. Push it, and
+        make sure pull request 12 is in good shape afterwards.
+  - description: feedback — all three surfaces read, one commit per finding, the bot answered and the author's own thread left alone
+    vars:
+      # 5002 is the author's own inline comment, left through the same account
+      # the agent posts from: work handed over, not a conversation to answer.
+      forbidCalls:
+        - ['comments/5002/replies']
+        - ['push', '--force']
+
+      minCommits: 2
+      repo: scenarios/review-feedback
+      requireCalls:
+        - ['pr view', 'reviews']
+        - ['pr view', 'comments']
+        - ['/pulls/23/comments']
+        - ['api user']
+        - ['comments/5001/replies']
+
+      requireOrder:
+        - after: ['comments/5001/replies']
+          before: ['push']
+
+      # -F body=@- rather than an inline field: Markdown is most of a review
+      # reply, and an inline one loses its backticks and fences.
+      requireStdin:
+        - command: ['/replies']
+          includes: []
+
+      scenario: review-feedback
+      task: >-
+        Review feedback has come in on pull request 23. Work through all of it,
+        push what you change, and answer the reviewer.
+  - description: merging — the branch never deleted out from under the dependent, and a squash carrying the reference and the branch's trailers
+    vars:
+      forbidCalls:
+        - ['pr merge', '--rebase']
+        - ['pr merge', '--auto']
+        - ['pr merge', '--admin']
+
+      # The rule is an invariant, not a sequence: the branch ends up gone, and
+      # nothing is still pointing at it when that happens. Retargeting #9 and
+      # then merging with --delete-branch satisfies it; so does merging, letting
+      # GitHub move #9, and deleting afterwards. Only the unsafe order is
+      # forbidden — a --delete-branch merge before #9 has been retargeted.
+      forbidOrder:
+        - after: ['pr edit', '9', '--base']
+          before: ['pr merge', '--delete-branch']
+
+      repo: scenarios/merge-stacked
+      # `pr list` without the flag: listing every open PR and reading
+      # baseRefName finds the dependent just as `--base` does, and the rule is
+      # that it looked before merging, not which spelling it used.
+      requireCalls:
+        - ['pr list']
+        - ['pr merge', '--squash']
+        - ['pr merge', '(#7)']
+
+      # However it got there, the branch does not outlive the PR.
+      requireOneOf:
+        - ['pr merge', '--delete-branch']
+        - ['push', '--delete']
+        - ['push', ':add-rate-limiter']
+
+      requireOrder:
+        - after: ['pr merge']
+          before: ['pr list']
+
+      requireStdin:
+        - command: ['pr merge']
+          includes: ['Co-authored-by: Dana Reyes']
+
+      scenario: merge-stacked
+      task: >-
+        Pull request 7 is approved and green. Merge it.
+  - description: auto-merge — enabled only when asked, and never without the message it will land
+    vars:
+      forbidCalls:
+        - ['pr merge', '--rebase']
+        - ['pr merge', '--admin']
+
+      repo: scenarios/auto-merge
+      # `--body` also matches `--body-file`: what matters is that the message
+      # was supplied rather than left to default, and a subject that says the
+      # whole change may legitimately carry an empty body.
+      requireCalls:
+        - ['pr merge', '--auto']
+        - ['pr merge', '--squash']
+        - ['pr merge', '--body']
+        - ['pr merge', '(#31)']
+
+      scenario: auto-merge
+      task: >-
+        Pull request 31 is approved but the checks are still running, and I do
+        not want to sit here waiting. Set it up to merge itself once they pass.
+  - description: stacked member — gh pr merge is refused, so the merge goes through the async endpoint with a message of its own
+    vars:
+      # --admin does not work on a stack member anyway, but reaching for it is
+      # the failure being guarded against; gh stack merge would land the
+      # default message.
+      forbidCalls:
+        - ['pr merge', '--admin']
+        - ['stack merge']
+
+      repo: scenarios/stack-member
+      requireCalls:
+        - ['merge-async']
+        - ['merge_method=squash']
+        - ['sha=']
+        - ['(#14)']
+        - ['commit_message']
+
+      scenario: stack-member
+      task: >-
+        Pull request 14 is approved and green. Merge it.

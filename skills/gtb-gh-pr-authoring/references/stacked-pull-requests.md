@@ -1,0 +1,101 @@
+# Stacked GitHub pull requests
+
+Everything that changes when a pull request is one of several stacked on each
+other. `SKILL.md` decides whether to split at all; this covers what changes once you
+have. Its rules hold for an ordinary PR, and these replace the ones they
+contradict.
+
+## Creating a stack with gh stack link
+
+**`gh stack link` is the command worth driving.** It takes branch names, PR
+numbers or URLs, bottom to top, and needs no local tracking state — so it works
+from a worktree, where `gh stack init` does not. Branches without a PR get one,
+opened as a draft.
+
+```sh
+gh stack link auth-layer api-routes ui-components
+```
+
+Two of its behaviours belong to the human rather than to you: it pushes branch
+arguments to the remote before looking them up, and `--open` marks PRs ready
+for review — new and existing alike, so it can promote a draft that was
+deliberately left as one.
+
+## Merging a stacked pull request
+
+**`gh pr merge` will not merge a stack member.** It fails with "must be merged
+using the asynchronous merge REST API". This is about being in a stack, not
+about where you sit in one: the bottom PR, based on the trunk with nothing
+under it, fails the same way. Membership also outlives the merges: the last
+member standing, with everything below it already landed, is refused just like
+the first.
+
+`gh pr list` does not report membership, so the error is how you find out.
+After that, the API can tell you what the stack looks like and whether you are
+allowed to bypass:
+
+```sh
+gh api graphql -f query='query { repository(owner: "OWNER", name: "REPO") {
+  pullRequest(number: 123) {
+    viewerCanMergeAsAdmin
+    stackEntry { position stack { number size } }
+  } } }'
+```
+
+```sh
+gh api --method PUT 'repos/{owner}/{repo}/pulls/<number>/merge-async' \
+  -f merge_method=squash -f sha=<head-sha> \
+  -f commit_title='Fix scheduler retry backoff (#1234)' -F commit_message=@-
+```
+
+That returns `status: pending`, so poll until the PR reads `MERGED`. It can
+also return `status: failed` with an HTTP 400 — a draft PR does that — so check
+the response before you start polling. Pin `sha` so a push landing between the
+read and the merge cannot be the thing that merges. The endpoint takes no
+branch-deletion flag, so a branch that disappears anyway went to the
+repository's `deleteBranchOnMerge`.
+
+**A member above the one that merged is moved for you.** GitHub retargets it
+onto the new base either way — that much is not what the stack buys you. What a
+real stack adds is the rebase: the member's commits are replayed onto the new
+base, so it arrives ready rather than carrying work the base already has. A
+plain stack — only a base pointer, with no `gh stack` behind it — gets the
+pointer moved and nothing else, so it still wants restacking by hand.
+
+**That move is a rebase, so the member's commits lose their signatures.** They
+are replayed as new objects the original signatures do not cover, and an author
+running vigilant mode sees them marked Unverified under their own name. There
+is no flag to decline it; the stack rebases on your behalf.
+
+It stops at the branch, though, provided you squash. A squash merge replaces
+those commits outright: GitHub builds the one that lands on the trunk, commits
+it as itself and signs it, so what history keeps is verified whatever the
+branch looked like. Fast-forwarding a member instead preserves exactly what is
+on the branch, which after the stack's rebase is the unsigned version — so it
+is squashing that saves you here, not merging in general.
+
+**No CLI route bypasses a requirement here.** `merge-async` takes the request
+and answers `status: pending` exactly as it would for a mergeable PR, then
+leaves it blocked and never merges it — so the refusal arrives looking like
+success, and a poll waiting for `MERGED` waits forever. `--admin` gets further
+and still
+fails: the base-branch complaint does disappear, so the bypass itself worked,
+and the merge then falls over on stack membership instead. The merge box on the
+PR page is not so limited: with the rights to use it, a "merge without waiting
+for requirements to be met" checkbox appears there for a blocked stack member,
+including one with unmerged PRs still above it. That is their call to make, so
+say the PR is blocked and leave it to them.
+
+Unstacking is the other way round it — leave the stack, merge as an ordinary
+PR, restack — and it costs more than it looks. The PRs above were not stack
+members when the merge happened, so none of them was rebased and each needs
+restacking by hand. And an ordinary PR merges through `gh pr merge`, which puts
+`--delete-branch` back in play with those PRs pointing at the branch it is
+about to delete, so retarget them first as `SKILL.md` describes.
+
+**`gh stack merge` is not a way round it either.** It merges a stack
+atomically, which is genuinely useful, but it exposes no subject or body flag,
+so from the CLI what lands is the default message. The web UI does let you
+write one, so this is a gap in the extension rather than a limit on stacked
+merges. Give it a bare number and it reads that as a stack number before trying
+it as a PR number.

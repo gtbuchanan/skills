@@ -269,6 +269,13 @@ through todo-list edits, which agents cannot do reliably; reset-and-recommit and
 cherry-pick reconstructions discard authorship and author dates and are easy to
 get silently wrong. Plain `git commit --amend` is fine when the target is `HEAD`.
 
+**Amending a message replaces it.** `--amend -F -` swaps the whole message for
+what you hand it, so anything you do not retype is gone — a dropped
+`Co-authored-by:` takes the credit with it, and nothing restores it later. Pass
+`--no-edit` where only the tree is changing, and where the message is what you
+are there for, re-supply the trailers through `--trailer` rather than typing the
+block back into the body, exactly as on a fresh commit.
+
 **Once someone else can see the branch, prefer adding a commit to rewriting
 one.** A fixup-and-rebase rewrites published history: anyone holding the branch
 has to reconcile it, and a reviewer loses the incremental diff since they last
@@ -300,12 +307,21 @@ original, and it leaves no link to what it was undoing.
 - Keep git's generated message and add the why to the body. Whether `git revert`
   stops to let you write that depends on whether it was given a terminal, so
   settle it rather than inherit it: take the generated message with `--no-edit`,
-  read it back, and hand it on with the why appended. The sha reference has to
-  survive that round trip — it is the part that makes the revert auditable.
+  read it back, and amend it with the why written in. Git writes the reverted
+  sha there in full, and that reference is what makes the revert auditable, so
+  it has to come through the round trip character for character.
 
   ```sh
   git revert --no-edit <sha>
-  git log -1 --format=%B   # read back, then amend with -F - as above
+  git log -1 --format=%B   # the message to carry through, verbatim
+  git commit --amend -F - <<'MSG'
+  Revert "Switch the limiter to a fixed window"
+
+  This reverts commit 87a8aa57a2d179e57ead661e27c4f5e6dbc3aa14.
+
+  The fixed window let a full limit through on either side of a bucket
+  boundary, so a caller could spend twice its budget in a few seconds.
+  MSG
   ```
 
 If the commit is unpushed and on your own branch, dropping it is cleaner than

@@ -18,6 +18,7 @@ import { test } from 'vitest';
 import {
   VarsSchema,
   checkForbiddenOrder,
+  checkForbiddenStdin,
   checkOrder,
   checkStdin,
 } from '#evals/gtb-gh-pr-authoring/authoring-check.ts';
@@ -146,5 +147,61 @@ test('a forbidden order catches the unsafe move with no repair after it', ({ exp
   expect(checkForbiddenOrder([call('git push origin --delete x')], vars)).toHaveLength(1);
   expect(
     checkForbiddenOrder([call('git push origin --delete x'), call('pr edit 9')], vars),
+  ).toHaveLength(1);
+});
+
+const noHeadings = [{ command: ['pr', 'create'], includes: ['## ', 'N/A'] }];
+
+test('a description with no headings satisfies the absence rule', ({ expect }) => {
+  expect(
+    checkForbiddenStdin(
+      [
+        call(
+          'pr create --draft --body-file -',
+          'Compute it from the attempt count.\n\nResolves: #482\n',
+        ),
+      ],
+      varsOf({ forbidStdin: noHeadings }),
+    ),
+  ).toStrictEqual([]);
+});
+
+test('a heading anywhere in the body fails, not just at the start', ({ expect }) => {
+  /*
+   * The lenient reading — judging only how the body opens — passes a run that
+   * led with prose and then appended the section set anyway, which is the shape
+   * the default exists to prevent.
+   */
+  expect(
+    checkForbiddenStdin(
+      [call('pr create --body-file -', 'Fix the offset.\n\n## Testing\n\nRan the suite.\n')],
+      varsOf({ forbidStdin: noHeadings }),
+    ),
+  ).toHaveLength(1);
+});
+
+test('one clean body does not excuse another that carries a heading', ({ expect }) => {
+  /*
+   * Every matching call is judged, not some of them. Passing on any clean hit
+   * would let a second body that reintroduced the sections go unnoticed because
+   * the first one was fine.
+   */
+  expect(
+    checkForbiddenStdin(
+      [
+        call('pr create --body-file -', 'Fix the offset.\n\nResolves: #91\n'),
+        call('pr create --body-file -', '## Summary\n\nFix the offset.\n'),
+      ],
+      varsOf({ forbidStdin: noHeadings }),
+    ),
+  ).toHaveLength(1);
+});
+
+test('a section kept but filled with a placeholder fails too', ({ expect }) => {
+  expect(
+    checkForbiddenStdin(
+      [call('pr create --body-file -', 'Fix the offset.\n\nTesting: N/A\n')],
+      varsOf({ forbidStdin: noHeadings }),
+    ),
   ).toHaveLength(1);
 });

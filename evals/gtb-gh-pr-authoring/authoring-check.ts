@@ -210,7 +210,7 @@ export const checkStdin = (
  * description that grew a heading is still wrong when some other call's body
  * was clean.
  */
-const checkForbiddenStdin = (
+export const checkForbiddenStdin = (
   calls: readonly Call[],
   vars: v.InferOutput<typeof VarsSchema>,
 ): string[] =>

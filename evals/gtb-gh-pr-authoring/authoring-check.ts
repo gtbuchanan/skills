@@ -53,7 +53,13 @@ const StdinSchema = v.object({
   includes: StringListSchema,
 });
 
-const VarsSchema = v.object({
+/**
+ * A scenario's declared expectations, with every optional list defaulted.
+ *
+ * Exported so a test can build the same fully-defaulted shape the assertion
+ * runs on rather than hand-rolling one that drifts from it.
+ */
+export const VarsSchema = v.object({
   forbidCalls: v.optional(ClauseListSchema, []),
   forbidOrder: v.optional(v.array(OrderSchema), []),
   minCommits: v.optional(v.number(), 0),
@@ -125,7 +131,7 @@ const checkOneOf = (
  * An ordering that must not happen — the unsafe half of a rule whose safe
  * orders are several.
  */
-const checkForbiddenOrder = (
+export const checkForbiddenOrder = (
   calls: readonly Call[],
   vars: v.InferOutput<typeof VarsSchema>,
 ): string[] =>
@@ -138,7 +144,10 @@ const checkForbiddenOrder = (
       : [];
   });
 
-const checkOrder = (
+/**
+ * Pairs whose `before` must have been called, and called first.
+ */
+export const checkOrder = (
   calls: readonly Call[],
   vars: v.InferOutput<typeof VarsSchema>,
 ): string[] =>
@@ -152,7 +161,10 @@ const checkOrder = (
       : [`${describe(before)} came after ${describe(after)}, not before`];
   });
 
-const checkStdin = (
+/**
+ * That a call was handed the prose it was supposed to pipe.
+ */
+export const checkStdin = (
   calls: readonly Call[],
   vars: v.InferOutput<typeof VarsSchema>,
 ): string[] =>

@@ -96,6 +96,45 @@ the seam:
 
 ## Writing a Git commit message
 
+Hand the message to git as one literal multi-line string — never assembled
+inline, never staged in a file, never left to an editor git opens.
+
+```sh
+# POSIX shells — quoted heredoc delimiter, onto standard input
+git commit -F - <<'MSG'
+Fix scheduler retry backoff
+
+The backoff interval reset on every poll, so a wedged job retried
+forever at the floor delay instead of backing off.
+MSG
+```
+
+```powershell
+# PowerShell — here-string straight into -m; no pipe, no stdin
+git commit -m @'
+Fix scheduler retry backoff
+
+The backoff interval reset on every poll, so a wedged job retried
+forever at the floor delay instead of backing off.
+'@
+```
+
+Each alternative fails on something a commit message routinely contains. An
+inline `-m` string is shell prose: single-quoted it ends at the first
+apostrophe the body has, double-quoted the shell expands `$` and backticks
+before git sees them, and either way a `\n` inside it is two characters git
+writes verbatim — which is how a subject and its body land on one line. A
+message file written inside the repository is swept up by `git add -A` and
+ships as part of the change it describes. And a bare `git commit` opens an
+editor a non-interactive shell cannot answer, so it hangs or dies rather than
+committing.
+
+Quote the heredoc delimiter. Unquoted, the shell reaches into the body first,
+and a message is exactly where backticks and `$` show up — an identifier in
+prose becomes a command substitution.
+
+A subject with no body still goes in `-m`: one line has no structure to lose.
+
 These rules apply in every repository; a history full of `wip` is a reason to
 raise the standard, not permission to match it. A README or CONTRIBUTING that
 specifies a message format overrides them.
@@ -201,9 +240,14 @@ composes with `-m` and `-F`, and each value routes through
 `interpret-trailers` — so the body you author never contains the block:
 
 ```sh
-git commit -m 'Fix scheduler retry backoff' \
+git commit -F - \
   --trailer 'Resolves: #482' \
-  --trailer 'Co-authored-by: Dana Reyes <dana@example.com>'
+  --trailer 'Co-authored-by: Dana Reyes <dana@example.com>' <<'MSG'
+Fix scheduler retry backoff
+
+The backoff interval reset on every poll, so a wedged job retried
+forever at the floor delay instead of backing off.
+MSG
 ```
 
 That matters most for trailers added by convention rather than by thought — an
@@ -224,6 +268,13 @@ Preferred because it is non-interactive. `git rebase -i` needs an editor driven
 through todo-list edits, which agents cannot do reliably; reset-and-recommit and
 cherry-pick reconstructions discard authorship and author dates and are easy to
 get silently wrong. Plain `git commit --amend` is fine when the target is `HEAD`.
+
+**Amending a message replaces it.** `--amend -F -` swaps the whole message for
+what you hand it, so anything you do not retype is gone — a dropped
+`Co-authored-by:` takes the credit with it, and nothing restores it later. Pass
+`--no-edit` where only the tree is changing, and where the message is what you
+are there for, re-supply the trailers through `--trailer` rather than typing the
+block back into the body, exactly as on a fresh commit.
 
 **Once someone else can see the branch, prefer adding a commit to rewriting
 one.** A fixup-and-rebase rewrites published history: anyone holding the branch
@@ -253,8 +304,25 @@ original, and it leaves no link to what it was undoing.
   revert with other work. Name a contiguous run as `<oldest>^..<newest>`; do not
   write a bare `<sha>...`, which git reads as a symmetric-difference range and
   will quietly revert a commit other than the one you named.
-- Keep git's generated message and add the why to the body. The sha reference in
-  it is the part that makes the revert auditable.
+- Keep git's generated message and add the why to the body. Whether `git revert`
+  stops to let you write that depends on whether it was given a terminal, so
+  settle it rather than inherit it: take the generated message with `--no-edit`,
+  read it back, and amend it with the why written in. Git writes the reverted
+  sha there in full, and that reference is what makes the revert auditable, so
+  it has to come through the round trip character for character.
+
+  ```sh
+  git revert --no-edit <sha>
+  git log -1 --format=%B   # the message to carry through, verbatim
+  git commit --amend -F - <<'MSG'
+  Revert "Switch the limiter to a fixed window"
+
+  This reverts commit 87a8aa57a2d179e57ead661e27c4f5e6dbc3aa14.
+
+  The fixed window let a full limit through on either side of a bucket
+  boundary, so a caller could spend twice its budget in a few seconds.
+  MSG
+  ```
 
 If the commit is unpushed and on your own branch, dropping it is cleaner than
 carrying both it and its revert — but that is a rebase, not a hand-undo.

@@ -35,8 +35,14 @@ Whether that costs anything is a repository setting:
 gh repo view --json deleteBranchOnMerge
 ```
 
-Where the repository deletes head branches itself, `--auto` gives up nothing.
-Where it does not, the branch outlives the session that could have removed it,
+That setting states an intention rather than an outcome: a branch protection
+rule or a repository ruleset restricting deletion stops the cleanup, and
+`deleteBranchOnMerge` still reads `true` afterwards. Where a rule might cover
+the head branch, the answer is what the branch did, not what the setting said.
+
+Where the repository does delete head branches itself, `--auto` gives up
+nothing. Where it does not, the branch outlives the session that could have
+removed it,
 so settle it before enabling: take the wait and merge synchronously, or say in
 the handoff that the branch is left to sweep up. The local branch is left either
 way.

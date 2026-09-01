@@ -40,6 +40,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import * as v from 'valibot';
+import { checkRecord, checksFor } from '../checks.ts';
 import { baseBranch, repoSlug, viewer } from '../repository.ts';
 import type {
   DependentPr,
@@ -246,6 +247,8 @@ const readiness = (reviews: readonly { readonly state: string }[]): Record<strin
     : [{ conclusion: 'SUCCESS', name: 'build', status: 'COMPLETED' }],
 });
 
+const checks = checksFor(scenario);
+
 /**
  * The PR with this number: the scenario's own, or one of the dependents stacked
  * on its branch. A dependent is modelled fully enough to be told apart from the
@@ -398,13 +401,27 @@ if (joined.includes('api user')) {
   const listed = listRecords().map(record => pick(record));
   writeLine(JSON.stringify(listed));
 } else if (joined.includes('pr checks')) {
+  const records = checks.map(check => checkRecord(check));
+  if (requestedFields().length > 0) {
+    /* `--jq` is not evaluated here — this double has no jq — so a call that
+       asked for one gets the selected fields and reads them itself. That is
+       more than it asked for, which is normally this file's cardinal sin; it
+       is allowed only because the alternative is guessing at an expression the
+       skill does not fix, and the fields themselves are still narrowed. */
+    writeLine(JSON.stringify(records.map(record => pick(record))));
+  } else if (checks.every(check => check.bucket === 'pass')) {
+    writeLine('All checks were successful');
+  } else {
+    for (const check of records)
+      writeLine(
+        [check['name'], check['bucket'], '0', check['link'], check['description']]
+          .join('\t'),
+      );
+  }
   /* A scenario whose task says the checks are still running has to say so
      here too, or the agent reads the contradiction and acts on the world. */
-  if (scenario.checksPending === true) {
-    writeLine('build\tpending\t0\thttps://github.com/acme/widgets/runs/1');
+  if (checks.some(check => check.bucket === 'pending'))
     process.exit(checksPendingExit);
-  }
-  writeLine('All checks were successful');
 } else if (joined.includes('pr view')) {
   const viewed = pick(prRecordFor(namedNumber()));
   writeLine(JSON.stringify(viewed));

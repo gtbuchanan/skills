@@ -75,10 +75,14 @@ prompts:
 providers:
   - config:
       apiKeyRequired: false
+      # Scoped to the scenario under test rather than to `scenarios/**`. Bare
+      # Glob and Grep reach the whole workspace, so an agent could read a
+      # sibling scenario's tree, and a plan grounded in a project the task never
+      # mentioned is exactly what the grounding check exists to catch.
       append_allowed_tools:
-        - 'Glob'
-        - 'Grep'
-        - 'Read(scenarios/**)'
+        - 'Glob(scenarios/{{ scenario }}/**)'
+        - 'Grep(scenarios/{{ scenario }}/**)'
+        - 'Read(scenarios/{{ scenario }}/**)'
 
       ask_user_question:
         behavior: first_option

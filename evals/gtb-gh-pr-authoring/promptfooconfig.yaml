@@ -150,6 +150,29 @@ tests:
       task: >-
         The fix is committed locally but not yet on the remote. Push it, and
         make sure pull request 12 is in good shape afterwards.
+  - description: promoting — the ready transition watched like a push, and nothing invented to fill the wait
+    vars:
+      # There is nothing to push and nothing to merge here, so doing either
+      # means the agent went looking for work nobody asked for.
+      forbidCalls:
+        - ['push']
+        - ['pr merge']
+
+      repo: scenarios/promote-ready
+      requireCalls:
+        - ['pr ready']
+        - ['pr checks', '--watch']
+
+      # The watch has to come after the promotion. Watching first only reports
+      # the checks the draft already had, which is the answer promoting makes
+      # stale.
+      requireOrder:
+        - after: ['pr checks', '--watch']
+          before: ['pr ready']
+
+      scenario: promote-ready
+      task: >-
+        I have read pull request 44 and it is a draft. Mark it ready for review.
   - description: feedback — all three surfaces read, one commit per finding, the bot answered and the author's own thread left alone
     vars:
       # 5002 is the author's own inline comment, left through the same account

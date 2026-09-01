@@ -25,6 +25,7 @@ import {
   headerBefore,
   limiterAfter,
   limiterBefore,
+  localeBefore,
   parserBefore,
   poolBefore,
   schedulerAfter,
@@ -118,6 +119,35 @@ export const scenarios: readonly Scenario[] = [
       isDraft: true,
       number: 12,
       title: 'Key the response cache by method as well as url',
+    },
+    reviewComments: [],
+    reviews: [],
+  },
+  /*
+   * A draft with nothing left to do but promote. Its checks are already green,
+   * so the only run left to watch is the one promoting starts.
+   */
+  {
+    branch: 'fix-locale-fallback',
+    comments: [],
+    commits: [
+      {
+        date: '2026-05-10T09:00:00-05:00',
+        key: 'base',
+        subject: 'Fall back to the default locale',
+        tree: { 'src/locale.ts': localeBefore },
+      },
+    ],
+    deleteBranchOnMerge: true,
+    dependents: [],
+    key: 'promote-ready',
+    pr: {
+      baseRefName: baseBranch,
+      body: 'Falls back to the default locale when the request names none.',
+      headRefName: 'fix-locale-fallback',
+      isDraft: true,
+      number: 44,
+      title: 'Fall back to the default locale',
     },
     reviewComments: [],
     reviews: [],

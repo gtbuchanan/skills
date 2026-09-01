@@ -54,10 +54,11 @@ A PR moves through six stages, and the last three transitions are the human's:
 1. **Checks** — every push is followed by a check watch.
 1. **Author review** — the human reads the code on GitHub. **Your work stops
    here:** report what you pushed and what the checks said.
-1. **Hosted agent review** — the human fires an automated reviewer once their
-   own pass is done. You neither summon it nor wait for it; you act on the
-   findings when they are brought to you.
-1. **Ready** — the human promotes, which invites human reviewers.
+1. **Hosted agent review** — an automated reviewer goes over the code the human
+   has now read. You neither summon it nor wait for it; you act on the findings
+   when they are brought to you.
+1. **Ready** — the human promotes, which invites human reviewers and starts
+   anything that was skipping the draft.
 1. **Human peer review** — and then the merge.
 
 Each gate spares the next reader what the previous one would have caught:
@@ -248,6 +249,19 @@ failed — read what it printed. "no checks reported" is too early rather than
 red, so watch again instead of reporting the push as broken. If it keeps saying
 it, the branch has nothing configured to run, which is worth saying plainly and
 is still not green.
+
+## Watching checks after promoting a GitHub pull request to ready
+
+**Watch the checks after `gh pr ready`, the same as after a push.** Marking a
+PR ready starts work that was waiting on it: jobs that skip drafts run for the
+first time, and a reviewer that skips drafts starts reading. You are not
+summoning any of that — you are checking on what your own command started.
+
+One thing reads differently here. After a push there are no new checks yet, so
+a watch you run too early tells you there is nothing there. After a promotion
+the draft's old checks are still there, green and finished, so a watch you run
+too early hands those back and looks like success. If the watch comes back
+instantly, you are probably looking at the old run. Watch again.
 
 ## Acting on review feedback on a GitHub pull request
 

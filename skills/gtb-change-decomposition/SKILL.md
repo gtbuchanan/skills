@@ -152,8 +152,9 @@ that needed one.
 
 When a caller asks for the plan structured, emit a JSON array of objects with
 `title`, `kind` (`structural`, `behavioral`, or `spike`), `touches` (the paths
-the unit changes), and `why` (one clause on what makes it its own unit), ordered
-as it should be executed.
+the unit changes — for a spike, which changes nothing, the paths it examines or
+produces), and `why` (one clause on what makes it its own unit), ordered as it
+should be executed.
 
 **Name paths that exist.** Look before planning: paths taken from the shape of
 the request rather than from the project read as confident while describing a

@@ -263,6 +263,13 @@ the draft's old checks are still there, green and finished, so a watch you run
 too early hands those back and looks like success. If the watch comes back
 instantly, you are probably looking at the old run. Watch again.
 
+If the second watch shows that same run — `gh run list --branch <branch>` says
+whether a new one exists at all — report that and leave it there. Nothing may
+have been waiting on the draft, the workflow may not count the promotion among
+its triggers, or a reviewer may be configured and held up by something outside
+the PR. They look the same from the check list, and a third watch will not
+separate them.
+
 ## Acting on review feedback on a GitHub pull request
 
 **Do not summon an automated reviewer, and do not wait for one.** Firing it is

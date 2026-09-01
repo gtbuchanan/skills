@@ -54,6 +54,12 @@ export const parserBefore = [
   '',
 ].join('\n');
 
+export const localeBefore = [
+  'export const resolveLocale = (requested: string | undefined): string =>',
+  '  requested ?? "en-US";',
+  '',
+].join('\n');
+
 export const headerBefore = [
   'export const headerOffset = (message: string): number => {',
   '  return message.indexOf(":");',

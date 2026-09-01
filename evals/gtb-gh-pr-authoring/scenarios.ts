@@ -16,6 +16,7 @@
  * Loaded by the stubs under plain `node`, whose type stripping only erases
  * annotations, so everything here stays erasable syntax.
  */
+import { baseBranch, viewer } from './repository.ts';
 import type { Scenario } from './shapes.ts';
 import {
   cacheAfter,
@@ -24,6 +25,7 @@ import {
   headerBefore,
   limiterAfter,
   limiterBefore,
+  localeBefore,
   parserBefore,
   poolBefore,
   schedulerAfter,
@@ -32,30 +34,6 @@ import {
   tokenBefore,
   tokenizerBefore,
 } from './trees.ts';
-import type { SeedIdentity } from '#lib/seed-repo.ts';
-
-/**
- * The authenticated account — what `gh api user` reports, and the identity the
- * commits carry. The two are deliberately the same person: the skill's rule
- * against replying to your own review threads only has teeth when the account
- * posting is the account that left them.
- */
-export const viewer = 'taylor';
-
-export const author: SeedIdentity = {
-  email: 'taylor@example.com',
-  name: 'Taylor Buchanan',
-};
-
-/**
- * The repository `gh repo view` reports.
- */
-export const repoSlug = 'acme/widgets';
-
-/**
- * The default branch every PR here targets.
- */
-export const baseBranch = 'main';
 
 /**
  * Every scenario, keyed by the name its checkout is seeded under.
@@ -141,6 +119,35 @@ export const scenarios: readonly Scenario[] = [
       isDraft: true,
       number: 12,
       title: 'Key the response cache by method as well as url',
+    },
+    reviewComments: [],
+    reviews: [],
+  },
+  /*
+   * A draft with nothing left to do but promote. Its checks are already green,
+   * so the only run left to watch is the one promoting starts.
+   */
+  {
+    branch: 'fix-locale-fallback',
+    comments: [],
+    commits: [
+      {
+        date: '2026-05-10T09:00:00-05:00',
+        key: 'base',
+        subject: 'Fall back to the default locale',
+        tree: { 'src/locale.ts': localeBefore },
+      },
+    ],
+    deleteBranchOnMerge: true,
+    dependents: [],
+    key: 'promote-ready',
+    pr: {
+      baseRefName: baseBranch,
+      body: 'Falls back to the default locale when the request names none.',
+      headRefName: 'fix-locale-fallback',
+      isDraft: true,
+      number: 44,
+      title: 'Fall back to the default locale',
     },
     reviewComments: [],
     reviews: [],

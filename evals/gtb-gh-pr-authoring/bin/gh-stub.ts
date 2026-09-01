@@ -40,7 +40,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import * as v from 'valibot';
-import { baseBranch, repoSlug, viewer } from '../scenarios.ts';
+import { baseBranch, repoSlug, viewer } from '../repository.ts';
 import type {
   DependentPr,
   PullRequest,

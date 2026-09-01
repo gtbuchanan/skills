@@ -21,7 +21,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import * as v from 'valibot';
-import { author } from './scenarios.ts';
+import { author } from './repository.ts';
 import type { ExtraCommit, Scenario } from './shapes.ts';
 import { markerFile, scenarioByKey, scenarioPath } from './world.ts';
 import { parseJson } from '#lib/calls.ts';

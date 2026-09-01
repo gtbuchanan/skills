@@ -139,8 +139,13 @@ tests:
         - ['pr edit', '--add-reviewer']
 
       repo: scenarios/push-watch
+      # `--watch` on its own would pass a run that learned of one failure and
+      # pushed on it, so the fail-fast watch and the pending checks read by
+      # name are named separately.
       requireCalls:
         - ['pr checks', '--watch']
+        - ['pr checks', '--fail-fast']
+        - ['pr checks', 'workflow']
 
       requireOrder:
         - after: ['pr checks', '--watch']

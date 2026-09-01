@@ -6,9 +6,7 @@ what it appears to.
 ## Exit codes from gh pr checks
 
 Exit 0 means every check passed and 1 means at least one failed; 8 means they
-are still pending, which a completed `--watch` should not give you. Prefer the
-plain watch over `--fail-fast`: learning about one failure per push costs
-another full matrix each time.
+are still pending, which a completed `--watch` should not give you.
 
 ## A check watch that returns before the checks exist
 
@@ -33,3 +31,43 @@ whether a new one exists — report that and leave it there. Nothing may have
 been gated on the draft, the workflow may not count the promotion among its
 triggers, or a reviewer may be held up by something outside the PR. A third
 watch will not separate them.
+
+## Telling a code check from an automated reviewer's
+
+`--watch` waits on the whole list, and an automated reviewer reports as a check
+like any other, so its queue can hold the watch open long after the build has
+answered. Name what is still pending rather than counting it — which check is
+outstanding is the whole question:
+
+```sh
+gh pr checks --json name,workflow,bucket \
+  --jq '.[] | select(.bucket == "pending") | "\(.name)\t\(.workflow)"'
+```
+
+Where GitHub Actions runs all of the CI, a `workflow` marks the checks that
+test the code and a reviewer's has none. The field says "ran as a GitHub
+Actions workflow" rather than "tests the code", though, so another CI service
+or a deploy preview reports with no workflow either — on a repository with any,
+go by the reviewer's name instead of the field.
+
+Nothing outstanding but the reviewer means the fix can go. That answers for the
+moment it is asked, so ask again when the fix is ready rather than treating one
+answer as a wait.
+
+## What an automated reviewer's check reports
+
+What its check means is the reviewer's own convention, so do not read a verdict
+off it. Some pass the check once the review finishes, a review requesting
+changes included; some pass it for a PR they never read, still in draft or
+given up on. Take a green board as no more than "the reviewer is finished, or
+was never going to run", and read the verdict where verdicts live:
+
+```sh
+gh pr view <number> --json reviewDecision,reviews
+```
+
+Whether the review is required decides whether the PR can merge, not when to
+push a fix — so `--required` is no way to leave it out of the wait. The
+reviewer's own check may be required, and where a repository requires nothing
+the flag reports exactly that and exits 1, which reads like a failure and is
+not one.

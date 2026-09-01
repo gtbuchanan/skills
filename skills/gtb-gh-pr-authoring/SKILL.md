@@ -311,7 +311,22 @@ through.
 gh api repos/{owner}/{repo}/pulls/<number>/comments \
   --jq '.[] | "\(.id) \(.path) \(.in_reply_to_id)"'
 gh api repos/{owner}/{repo}/pulls/<number>/comments/<root-id>/replies \
-  -F body=@-
+  -F body=@- <<'BODY'
+Applied in 2f8665e.
+BODY
+```
+
+The `@` here belongs to gh, not to the shell, which is what separates this from
+`--body` above. A PowerShell here-string goes straight into `--body` because
+that value is an ordinary argument; written as `-F body=@'…'@` it never reaches
+PowerShell's parser at all — gh reads `@` as its own read-from-file syntax and
+dies opening a file named after the first line of the message. Only `@-` means
+standard input, so the here-string is piped in rather than passed:
+
+```powershell
+@'
+Applied in 2f8665e.
+'@ | gh api 'repos/{owner}/{repo}/pulls/<number>/comments/<root-id>/replies' -F body=@-
 ```
 
 ## Merging a GitHub pull request

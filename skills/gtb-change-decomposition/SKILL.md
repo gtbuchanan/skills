@@ -129,7 +129,7 @@ is waste. Let the spike choose, then plan the winner.
 ## Stating the plan
 
 Before the first edit, state the units in order — one line each: imperative
-title, what it touches, structural or behavioral.
+title, what it touches, and whether it is structural, behavioral, or a spike.
 
 ```text
 1. Extract the retry policy from the poller (structural) — src/poll.ts

@@ -75,14 +75,25 @@ prompts:
 providers:
   - config:
       apiKeyRequired: false
-      # Scoped to the scenario under test rather than to `scenarios/**`. Bare
-      # Glob and Grep reach the whole workspace, so an agent could read a
-      # sibling scenario's tree, and a plan grounded in a project the task never
-      # mentioned is exactly what the grounding check exists to catch.
+      # These express intent, not a boundary, and the difference was measured
+      # rather than assumed. Two things are true of this provider: `{{ vars }}`
+      # do not resolve in provider config — a `working_dir` of
+      # `.../scenarios/{{ scenario }}` fails with ENOENT on the literal string —
+      # and `append_allowed_tools` appends to a permissive default rather than
+      # restricting it. A probe run confirmed the consequence: from
+      # `structural-first`, reading `leave-whole/src/webhook/types.ts` was
+      # ALLOWED.
+      #
+      # So no rule written here isolates a scenario, and the suite does not
+      # claim otherwise. What keeps the scenarios independent is that nothing on
+      # disk answers another scenario's task: task text lives in these vars, and
+      # a sibling's source tree tells an agent nothing about its own. Real
+      # isolation needs a per-test workspace, which needs a `working_dir` this
+      # provider cannot template.
       append_allowed_tools:
-        - 'Glob(scenarios/{{ scenario }}/**)'
-        - 'Grep(scenarios/{{ scenario }}/**)'
-        - 'Read(scenarios/{{ scenario }}/**)'
+        - 'Glob'
+        - 'Grep'
+        - 'Read(scenarios/**)'
 
       ask_user_question:
         behavior: first_option

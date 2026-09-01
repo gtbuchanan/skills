@@ -110,6 +110,10 @@ tests:
   - description: groundwork first — the provider is extracted before the second one lands
     vars:
       minUnits: 2
+      requiresPaths:
+        - src/payments/stripe.ts
+        - src/payments/checkout.ts
+
       scenario: structural-first
       structuralFirst: true
       task: >-
@@ -126,6 +130,11 @@ tests:
 
       minUnits: 2
       requireKind: structural
+      requiresPaths:
+        - src/cache.js
+        - src/queue.js
+        - src/slug.js
+
       scenario: churn-separated
       task: >-
         The cache serves stale entries and drops fresh ones — the TTL comparison
@@ -139,11 +148,18 @@ tests:
     vars:
       maxUnits: 1
       minUnits: 1
+      # handle.ts is deliberately absent: it forwards the whole event to its
+      # handlers, so a field added to the type reaches consumers without it
+      # changing. Requiring it would fail plans that read the fixture correctly.
+      requiresPaths:
+        - src/webhook/types.ts
+        - src/webhook/parse.ts
+
       scenario: leave-whole
       task: >-
-        Webhook events need to carry the tenant id. The parser, the event type,
-        and the handler all need it, and consumers break unless all three change
-        together.
+        Webhook events need to carry the tenant id. The event type and the
+        parser both need it, and the field is required, so consumers break
+        unless the two change together.
   # Nothing in the tree says where the time goes — it could be the postings
   # query, the per-document loads in rank(), or neither. Planning fixes for an
   # unconfirmed cause invents most of the plan.

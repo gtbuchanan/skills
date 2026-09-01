@@ -63,6 +63,13 @@ const VarsSchema = v.object({
   maxUnits: v.optional(v.number()),
   minUnits: v.optional(v.number()),
   requireKind: v.optional(v.string()),
+  /**
+   * Paths the task cannot be done without touching, checked against the union
+   * of every unit's `touches`. Unit COUNT is not coverage: a `leave-whole` plan
+   * of one unit naming only the type file satisfies every count and ordering
+   * check while leaving out two files the change cannot land without.
+   */
+  requiresPaths: v.optional(StringArraySchema),
   scenario: v.string(),
   structuralFirst: v.optional(v.boolean()),
   verticalSlice: v.optional(v.boolean()),
@@ -166,6 +173,34 @@ const checkShape = (plan: Unit[], scenario: string): string[] => {
   }
 
   return problems;
+};
+
+/**
+ * Paths the task requires that no unit in the plan claims.
+ */
+const checkCoverage = (
+  plan: Unit[],
+  vars: v.InferOutput<typeof VarsSchema>,
+): string[] => {
+  const required = vars.requiresPaths;
+  if (required === undefined) return [];
+
+  const covered = new Set(
+    plan.flatMap(unit => touchedPaths(unit, vars.scenario)),
+  );
+  /* A unit may claim a directory rather than enumerate it — a repo-wide
+   * reformat naming `src` covers every file beneath it — so an ancestor counts.
+   * What this still catches is the case worth catching: a plan naming one file
+   * of a set the change cannot land without. */
+  const isCovered = (entry: string): boolean => {
+    const segments = entry.split('/');
+    for (let depth = 1; depth <= segments.length; depth += 1)
+      if (covered.has(segments.slice(0, depth).join('/'))) return true;
+    return false;
+  };
+  const missing = required.filter(entry => !isCovered(entry));
+
+  return missing.length > 0 ? [`no unit touches ${missing.join(', ')}`] : [];
 };
 
 const checkCounts = (
@@ -285,6 +320,7 @@ export default function assertPlan(
   return fromProblems([
     ...checkShape(plan, vars.scenario),
     ...checkCounts(plan, vars),
+    ...checkCoverage(plan, vars),
     ...checkKinds(plan, vars),
     ...checkStructuralFirst(plan, vars),
     ...checkCuts(plan, vars),

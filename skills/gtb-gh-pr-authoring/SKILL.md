@@ -253,22 +253,19 @@ is still not green.
 ## Watching checks after promoting a GitHub pull request to ready
 
 **Watch the checks after `gh pr ready`, the same as after a push.** Marking a
-PR ready starts work that was waiting on it: jobs that skip drafts run for the
-first time, and a reviewer that skips drafts starts reading. You are not
-summoning any of that — you are checking on what your own command started.
+PR ready starts work that was waiting on it: jobs that skip drafts, and a
+reviewer that skips drafts. You are not summoning any of that — you are
+checking on what your own command started.
 
-One thing reads differently here. After a push there are no new checks yet, so
-a watch you run too early tells you there is nothing there. After a promotion
-the draft's old checks are still there, green and finished, so a watch you run
-too early hands those back and looks like success. If the watch comes back
-instantly, you are probably looking at the old run. Watch again.
+An early watch reads differently here. A push has no checks yet and says so; a
+promotion inherits the draft's run, complete and green, so an instant result is
+probably that old run. Watch again.
 
-If the second watch shows that same run — `gh run list --branch <branch>` says
-whether a new one exists at all — report that and leave it there. Nothing may
-have been waiting on the draft, the workflow may not count the promotion among
-its triggers, or a reviewer may be configured and held up by something outside
-the PR. They look the same from the check list, and a third watch will not
-separate them.
+If the second watch shows the same run — `gh run list --branch <branch>` says
+whether a new one exists — report that and leave it there. Nothing may have
+been gated on the draft, the workflow may not count the promotion among its
+triggers, or a reviewer may be held up by something outside the PR. A third
+watch will not separate them.
 
 ## Acting on review feedback on a GitHub pull request
 

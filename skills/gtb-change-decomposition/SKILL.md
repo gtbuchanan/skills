@@ -80,14 +80,23 @@ earlier ones carry most of the work:
 - **Groundwork** — the extraction, migration, or scaffold a change needs,
   separated from the change that needed it.
 - **Data** — support one type, format, or source first; widen later.
-- **Rules** — relax a validation, permission, or policy, and restore it as its
-  own unit.
+- **Rules** — narrow what the feature does: one scheduling mode, one manager per
+  employee, one currency. Widen it in later units. This cut reduces scope; it
+  never drops a guard on something the feature already does — see below.
 - **Interface** — make it work through the plainest interface, improve it after.
 - **Operations** — a "manage X" scope is create, read, update and delete wearing
   one name.
 - **Spike** — timebox learning as its own unit when uncertainty is what makes
   the change unsplittable. The last cut to reach for and the first unit to run:
   it ships knowledge, not software.
+
+**Controls ride with the behavior they govern.** Authorization, audit and
+compliance records, and safety limits are not scope to be narrowed and deferred:
+they constrain who may perform an operation and what must be recorded when
+someone does, so a unit that ships the operation without them ships something
+nobody intended to be possible. "Admins can archive" is one unit, not archiving
+followed by the permission. Every unit is shippable by definition, which is
+exactly why this cannot be left to a later one.
 
 Worked examples, and how to choose between two viable cuts, are in
 `references/cut-lines.md`. Read it when the obvious cut is not obvious.

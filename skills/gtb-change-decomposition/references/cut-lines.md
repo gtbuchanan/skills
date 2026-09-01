@@ -38,9 +38,7 @@ Cut by layer — schema, then endpoint, then UI — and nothing is demonstrable
 until all three land. Run the catalogue instead:
 
 - **Happy path first** — one date range, generated synchronously, downloaded
-  directly. No email, no audit log. This works end to end and is shippable.
-- **Rules** — the audit log is a policy requirement, not part of the export
-  working. Its own unit, after.
+  directly. No email. This works end to end and is shippable.
 - **Interface** — emailing a link is a better interface to the same generated
   file. Its own unit, after the direct download works.
 - **Data** — if "reports" is really four report types, the first unit supports
@@ -48,14 +46,18 @@ until all three land. Run the catalogue instead:
 - **Groundwork** — if generation needs a job queue that does not exist yet,
   that queue is structural and lands first, green, on its own.
 
+The audit log is not on that list, because it is not scope to be narrowed. It
+records that an export happened, so it belongs to the unit where exports start
+happening — deferring it means shipping a release whose exports leave no trace,
+which is the state the requirement exists to prevent.
+
 The plan falls out in an order where every prefix is coherent:
 
 ```text
 1. Add the job queue the export will run on (structural)
-2. Export one report type for a date range, downloaded directly (behavioral)
+2. Export one report type for a date range, downloaded directly and audited (behavioral)
 3. Deliver the export as an emailed link (behavioral)
-4. Record each export in the audit log (behavioral)
-5. Support the remaining report types (behavioral)
+4. Support the remaining report types (behavioral)
 ```
 
 Stop after unit 2 and something real shipped. Stop after unit 2 in the
@@ -78,11 +80,19 @@ extraction's noise hides whether the first provider's behavior moved.
 format, then the rest. _"Sync from the warehouse"_ becomes one table, then the
 rest. The first unit proves the pipeline; the others are repetition.
 
-**Rules.** A validation, permission, or policy relaxed at first and restored as
-its own unit. _"Only admins can archive, and archived items are retained 90
-days"_ is the archive behavior, then the permission, then the retention job —
-three units, each independently reviewable, where the fused version is one diff
-touching authorization, storage, and scheduling at once.
+**Rules.** Narrow what the feature does, and widen it later. _"Notify on every
+status change"_ becomes notifying on the one transition that matters, then the
+rest; _"employees may have several managers"_ becomes one manager, then several.
+
+What this cut does not license is dropping a guard on something the feature
+already does. _"Only admins can archive, and archived items are retained 90
+days"_ splits into archiving-as-an-admin-only-operation and the retention job —
+two units, not three. The retention job is a policy about data the feature has
+already stored, and defers cleanly. The permission decides whether the archiving
+exists at all for a given caller, so a unit shipping archive without it hands
+every user an operation that was never meant to be theirs. Authorization, audit
+and compliance records, and safety limits all behave this way: they ride with
+the behavior, and only what remains is a candidate for this cut.
 
 **Interface.** The plainest interface that exercises the behavior, improved
 after. A CLI flag before the settings UI; a plain list before the drag-and-drop

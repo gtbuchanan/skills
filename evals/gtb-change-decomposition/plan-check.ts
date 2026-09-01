@@ -105,14 +105,29 @@ const treeAnchors = (scenario: string): { dirs: Set<string>; files: Set<string> 
   return { dirs, files };
 };
 
-const isGrounded = (
+/**
+ * Paths that name nothing in the seeded tree, and no directory of it.
+ *
+ * Every entry has to land, not merely one: a unit pairing a real file with an
+ * invented one is describing a codebase that does not exist just as much as a
+ * unit that invents both, and scoring it on its best path would let the
+ * invention through.
+ */
+const ungrounded = (
   paths: string[],
   anchors: { dirs: Set<string>; files: Set<string> },
-): boolean =>
-  paths.some((entry) => {
-    if (anchors.files.has(entry) || anchors.dirs.has(entry)) return true;
-    const parent = entry.slice(0, entry.lastIndexOf('/'));
-    return parent !== '' && anchors.dirs.has(parent);
+): string[] =>
+  paths.filter((entry) => {
+    if (anchors.files.has(entry) || anchors.dirs.has(entry)) return false;
+    /* A file the unit intends to CREATE is grounded by the directory it would
+     * live in, so `src/payments/provider.ts` counts and `src/export/csv.ts`
+     * does not. */
+    const slash = entry.lastIndexOf('/');
+    /* The project root is a directory too, and it is where the config a unit
+     * adds belongs — a reformat unit writing `.prettierrc` is naming a real
+     * place, not inventing a tree. */
+    if (slash === -1) return false;
+    return !anchors.dirs.has(entry.slice(0, slash));
   });
 
 /**
@@ -140,11 +155,14 @@ const checkShape = (plan: Unit[], scenario: string): string[] => {
     if (unit.title.trim() === '') problems.push(`${label}: no title`);
     if (!kinds.has(unit.kind))
       problems.push(`${label}: kind=${unit.kind || '(none)'} is not structural or behavioral`);
-    if (unit.touches.length === 0) problems.push(`${label}: touches nothing`);
-    else if (!isGrounded(touchedPaths(unit, scenario), anchors))
-      problems.push(
-        `${label}: touches ${unit.touches.join(', ')} — no path under the seeded tree`,
-      );
+    if (unit.touches.length === 0) {
+      problems.push(`${label}: touches nothing`);
+      continue;
+    }
+
+    const invented = ungrounded(touchedPaths(unit, scenario), anchors);
+    if (invented.length > 0)
+      problems.push(`${label}: ${invented.join(', ')} not under the seeded tree`);
   }
 
   return problems;

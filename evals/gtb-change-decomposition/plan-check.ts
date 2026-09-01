@@ -107,7 +107,12 @@ const touchedPaths = (unit: Unit, scenario: string): string[] =>
  */
 const importedPaths = (file: string, contents: string): string[] => {
   const dir = file.split('/').slice(0, -1);
-  const specifiers = contents.matchAll(/from\s+'(?<spec>\.{1,2}\/[^']+)'/gv);
+  /* Both quote styles: the seeded trees are single-quoted throughout, so a
+   * double-quoted one would lose its anchor silently and surface later as a
+   * grounding failure about a path the project plainly names. */
+  const specifiers = contents.matchAll(
+    /from\s+(?<quote>['"])(?<spec>\.{1,2}\/[^'"]+)\k<quote>/gv,
+  );
 
   return [...specifiers].flatMap((match) => {
     const spec = match.groups?.['spec'];
@@ -128,16 +133,23 @@ const treeAnchors = (scenario: string): { dirs: Set<string>; files: Set<string> 
   const found = scenarios.find(entry => entry.key === scenario);
   if (!found) throw new Error(`no seeded tree for scenario ${scenario}`);
 
-  const files = new Set(Object.keys(found.tree));
-  for (const [file, contents] of Object.entries(found.tree))
-    for (const imported of importedPaths(file, contents)) files.add(imported);
+  const seeded = Object.keys(found.tree);
 
+  /* Directories come from the seeded files ALONE. An imported module the tree
+   * does not contain anchors itself, but its directory is not a place the
+   * project was shown to have — deriving `src/store` from an import of
+   * `src/store/documents.ts` would ground `src/store/unmentioned.ts`, a file
+   * nothing in the project names. */
   const dirs = new Set<string>();
-  for (const file of files) {
+  for (const file of seeded) {
     const segments = file.split('/');
     for (let index = 1; index < segments.length; index += 1)
       dirs.add(segments.slice(0, index).join('/'));
   }
+
+  const files = new Set(seeded);
+  for (const [file, contents] of Object.entries(found.tree))
+    for (const imported of importedPaths(file, contents)) files.add(imported);
 
   return { dirs, files };
 };

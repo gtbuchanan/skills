@@ -59,6 +59,12 @@ test('does not take a candidate from inside a string literal', ({ expect }) => {
   expect(found).toStrictEqual({ reason: 'no array matched the expected shape' });
 });
 
+test('reaches an array nested inside an object', ({ expect }) => {
+  const found = findJsonArray('[{"result":[{"title":"x"}]}]', Titled);
+
+  expect(found).toStrictEqual({ output: [{ title: 'x' }] });
+});
+
 test('prefers the outer array when both satisfy the schema', ({ expect }) => {
   const found = findJsonArray('[{"title":"outer","kids":[{"title":"inner"}]}]', Titled);
 

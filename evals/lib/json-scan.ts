@@ -64,10 +64,16 @@ const arraySpan = (text: string, start: number): string | undefined => {
  * permissive enough schema it wins. That array does not exist in the JSON, so
  * it must not be reachable from a parse of it.
  */
-const collectNested = (value: readonly unknown[], into: unknown[][]): void => {
-  for (const item of value) {
-    if (!Array.isArray(item)) continue;
-    into.push(item);
+const collectNested = (value: unknown, into: unknown[][]): void => {
+  /* Object values are walked too, not just array items: a result wrapped as
+   * `[{"result": [ … ]}]` puts the array that matches one level inside an
+   * object, and stopping at objects would leave it unreachable. */
+  const isWalkable = typeof value === 'object' && value !== null;
+  if (!isWalkable) return;
+  const children = Array.isArray(value) ? value : Object.values(value);
+
+  for (const item of children) {
+    if (Array.isArray(item)) into.push(item);
     collectNested(item, into);
   }
 };

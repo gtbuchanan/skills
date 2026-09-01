@@ -51,11 +51,11 @@ or a deploy preview reports with no workflow either — on a repository with any
 go by the reviewer's name instead of the field.
 
 Nothing outstanding but the reviewer means the fix can go — unless that review
-is already running rather than waiting to. Where the reviewer says which it is,
-the difference is worth reading: a queued review may sit behind a backlog or a
-limit for as long as it takes, while one under way will report shortly, and
-waiting for it lets a single push carry its findings with the build fix.
-Pushing through it discards the run and starts another against the new head.
+is already running rather than waiting to. The check's description is where a
+reviewer says which: one that reads as queued may sit behind a backlog or a
+limit for as long as that takes, while one that reads as under way reports
+shortly, and waiting lets a single push carry its findings with the build fix.
+Pushing through it discards that run and starts another against the new head.
 
 That answers for the moment it is asked, so ask again when the fix is ready
 rather than treating one answer as a wait.
@@ -63,14 +63,23 @@ rather than treating one answer as a wait.
 ## What an automated reviewer's check reports
 
 What its check means is the reviewer's own convention, so do not read a verdict
-off it. Some pass the check once the review finishes, a review requesting
-changes included; some pass it for a PR they never read, still in draft or
-given up on. Take a green board as no more than "the reviewer is finished, or
-was never going to run", and read the verdict where verdicts live:
+off it. A green one covers a review that finished having asked for changes and
+a PR the reviewer never read — one still in draft, or one it gave up on — and
+those are worth telling apart, so read the description rather than the colour.
+Take green as no more than "the reviewer is finished, or was never going to
+run".
+
+Where it put its findings is a third question again. Whether a reviewer submits
+a review at all is a setting on its side, so a finished one can leave `reviews`
+empty and the PR still reporting `REVIEW_REQUIRED`, having said everything it
+had to say in a conversation comment:
 
 ```sh
-gh pr view <number> --json reviewDecision,reviews
+gh pr view <number> --json reviewDecision,reviews,comments
 ```
+
+That is the same three surfaces the review-feedback rules name, and a check
+saying `pass` argues for none of them being empty.
 
 Whether the review is required decides whether the PR can merge, not when to
 push a fix — so `--required` is no way to leave it out of the wait. The

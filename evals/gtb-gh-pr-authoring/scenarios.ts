@@ -16,6 +16,7 @@
  * Loaded by the stubs under plain `node`, whose type stripping only erases
  * annotations, so everything here stays erasable syntax.
  */
+import { baseBranch, viewer } from './repository.ts';
 import type { Scenario } from './shapes.ts';
 import {
   cacheAfter,
@@ -32,30 +33,6 @@ import {
   tokenBefore,
   tokenizerBefore,
 } from './trees.ts';
-import type { SeedIdentity } from '#lib/seed-repo.ts';
-
-/**
- * The authenticated account — what `gh api user` reports, and the identity the
- * commits carry. The two are deliberately the same person: the skill's rule
- * against replying to your own review threads only has teeth when the account
- * posting is the account that left them.
- */
-export const viewer = 'taylor';
-
-export const author: SeedIdentity = {
-  email: 'taylor@example.com',
-  name: 'Taylor Buchanan',
-};
-
-/**
- * The repository `gh repo view` reports.
- */
-export const repoSlug = 'acme/widgets';
-
-/**
- * The default branch every PR here targets.
- */
-export const baseBranch = 'main';
 
 /**
  * Every scenario, keyed by the name its checkout is seeded under.

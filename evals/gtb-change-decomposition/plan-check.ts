@@ -96,13 +96,43 @@ const touchedPaths = (unit: Unit, scenario: string): string[] =>
  * CREATE (`src/payments/provider.ts`) still counts as grounded while one naming
  * an invented tree (`src/export/csv.ts`) does not.
  */
+/**
+ * Relative import specifiers in a seeded file, resolved against its directory.
+ *
+ * A module the tree imports but does not contain is still something the project
+ * named — `fog` seeds a search that loads documents from `../store/documents.ts`
+ * precisely so the cause of its slowness may lie somewhere unreadable. A plan
+ * naming that file read it off an import statement rather than inventing it,
+ * which is the distinction grounding is trying to draw.
+ */
+const importedPaths = (file: string, contents: string): string[] => {
+  const dir = file.split('/').slice(0, -1);
+  const specifiers = contents.matchAll(/from\s+'(?<spec>\.{1,2}\/[^']+)'/gv);
+
+  return [...specifiers].flatMap((match) => {
+    const spec = match.groups?.['spec'];
+    if (spec === undefined) return [];
+
+    const resolved = [...dir];
+    for (const segment of spec.split('/')) {
+      if (segment === '.') continue;
+      if (segment === '..') resolved.pop();
+      else resolved.push(segment);
+    }
+
+    return [resolved.join('/')];
+  });
+};
+
 const treeAnchors = (scenario: string): { dirs: Set<string>; files: Set<string> } => {
   const found = scenarios.find(entry => entry.key === scenario);
   if (!found) throw new Error(`no seeded tree for scenario ${scenario}`);
 
   const files = new Set(Object.keys(found.tree));
-  const dirs = new Set<string>();
+  for (const [file, contents] of Object.entries(found.tree))
+    for (const imported of importedPaths(file, contents)) files.add(imported);
 
+  const dirs = new Set<string>();
   for (const file of files) {
     const segments = file.split('/');
     for (let index = 1; index < segments.length; index += 1)

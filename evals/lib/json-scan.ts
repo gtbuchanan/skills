@@ -75,8 +75,11 @@ const scanJsonArrays = (
       const parsed: unknown = JSON.parse(span);
       if (!Array.isArray(parsed)) continue;
       arrays.push(parsed);
-      // Resume past this array so its own contents aren't rescanned.
-      index += span.length - 1;
+      /* The scan deliberately does not resume past the span. An outer array
+       * that parses as JSON can still lose to the schema — `[[{…}]]` is the
+       * plain case — and skipping its contents would retire the only candidate
+       * that could have matched. Rescanning nested spans costs a pass over
+       * text an agent just wrote; missing the result costs a false failure. */
     } catch (error) {
       parseError ??= error instanceof Error ? error.message : String(error);
     }

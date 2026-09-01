@@ -14,15 +14,19 @@ late.
 
 ## Why a line is needed at all
 
-Description-based selection reaches requests whose subject is the decomposition
-itself — _break this up_, _is this one PR or two_, _sort out this pile of
-changes_. It does not reach _fix the retry logic_ or _implement the caching
-layer_, which carry no cue resembling decomposition and which an agent will
-happily perform without consulting anything.
+The frontmatter description names the work this skill applies to, implementing a
+feature and fixing a bug among it. Being applicable is not the same as being
+selected: selection matches on what a request says, and _fix the retry logic_
+says nothing resembling decomposition, so nothing puts the skill in front of the
+agent that would have used it. What selection reaches reliably is a request
+whose subject is the decomposition itself — _break this up_, _is this one PR or
+two_, _sort out this pile of changes_.
 
-Those are precisely the requests where the boundaries get decided. A skill that
-arrives after the change is written has arrived too late to affect it — the
-splitting is then recovery rather than planning.
+The gap between those two sets is the whole problem, because it is the requests
+that never mention planning where the boundaries actually get decided. A skill
+arriving after the change is written has arrived too late to affect it; the
+splitting is then recovery rather than planning. An always-loaded line closes
+the gap by not depending on the wording of the request at all.
 
 ## Why the later phases need no such line
 

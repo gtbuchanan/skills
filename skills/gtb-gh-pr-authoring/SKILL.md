@@ -243,15 +243,14 @@ Fail-fast named one failure; the finished list is what you fix against, or the
 fix goes up on half the story and buys the second full matrix that watching was
 there to avoid. What has to finish is the checks that test the code — an
 automated reviewer reports as a check too, and its queue can outlast the build
-several
-times over, so waiting on that is how a queued review ends up holding a build
-fix. `references/watching-checks.md` has the query for that, and what it cannot
-tell apart on its own.
+several times over, so waiting on that is how a queued review ends up holding a
+build fix. A review already running is the exception worth waiting for: its
+findings are close, and one push can carry them with the build fix.
 
 A watch can report green, or report a failure, having earned neither — before
 the checks exist, and after a promotion. Read `references/watching-checks.md`
-for those, for the exit codes, and for the query that separates a workflow's
-checks from a reviewer's.
+for those, for the exit codes, and for telling a check that tests the code from
+a reviewer's.
 
 ## Watching checks after promoting a GitHub pull request to ready
 

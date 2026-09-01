@@ -50,9 +50,15 @@ Actions workflow" rather than "tests the code", though, so another CI service
 or a deploy preview reports with no workflow either — on a repository with any,
 go by the reviewer's name instead of the field.
 
-Nothing outstanding but the reviewer means the fix can go. That answers for the
-moment it is asked, so ask again when the fix is ready rather than treating one
-answer as a wait.
+Nothing outstanding but the reviewer means the fix can go — unless that review
+is already running rather than waiting to. Where the reviewer says which it is,
+the difference is worth reading: a queued review may sit behind a backlog or a
+limit for as long as it takes, while one under way will report shortly, and
+waiting for it lets a single push carry its findings with the build fix.
+Pushing through it discards the run and starts another against the new head.
+
+That answers for the moment it is asked, so ask again when the fix is ready
+rather than treating one answer as a wait.
 
 ## What an automated reviewer's check reports
 

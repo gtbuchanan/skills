@@ -54,8 +54,28 @@ const arraySpan = (text: string, start: number): string | undefined => {
 };
 
 /**
- * Every bracket-balanced array in `text` that parses as JSON, in the order they
- * start, plus the first parse failure seen along the way.
+ * Appends every array nested inside `value`, outermost first.
+ *
+ * Nested candidates are taken from the PARSED value rather than by rescanning
+ * the text, because an outer array that loses to the schema can still contain
+ * the one that matches — `[[{…}]]` is the plain case. Rescanning would find
+ * those too, but it would also find bracket runs inside string literals: given
+ * `["note [1]"]`, a text scan offers `[1]` as a candidate, and against a
+ * permissive enough schema it wins. That array does not exist in the JSON, so
+ * it must not be reachable from a parse of it.
+ */
+const collectNested = (value: readonly unknown[], into: unknown[][]): void => {
+  for (const item of value) {
+    if (!Array.isArray(item)) continue;
+    into.push(item);
+    collectNested(item, into);
+  }
+};
+
+/**
+ * Every array in `text` that parses as JSON — top-level spans in the order they
+ * start, each followed by the arrays nested inside it — plus the first parse
+ * failure seen along the way.
  */
 const scanJsonArrays = (
   text: string,
@@ -75,11 +95,10 @@ const scanJsonArrays = (
       const parsed: unknown = JSON.parse(span);
       if (!Array.isArray(parsed)) continue;
       arrays.push(parsed);
-      /* The scan deliberately does not resume past the span. An outer array
-       * that parses as JSON can still lose to the schema — `[[{…}]]` is the
-       * plain case — and skipping its contents would retire the only candidate
-       * that could have matched. Rescanning nested spans costs a pass over
-       * text an agent just wrote; missing the result costs a false failure. */
+      collectNested(parsed, arrays);
+      // Resume past the span: its interior is covered by collectNested, and
+      // rescanning it is what would surface brackets inside string literals.
+      index += span.length - 1;
     } catch (error) {
       parseError ??= error instanceof Error ? error.message : String(error);
     }

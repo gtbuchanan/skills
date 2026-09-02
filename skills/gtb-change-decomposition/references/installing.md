@@ -30,15 +30,35 @@ the gap by not depending on the wording of the request at all.
 
 ## Why the later phases need no such line
 
-Whatever governs commit messages, pull requests, or code review can be left to
-its own description. By the time those matter, the request says so — _commit
-this_, _open a PR_, _what did review say_ — and a description matching that
-wording is enough to reach the right conventions at the right moment.
+The mechanics of a later phase can be left to its own description. By the time
+those matter, the request says so — _commit this_, _open a PR_, _what did review
+say_ — and a description matching that wording reaches the right conventions at
+the right moment.
 
-Decomposition is the sole exception, which is why it is the sole thing named in
-always-loaded instructions. Naming the others there would put back exactly the
-cost that separating this skill was meant to remove: every task paying for
-mechanics it does not need yet.
+That holds for mechanics and only for mechanics, which is a narrower claim than
+it first looks. A phase skill also collects decisions its phase merely
+_reveals_: how many reviews the work is split across, and what each one branches
+from, both surface when the first one is opened and are both settled long before
+it. A description keyed to _open a PR_ reaches those a branch too late, and no
+wording repairs it — that is a deadline rather than a matching problem.
+
+The test is whether acting on a rule needs something to have been done
+differently earlier. Where it does, the rule belongs with planning, whichever
+phase it appears to describe.
+
+That does not make it this skill's rule. Decisions like those are specific to a
+host — what a squash keeps, what a stack costs, whether reviews are pull requests
+at all — and this skill stays ignorant of that on purpose, which is what lets it
+describe a project of any shape. So they belong in a small always-loaded skill of
+their own, beside this one:
+
+> Boundaries are always-loaded. Mechanics are triggered.
+
+That is a second line in your instructions rather than a first, and worth it at
+the size boundaries come in. What this argument objects to is naming the phase
+skills — charging every task for a template, a check watch and a merge it does
+not need yet. A few dozen lines deciding how many reviews the work becomes is
+not that, and it is the half that was arriving late.
 
 ## If it is not installed
 

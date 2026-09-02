@@ -236,33 +236,29 @@ gh pr checks --watch --fail-fast
 ```
 
 **`--fail-fast` says when to start diagnosing, never when to push.** It returns
-on the first failure, while the rest of the run is still going.
+on the first failure, with the run still going.
 
-**Before pushing, confirm the run has finished and fix everything it found.**
-Fail-fast named one failure; the finished list is what you fix against, or the
-fix goes up on half the story and buys the second full matrix that watching was
-there to avoid. What has to finish is the checks that test the code — an
-automated reviewer reports as a check too, and its queue can outlast the build
-several times over, so waiting on that is how a queued review ends up holding a
-build fix. A review already running is the exception worth waiting for: its
-findings are close, and one push can carry them with the build fix.
+**Push once the checks that test the code have finished**, so the push carries
+every failure the run found rather than the first. An automated reviewer
+reports as a check too and can sit queued far longer than the build, so waiting
+on that is how a review holds up a fix it has nothing to do with. One already
+running is worth the wait: a single push can carry its findings as well.
 
 A watch can report green, or report a failure, having earned neither — before
-the checks exist, and after a promotion. Read `references/watching-checks.md`
-for those, for the exit codes, and for telling a check that tests the code from
-a reviewer's.
+the checks exist, and after a promotion. `references/watching-checks.md` has
+those, the exit codes, and how to tell a code check from a reviewer's.
 
 ## Watching checks after promoting a GitHub pull request to ready
 
 **Watch the checks after `gh pr ready`, the same as after a push.** Marking a
-PR ready starts work that was waiting on it: jobs that skip drafts, and a
-reviewer that skips drafts. You are not summoning any of that — you are
-checking on what your own command started.
+PR ready starts what was waiting on it — jobs that skip drafts, and a reviewer
+that skips drafts. You are not summoning any of it; you are checking on what
+your own command started.
 
-**An instant green after a promotion is the draft's own run.** The checks it
-already passed are still there, so a watch can finish before anything new
-registers. `references/watching-checks.md` covers what to do with that, and
-when to stop watching.
+**An instant green after a promotion is the draft's own run**, still there and
+still passing while nothing new has registered yet.
+`references/watching-checks.md` covers what to do with that, and when to stop
+watching.
 
 ## Acting on review feedback on a GitHub pull request
 

@@ -44,51 +44,45 @@ gh pr checks --json name,workflow,bucket \
   --jq '.[] | select(.bucket == "pending") | "\(.name)\t\(.workflow)"'
 ```
 
-Where GitHub Actions runs all of the CI, a `workflow` marks the checks that
-test the code and a reviewer's has none. The field says "ran as a GitHub
-Actions workflow" rather than "tests the code", though, so another CI service
-or a deploy preview reports with no workflow either — on a repository with any,
-go by the reviewer's name instead of the field.
+Where GitHub Actions runs all the CI, a `workflow` marks a check that tests the
+code and a reviewer's has none. The field means "ran as an Actions workflow"
+rather than "tests the code", so another CI service or a deploy preview has none
+either; where a repository has any, go by the reviewer's name instead.
 
 Nothing outstanding but the reviewer means the fix can go — unless that review
-is already running rather than waiting to. The check's description is where a
-reviewer says which: one that reads as queued may sit behind a backlog or a
-limit for as long as that takes, while one that reads as under way reports
-shortly, and waiting lets a single push carry its findings with the build fix.
-Pushing through it discards that run and starts another against the new head.
+is running rather than queued, which its description is where to read. A queued
+one may sit behind a backlog or a limit for as long as that takes; one under way
+reports shortly, and waiting lets a single push carry its findings with the
+build fix, where pushing through discards that run and starts another against
+the new head.
 
-That answers for the moment it is asked, so ask again when the fix is ready
-rather than treating one answer as a wait.
+The answer holds for the moment it is asked, so ask again when the fix is ready
+rather than treating one as a wait.
 
 ## What an automated reviewer's check reports
 
 What its check means is the reviewer's own convention, so do not read a verdict
-off it. One that passed may have finished a review that asked for changes, or
-skipped a draft it declined to read, or given up on a head it never got to — a
-spent rate limit passes exactly like a clean bill, and that is the one where a
-reviewer meant to run and nothing on the board says it did not. Read the
-description rather than the colour, and take green as no more than "nothing
-further is coming from the reviewer on this head".
+off it. A passing one covers a review that asked for changes, a draft it
+declined to read, and a head it never got to — a spent rate limit passes exactly
+like a clean bill, and that is the dangerous one, where the reviewer meant to
+run and nothing on the board says it did not. Read the description, not the
+colour, and take green as no more than "nothing further is coming".
 
-Where it put its findings is a third question again. Whether it submits a
-review — the thing carrying an approval or a request for changes — is a setting
-on its side, and with that off a finished review leaves `reviews` empty and
-`reviewDecision` still `REVIEW_REQUIRED`. The findings do not move because of
-it: they land inline as they always do, with the summary in a conversation
-comment. So an empty `reviews` says nothing about whether anything was found,
-and only the inline surface answers that:
+Whether it submits a review — the thing carrying an approval or a request for
+changes — is a setting on its side; with that off, `reviews` stays empty and
+`reviewDecision` still reads `REVIEW_REQUIRED`. Its findings do not move for
+that: they land inline as always, with the summary in a conversation comment. An
+empty `reviews` therefore says nothing about whether anything was found:
 
 ```sh
 gh pr view <number> --json reviewDecision,reviews,comments
 gh api --paginate repos/{owner}/{repo}/pulls/<number>/comments
 ```
 
-Those are the surfaces the review-feedback rules name — `--json comments`
+Those are the surfaces the review-feedback rules name, and `--json comments`
 never includes the inline ones, which is why the second call is not optional.
-A check saying `pass` argues for none of them being empty.
 
 Whether the review is required decides whether the PR can merge, not when to
-push a fix — so `--required` is no way to leave it out of the wait. The
+push a fix, so `--required` is no way to leave it out of the wait: the
 reviewer's own check may be required, and where a repository requires nothing
-the flag reports exactly that and exits 1, which reads like a failure and is
-not one.
+the flag says so and exits 1, which reads like a failure and is not one.

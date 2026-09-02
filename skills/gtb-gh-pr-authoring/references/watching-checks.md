@@ -63,11 +63,12 @@ rather than treating one answer as a wait.
 ## What an automated reviewer's check reports
 
 What its check means is the reviewer's own convention, so do not read a verdict
-off it. A green one covers a review that finished having asked for changes and
-a PR the reviewer never read — one still in draft, or one it gave up on — and
-those are worth telling apart, so read the description rather than the colour.
-Take green as no more than "the reviewer is finished, or was never going to
-run".
+off it. One that passed may have finished a review that asked for changes, or
+skipped a draft it declined to read, or given up on a head it never got to — a
+spent rate limit passes exactly like a clean bill, and that is the one where a
+reviewer meant to run and nothing on the board says it did not. Read the
+description rather than the colour, and take green as no more than "nothing
+further is coming from the reviewer on this head".
 
 Where it put its findings is a third question again. Whether a reviewer submits
 a review at all is a setting on its side, so a finished one can leave `reviews`

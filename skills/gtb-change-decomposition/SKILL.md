@@ -171,6 +171,12 @@ undoing it costs most.
 its hook runner, its test script, not a generic guess. The standalone test is a
 promise to whoever lands between two units later.
 
+**Where units ship separately, done includes shipped.** A unit whose checks pass
+is finished as code and not yet finished as a unit: leave it sitting where it
+was written and start the next one, and the two arrive together whatever the
+plan said. Send each on its way before the next begins — nothing fails when that
+is skipped, which is what makes it the step that quietly does not happen.
+
 **The plan is a hypothesis.** When the code disagrees, re-plan rather than
 widening the current unit to swallow the surprise; out-of-scope work becomes its
 own unit or a follow-up, never a passenger. Say what changed — a plan silently
@@ -183,6 +189,13 @@ This skill decides boundaries and order, not what a unit is called or how it
 ships. Those are separate jobs with their own conventions, living wherever your
 project keeps them; load those when you reach that point rather than improvising
 their rules from here.
+
+**Except for whatever they settle early.** A project's shipping conventions
+usually hold a decision or two carrying this plan's deadline rather than their
+own — how many of the units one review covers, and what each one branches from.
+Neither can be applied afterwards to a branch that already answered it. Where
+your project keeps conventions like that, they belong loaded alongside this
+skill rather than at the point the rest of them governs.
 
 ## Installing this skill
 

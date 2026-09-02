@@ -8,8 +8,6 @@ description: >-
   work is headed for a GitHub PR or one is already open: creating a PR, pushing
   to a branch that has one, marking it ready for review, reading CI results,
   answering or acting on review comments, or merging and deleting the branch.
-  Reviewing someone else's PR is the opposite job — that is what the
-  gtb-pr-review-* skills are for.
 ---
 
 # Authoring a GitHub pull request

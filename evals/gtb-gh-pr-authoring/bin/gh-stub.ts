@@ -342,6 +342,15 @@ if (joined.includes('api user')) {
   writeLine(JSON.stringify(listed));
 } else if (joined.includes('pr checks')) {
   const records = checks.map(check => checkRecord(check));
+  if (checks.length === 0) {
+    /* An empty list is a failure to gh, not a pass: it says so on stderr and
+       exits 1. The skill has a rule about not reading that as red, so a double
+       answering "All checks were successful" here would deny a scenario the
+       one state that rule is about — and `[].every()` is true, so the success
+       branch below claims it. */
+    process.stderr.write(`no checks reported on the '${scenario.branch}' branch\n`);
+    process.exit(1);
+  }
   if (requestedFields().length > 0) {
     /* `--jq` is not evaluated here — this double has no jq — so a call that
        asked for one gets the selected fields and reads them itself. That is

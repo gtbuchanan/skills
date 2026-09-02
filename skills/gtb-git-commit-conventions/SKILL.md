@@ -1,12 +1,12 @@
 ---
 name: gtb-git-commit-conventions
 description: >-
-  Git commit conventions — how to scope a commit, when to make one, and how to
-  write the message, plus trailers, fixups, and reverts. Use whenever work in a
-  Git repository is going to produce commits: implementing a feature, fixing a
-  bug, refactoring, acting on review feedback, or untangling changes already
-  piled up in the working tree. Also use for any explicit request to commit,
-  write or reword a commit message, amend, split, squash, fixup, or revert.
+  Git commit conventions — when to make a commit and how to write the message,
+  plus trailers, fixups, reverts, and the recovery moves for work already piled
+  up in the working tree. Use whenever work in a Git repository is going to
+  produce commits: implementing a feature, fixing a bug, refactoring, or acting
+  on review feedback. Also use for any explicit request to commit, write or
+  reword a commit message, amend, split, squash, fixup, or revert.
 ---
 
 # Git commit guidelines
@@ -14,8 +14,6 @@ description: >-
 The commit is the smallest durable unit of a project's history: `git log`,
 `git bisect`, and `git revert` still operate on it long after the branch and
 everyone who remembers the change are gone. Shape commits for those readers.
-Most of that shaping happens before any message is written, which is why this
-belongs at the start of the work rather than the end.
 
 ## When to make a Git commit
 
@@ -24,43 +22,15 @@ at the end of the session. While you are inside the change you know which edits
 belong together; an hour later you are reconstructing that from a diff, and the
 commits you carve out record states nothing ever built or tested.
 
-**One logical change per commit.** A bug fix and a dependency bump, a refactor
-and the feature it enabled: separate commits. That is what makes `revert`
-precise, keeps `bisect` pointing at a cause rather than a bundle, and lets a
-reviewer read one intention at a time.
+**What counts as one change is decided before the first edit**, along with how
+the pieces are ordered and when something is better left whole. A commit is one
+of those units written down. `gtb-change-decomposition` governs all of it and
+none of its rules are repeated here — reach for it when the question is where
+the boundary falls rather than what to call it.
 
-**Two tests for whether it is one change.** Reverting the commit should remove
-exactly what its subject describes and nothing else — collateral means it was
-carrying a second change. And if the subject needs an "and" to stay accurate,
-that "and" is usually the seam to split on.
-
-**Atomic is not minimal.** The unit is one idea, not one file or one hunk: a
-change touching a handler, its schema, and its test is one commit when it is one
-thought. Splitting past that point costs more than it buys — a stream of
-fragments nobody can follow, some of which do not build alone, is worse than the
-tangled commit it replaced.
-
-**Ship tests with the code they cover.** Separating them leaves the earlier
-commit recording behavior nothing verified, and a later revert strands tests for
-code that is gone.
-
-**Keep mechanical churn out of semantic commits.** A reformat, bulk rename, or
-import reshuffle landed alongside a fix buries the fix in noise and makes the
-diff unreviewable. Give the churn its own commit; for a repo-wide reformat,
-record its sha in `.git-blame-ignore-revs` so `git blame` keeps pointing at
-whoever wrote the logic rather than at the formatter.
-
-**Watch for the verb changing.** Finished extracting a helper and about to use
-it, finished the feature and about to test it — the step you just finished is a
-commit.
-
-**Order commits so each stands alone.** An enabling refactor lands before the
-change that needs it, so every commit builds and can be reviewed, reverted, or
-bisected on its own.
-
-**Run the project's build and checks before each commit** — its build task, its
-hook runner, its test script, not a generic guess. A commit that does not build
-breaks `bisect` for everyone who crosses it later.
+**Record a repo-wide reformat in `.git-blame-ignore-revs`.** Its own commit is
+still a wall of moved lines, and without the sha listed there `git blame` credits
+the formatter instead of whoever wrote the logic.
 
 **If work has already piled up**, split it before committing. This is recovery
 rather than routine — the cost of it is exactly what committing as you go
@@ -340,25 +310,3 @@ It is a conventional indicator that the caller is a non-interactive agent. A
 signing setup that wraps GPG can read it and skip the TTY-loopback pinentry an
 agent's shell has no way to answer, so a cache miss raises a prompt a human can
 approve instead of hanging the commit. Inert where nothing reads it.
-
-## Installing these Git commit conventions
-
-This skill needs a line in your always-loaded agent instructions (`AGENTS.md`,
-`CLAUDE.md`, or the equivalent) naming it:
-
-```text
-When asked to plan or make changes in a Git repo, load the
-gtb-git-commit-conventions skill before your first edit. It governs how the
-work gets split into commits, and that is decided while you work — consulting
-it once the change is written is too late.
-```
-
-Description-based selection will not stand in for that. It reaches requests
-whose subject is the history itself — squash these, write a message, sort out
-this branch — but not "fix the retry logic" or "implement the caching layer",
-which carry no cue resembling commit conventions and which an agent can perform
-without consulting anything. Those are the cases where commit boundaries are
-actually being decided.
-
-If you are reading this because the skill loaded and no such line exists, say
-so: it will keep failing to load on exactly the work it is most needed for.

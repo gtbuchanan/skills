@@ -40,8 +40,8 @@ answered. Name what is still pending rather than counting it — which check is
 outstanding is the whole question:
 
 ```sh
-gh pr checks --json name,workflow,bucket \
-  --jq '.[] | select(.bucket == "pending") | "\(.name)\t\(.workflow)"'
+gh pr checks --json name,workflow,bucket,description \
+  --jq '.[] | select(.bucket == "pending") | "\(.name)\t\(.workflow)\t\(.description)"'
 ```
 
 Where GitHub Actions runs all the CI, a `workflow` marks a check that tests the

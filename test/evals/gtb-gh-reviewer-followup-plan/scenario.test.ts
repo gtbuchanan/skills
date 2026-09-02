@@ -1,5 +1,5 @@
 /*
- * Tests for the gtb-gh-reviewer-followup-plan suite's canned GitHub side.
+ * Tests for this suite's canned GitHub side.
  *
  * The git side is a real repository (see seed.test.ts), so what these keep
  * honest is the join between the two: the reviews fixture names commits by plan

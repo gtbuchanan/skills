@@ -1,9 +1,10 @@
 /*
- * promptfoo javascript assertion for the gtb-gh-reviewer-followup-plan read path.
+ * promptfoo javascript assertion for this suite's read path.
  *
  * The fake gh/git (bin/*-stub.ts) append every invocation's argv, as a JSON
- * line tagged with its command, to artifacts/skill-evals/gtb-gh-reviewer-followup-plan.calls.jsonl.
- * This asserts the skill behaved as the read-only analysis shell it claims to be:
+ * line tagged with its command, to the suite's call log under
+ * artifacts/skill-evals/. This asserts the skill behaved as the read-only
+ * analysis shell it claims to be:
  *
  *   1. read-only        — no mutating gh call (resolve/unresolve, replies,
  *                         reactions)

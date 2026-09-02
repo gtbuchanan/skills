@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Fake `git` for the gtb-gh-reviewer-followup eval. The prompt tells the agent it is
+ * Fake `git` for this eval. The prompt tells the agent it is
  * already in the checkout (skip worktree setup/teardown), but this no-op stub is
  * a safety net so any stray git call (e.g. a `git pull --ff-only`) succeeds
  * quietly instead of touching a real repo. Every call is logged to $STUB_LOG.

@@ -1,8 +1,8 @@
 /*
- * promptfoo javascript assertion for the gtb-gh-reviewer-followup-apply write path.
+ * promptfoo javascript assertion for this suite's write path.
  *
  * The fake gh (bin/gh-stub.ts) appends every invocation's argv, as a JSON
- * line, to artifacts/skill-evals/gtb-gh-reviewer-followup-apply.calls.jsonl. This checks that
+ * line, to the suite's call log under artifacts/skill-evals/. This checks that
  * the skill made the right GitHub calls for the fixture's approved actions:
  *
  *   expectResolve  — thread ids that must appear in a resolveReviewThread call

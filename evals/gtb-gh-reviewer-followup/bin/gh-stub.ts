@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Fake `gh` for the gtb-gh-reviewer-followup eval. The dependent skills are mocked, so
+ * Fake `gh` for this eval. The dependent skills are mocked, so
  * the only real GitHub calls are the ones the orchestrator makes itself — the
  * happy-path `pr review --approve` and `pr merge --squash`. This logs every
  * invocation (argv) to $STUB_LOG and returns canned success so followup-check.ts

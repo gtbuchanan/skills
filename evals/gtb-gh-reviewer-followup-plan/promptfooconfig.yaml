@@ -1,9 +1,9 @@
 # yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
 #
-# Read-path eval for gtb-gh-reviewer-followup-plan. Runs the REAL skill via claude-agent-sdk,
+# Read-path eval for this skill. Runs the REAL skill via claude-agent-sdk,
 # shadowing both `gh` and `git` with fakes (bin/*-stub.ts) that serve canned PR
-# data from fixtures/scenario and record every call to
-# artifacts/skill-evals/gtb-gh-reviewer-followup-plan.calls.jsonl. plan-check.ts asserts the
+# data from fixtures/scenario and record every call to the suite's log under
+# artifacts/skill-evals/. plan-check.ts asserts the
 # skill stayed read-only, queried the right endpoints, scoped the diff to the
 # last-review baseline, and emitted a correct action list (skip-only threads
 # dropped, a resolved-by-other thread the fix missed reopened; verdict→action

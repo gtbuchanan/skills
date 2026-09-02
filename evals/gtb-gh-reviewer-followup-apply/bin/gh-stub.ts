@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Fake `gh` for the gtb-gh-reviewer-followup-apply write-path eval. It never touches the
+ * Fake `gh` for this write-path eval. It never touches the
  * network: it appends the invocation (argv) as a JSON line to $STUB_LOG so the
  * checker can assert exactly which GitHub calls the skill made, and returns
  * canned JSON so the skill can proceed.

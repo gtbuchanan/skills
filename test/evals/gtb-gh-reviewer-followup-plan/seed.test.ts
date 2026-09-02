@@ -1,5 +1,5 @@
 /*
- * Tests for seeding the gtb-gh-reviewer-followup-plan suite's checkout.
+ * Tests for seeding this suite's checkout.
  *
  * These drive the real git, because every claim worth making here is a claim
  * about what git actually does with the seed: that the object names come out

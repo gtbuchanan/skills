@@ -81,6 +81,13 @@ const testInWorkspace = test.extend<{ workspace: { readonly dir: string } }>({
 const suiteUrl = (suite: string): string =>
   pathToFileURL(path.join(repoRoot, 'evals', suite, 'setup.ts')).href;
 
+/**
+ * These helpers derive paths from a suite name and never read the disk, so the
+ * name is sample data. A stand-in keeps the cases from being rewritten every
+ * time a real skill is renamed.
+ */
+const suite = 'gtb-example-suite';
+
 testWithoutWorkspace('skillsRoot refuses to guess when unset', ({ expect }) => {
   expect(() => skillsRoot()).toThrow(/EVAL_WORKSPACE is unset/v);
 });
@@ -103,28 +110,22 @@ testInWorkspace('skillsRoot is independent of the repo it runs from', ({ expect,
 });
 
 testInWorkspace('artifactPath stays anchored to the repo', ({ expect, workspace }) => {
-  const resolved = artifactPath('gtb-gh-reviewer-followup-plan.calls.jsonl');
+  const resolved = artifactPath(`${suite}.calls.jsonl`);
 
   expect(resolved).toBe(
-    path.join(repoRoot, 'artifacts', 'skill-evals', 'gtb-gh-reviewer-followup-plan.calls.jsonl'),
+    path.join(repoRoot, 'artifacts', 'skill-evals', `${suite}.calls.jsonl`),
   );
   expect(resolved.startsWith(workspace.dir)).toBe(false);
 });
 
 test('suiteName derives the skill from the calling file', ({ expect }) => {
-  expect(suiteName(suiteUrl('gtb-gh-reviewer-followup-apply'))).toBe(
-    'gtb-gh-reviewer-followup-apply',
-  );
+  expect(suiteName(suiteUrl(suite))).toBe(suite);
 });
 
 test('suiteDir resolves to the calling suite directory', ({ expect }) => {
-  expect(suiteDir(suiteUrl('gtb-gh-reviewer-followup-apply'))).toBe(
-    path.join(repoRoot, 'evals', 'gtb-gh-reviewer-followup-apply'),
-  );
+  expect(suiteDir(suiteUrl(suite))).toBe(path.join(repoRoot, 'evals', suite));
 });
 
 test('suiteCallLog keys the log by suite, under the artifact dir', ({ expect }) => {
-  expect(suiteCallLog(suiteUrl('gtb-gh-reviewer-followup-plan'))).toBe(
-    artifactPath('gtb-gh-reviewer-followup-plan.calls.jsonl'),
-  );
+  expect(suiteCallLog(suiteUrl(suite))).toBe(artifactPath(`${suite}.calls.jsonl`));
 });

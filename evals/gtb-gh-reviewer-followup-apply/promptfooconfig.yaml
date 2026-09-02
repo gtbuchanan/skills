@@ -1,9 +1,9 @@
 # yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
 #
-# Write-path eval for gtb-gh-reviewer-followup-apply. Runs the REAL skill via claude-agent-sdk
+# Write-path eval for this skill. Runs the REAL skill via claude-agent-sdk
 # against pre-approved action-list fixtures, but shadows the `gh` CLI with a
 # fake (bin/gh-stub.ts) so NOTHING is written to a real PR. The stub records
-# every invocation's argv to artifacts/skill-evals/gtb-gh-reviewer-followup-apply.calls.jsonl,
+# every invocation's argv to the suite's log under artifacts/skill-evals/,
 # and apply-check.ts asserts the skill made the right GitHub calls.
 #
 # Runs only under the eval runner, where the fake gh sits at the front of PATH

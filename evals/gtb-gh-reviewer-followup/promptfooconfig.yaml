@@ -1,9 +1,9 @@
 # yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
 #
-# Orchestration eval for gtb-gh-reviewer-followup. The dependent skills are mocked
+# Orchestration eval for this skill. The dependent skills are mocked
 # (see mock-skills/ + setup.ts) so this exercises followup's own control flow
-# and merge gate in isolation — the diff/apply pipelines are covered by their
-# own suites. setup.ts overlays the mock diff/apply onto the already-synced real
+# and merge gate in isolation — the plan/apply pipelines are covered by their
+# own suites. setup.ts overlays the mock plan/apply onto the already-synced real
 # skills; a fake gh (bin/gh-stub.ts) captures the only real calls followup
 # makes itself — pr review --approve and pr merge --squash — and
 # followup-check.ts asserts the gate.
@@ -53,7 +53,7 @@ providers:
         - 'gtb-gh-reviewer-followup-plan'
         - 'gtb-gh-reviewer-followup-apply'
       # The runner's workspace, like the other suites; setup.ts overlays the
-      # mock diff/apply onto the real skills already installed there.
+      # mock plan/apply onto the real skills already installed there.
       working_dir: '{{ env.EVAL_WORKSPACE }}'
     id: anthropic:claude-agent-sdk
     label: gtb-gh-reviewer-followup

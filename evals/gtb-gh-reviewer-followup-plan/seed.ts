@@ -1,5 +1,5 @@
 /*
- * The PR the gtb-gh-reviewer-followup-plan suite follows up on, as a real repository.
+ * The PR this suite follows up on, as a real repository.
  *
  * The history below IS the PR, so `log`, `diff`, `rev-parse` and `status` are
  * true by construction and the stub only has to record what was asked.

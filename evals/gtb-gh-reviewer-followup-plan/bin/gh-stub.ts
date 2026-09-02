@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Fake `gh` for the gtb-gh-reviewer-followup-plan read-path eval. It never touches the network:
+ * Fake `gh` for this read-path eval. It never touches the network:
  * it appends every invocation (argv) as a JSON line to $STUB_LOG and returns
  * canned data from $SCENARIO_DIR so the skill can proceed. plan-check.ts reads
  * the log to assert the skill stayed read-only and hit the right endpoints.

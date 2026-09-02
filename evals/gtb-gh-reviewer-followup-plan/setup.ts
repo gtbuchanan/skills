@@ -1,5 +1,5 @@
 /*
- * promptfoo beforeAll/beforeEach extension for the gtb-gh-reviewer-followup-plan suite.
+ * promptfoo beforeAll/beforeEach extension for this suite.
  *
  * Two things have to exist before the skill runs: a checkout of the PR, and
  * canned GitHub data that agrees with it. The checkout is seeded for real
@@ -17,10 +17,11 @@ import { copyFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { readTemplate, resolveShas } from './scenario.ts';
 import { seedRepository } from './seed.ts';
-import { artifactPath, skillsRoot, suiteCallLog, suiteDir } from '#lib/paths.ts';
+import { artifactPath, skillsRoot, suiteCallLog, suiteDir, suiteName } from '#lib/paths.ts';
 import { resolveRealGit } from '#lib/real-git.ts';
 import { resetCallLog, truncateCallLog } from '#lib/setup.ts';
 
+const suite = suiteName(import.meta.url);
 const logPath = suiteCallLog(import.meta.url);
 const fixtures = path.join(suiteDir(import.meta.url), 'fixtures', 'scenario');
 
@@ -28,7 +29,7 @@ const fixtures = path.join(suiteDir(import.meta.url), 'fixtures', 'scenario');
  * Writes the canned GitHub data with the object names seeding produced.
  */
 const resolveScenario = (shas: Record<string, string>): string => {
-  const resolved = artifactPath('gtb-gh-reviewer-followup-plan.scenario');
+  const resolved = artifactPath(`${suite}.scenario`);
   rmSync(resolved, { force: true, recursive: true });
   mkdirSync(resolved, { recursive: true });
   writeFileSync(
@@ -62,7 +63,7 @@ export const extensionHook = (hookName: string): void => {
   resetCallLog(logPath);
   const shas = seedRepository({
     git: resolveRealGit(),
-    origin: artifactPath('gtb-gh-reviewer-followup-plan.origin.git'),
+    origin: artifactPath(`${suite}.origin.git`),
     workspace: skillsRoot(),
   });
   process.env['SCENARIO_DIR'] = resolveScenario(shas);

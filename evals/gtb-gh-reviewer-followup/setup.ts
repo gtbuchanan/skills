@@ -1,5 +1,5 @@
 /*
- * promptfoo beforeAll/beforeEach extension for the gtb-gh-reviewer-followup suite.
+ * promptfoo beforeAll/beforeEach extension for this suite.
  *
  * This suite tests the orchestrator in isolation: its dependent skills
  * (gtb-gh-reviewer-followup-plan, gtb-gh-reviewer-followup-apply) are mocked so
@@ -10,7 +10,7 @@
  * The harness has already installed the real skills into the tree this suite
  * runs against. Each suite gets its own, so this hook simply OVERLAYS the mock
  * deps on top with the same installer — the doubles overwrite the real
- * diff/apply for this suite only, while the genuine followup (the skill under
+ * plan/apply for this suite only, while the genuine followup (the skill under
  * test) is untouched. No drifting copy of followup, no separate install tree;
  * working_dir is the same as every other suite's. The installer's -a flag keeps
  * the layout agent-neutral (it must match the provider); swapping providers is

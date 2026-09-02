@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Recording `git` for the gtb-gh-reviewer-followup-plan read-path eval.
+ * Recording `git` for this read-path eval.
  *
  * This one fakes nothing. setup.ts seeds a real checkout of the PR — history,
  * origin and all — so every answer git gives is already true; the only thing

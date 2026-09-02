@@ -1,9 +1,9 @@
 /*
- * promptfoo javascript assertion for the gtb-gh-reviewer-followup merge gate.
+ * promptfoo javascript assertion for this suite's merge gate.
  *
- * The dependent skills are mocked, so the shared call log
- * (artifacts/skill-evals/gtb-gh-reviewer-followup.calls.jsonl) contains only the gh
- * calls the orchestrator makes itself. This asserts the happy-path gate:
+ * The dependent skills are mocked, so the shared call log under
+ * artifacts/skill-evals/ contains only the gh calls the orchestrator makes
+ * itself. This asserts the happy-path gate:
  *
  *   expectMerge true  — every thread was an exact fix, so followup must approve
  *                       AND squash-merge (the review is fully addressed).

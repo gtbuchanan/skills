@@ -1,5 +1,5 @@
 /*
- * promptfoo javascript assertion for gtb-reviewer-followup-verdict.
+ * promptfoo javascript assertion for this suite.
  *
  * The skill's output is a raw JSON array of per-thread verdicts. A reply must be
  * present iff the verdict is not exact-fix (exact-fix resolves the thread instead

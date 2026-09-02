@@ -1,6 +1,6 @@
 /*
- * The GitHub side of the world the gtb-gh-reviewer-followup-plan suite runs against, and the
- * identities both sides share.
+ * The GitHub side of the world this suite runs against, and the identities
+ * both sides share.
  *
  * The git side is a real repository (seed.ts), so the only facts that still
  * have to be stated are the ones GitHub owns: who the viewer is, what the

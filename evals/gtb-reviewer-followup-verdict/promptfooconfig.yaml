@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
 #
-# Tests the REAL gtb-reviewer-followup-verdict skill (no duplicated rubric) via promptfoo's
+# Tests the REAL skill (no duplicated rubric) via promptfoo's
 # claude-agent-sdk provider, following
 # https://www.promptfoo.dev/docs/guides/test-agent-skills/
 #

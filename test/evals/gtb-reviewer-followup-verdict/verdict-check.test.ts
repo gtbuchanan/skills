@@ -1,6 +1,6 @@
 /*
- * Tests for how the gtb-reviewer-followup-verdict checker finds the skill's array in the
- * agent's reply.
+ * Tests for how this suite's checker finds the skill's array in the agent's
+ * reply.
  *
  * The skill is told to emit the array bare, and usually does — but "usually" is
  * the whole problem. A real run sometimes leads with a sentence or wraps the

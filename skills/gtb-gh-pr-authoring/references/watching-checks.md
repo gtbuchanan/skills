@@ -70,17 +70,22 @@ reviewer meant to run and nothing on the board says it did not. Read the
 description rather than the colour, and take green as no more than "nothing
 further is coming from the reviewer on this head".
 
-Where it put its findings is a third question again. Whether a reviewer submits
-a review at all is a setting on its side, so a finished one can leave `reviews`
-empty and the PR still reporting `REVIEW_REQUIRED`, having said everything it
-had to say in a conversation comment:
+Where it put its findings is a third question again. Whether it submits a
+review — the thing carrying an approval or a request for changes — is a setting
+on its side, and with that off a finished review leaves `reviews` empty and
+`reviewDecision` still `REVIEW_REQUIRED`. The findings do not move because of
+it: they land inline as they always do, with the summary in a conversation
+comment. So an empty `reviews` says nothing about whether anything was found,
+and only the inline surface answers that:
 
 ```sh
 gh pr view <number> --json reviewDecision,reviews,comments
+gh api --paginate repos/{owner}/{repo}/pulls/<number>/comments
 ```
 
-That is the same three surfaces the review-feedback rules name, and a check
-saying `pass` argues for none of them being empty.
+Those are the three surfaces the review-feedback rules name — `--json comments`
+never includes the inline ones, which is why the second call is not optional.
+A check saying `pass` argues for none of them being empty.
 
 Whether the review is required decides whether the PR can merge, not when to
 push a fix — so `--required` is no way to leave it out of the wait. The

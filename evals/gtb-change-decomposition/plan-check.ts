@@ -102,14 +102,50 @@ const ContextSchema = v.looseObject({
  * loudly if the recording it depends on is not there, because an isolation
  * check that quietly measures nothing reads exactly like one that passed.
  */
-const foreignReach = (call: v.InferOutput<typeof ToolCallSchema>, others: string[]): string[] => {
+/**
+ * A path's segments with `.` and `..` resolved away.
+ */
+const resolveSegments = (path: string): string[] => {
+  const resolved: string[] = [];
+
+  for (const segment of path.split('/')) {
+    if (segment === '' || segment === '.') continue;
+    if (segment === '..') resolved.pop();
+    else resolved.push(segment);
+  }
+
+  return resolved;
+};
+
+/**
+ * References in a tool call that do not provably stay inside `scenario`.
+ *
+ * Matching the names of the OTHER scenarios would only catch a call that spells
+ * one out. The likelier ways to read a sibling never do: `find ./scenarios
+ * -type f` walks all of them, `scenarios/*` expands to all of them, and
+ * `scenarios/layer-trap/../leave-whole/…` resolves into one while naming
+ * another. So every `scenarios` reference is resolved and required to land
+ * inside this scenario, which makes anything unproven a failure rather than
+ * anything recognized.
+ */
+export const strayReferences = (
+  call: { input?: unknown; name?: string },
+  scenario: string,
+): string[] => {
   /* Windows paths arrive escaped inside the serialized input, so every run of
    * backslashes collapses to one separator before matching. */
   const text = JSON.stringify(call.input ?? {}).replaceAll(/\\+/gv, '/');
+  const references = text.matchAll(/scenarios(?:\/[^\s"',;\)]*)?/gv);
 
-  return others
-    .filter(other => text.includes(`scenarios/${other}`))
-    .map(other => `${call.name} → ${other}`);
+  return [...references]
+    .map(match => match[0])
+    .filter((reference) => {
+      // A bare `scenarios` reaches every one of them; anything else has to name
+      // this scenario in the position directly beneath it.
+      const [root, key] = resolveSegments(reference);
+      return root !== 'scenarios' || key !== scenario;
+    })
+    .map(reference => `${call.name ?? 'call'} → ${reference}`);
 };
 
 const trespasses = (context: unknown, scenario: string): string[] => {
@@ -122,8 +158,7 @@ const trespasses = (context: unknown, scenario: string): string[] => {
       `context had ${Object.keys(parsed).join(', ') || '(nothing)'}`,
     ];
 
-  const others = scenarios.map(entry => entry.key).filter(key => key !== scenario);
-  const seen = new Set(calls.flatMap(call => foreignReach(call, others)));
+  const seen = new Set(calls.flatMap(call => strayReferences(call, scenario)));
 
   return seen.size > 0 ? [`left its scenario: ${[...seen].join('; ')}`] : [];
 };

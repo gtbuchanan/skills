@@ -39,7 +39,8 @@ export const checkState = (bucket: CheckEntry['bucket']): string => {
   if (bucket === 'pass') return 'SUCCESS';
   if (bucket === 'fail') return 'FAILURE';
   if (bucket === 'pending') return 'PENDING';
-  return bucket.toUpperCase();
+  if (bucket === 'skipping') return 'SKIPPED';
+  return 'CANCELLED';
 };
 
 export const checkRecord = (check: CheckEntry): Record<string, unknown> => ({

@@ -140,7 +140,8 @@ tests:
 
       repo: scenarios/push-watch
       requireCalls:
-        - ['pr checks', '--watch']
+        - ['pr checks', '--watch', '--fail-fast']
+        - ['pr checks', '--json', 'workflow', 'bucket']
 
       requireOrder:
         - after: ['pr checks', '--watch']

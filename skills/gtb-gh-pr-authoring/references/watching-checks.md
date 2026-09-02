@@ -66,7 +66,7 @@ off it. A passing one covers a review that asked for changes, a draft it
 declined to read, and a head it never got to — a spent rate limit passes exactly
 like a clean bill, and that is the dangerous one, where the reviewer meant to
 run and nothing on the board says it did not. Read the description, not the
-colour, and take green as no more than "nothing further is coming".
+colour.
 
 Whether it submits a review — the thing carrying an approval or a request for
 changes — is a setting on its side; with that off, `reviews` stays empty and

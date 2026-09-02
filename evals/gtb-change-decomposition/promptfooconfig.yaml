@@ -80,16 +80,16 @@ providers:
       # do not resolve in provider config — a `working_dir` of
       # `.../scenarios/{{ scenario }}` fails with ENOENT on the literal string —
       # and `append_allowed_tools` appends to a permissive default rather than
-      # restricting it. A probe run confirmed the consequence: from
-      # `structural-first`, reading `leave-whole/src/webhook/types.ts` was
-      # ALLOWED.
+      # restricting it. That default includes `Bash`, so no allow rule here can
+      # express a boundary at all: the first thing a run does is `find` its way
+      # around the workspace.
       #
-      # So no rule written here isolates a scenario, and the suite does not
-      # claim otherwise. What keeps the scenarios independent is that nothing on
-      # disk answers another scenario's task: task text lives in these vars, and
-      # a sibling's source tree tells an agent nothing about its own. Real
-      # isolation needs a per-test workspace, which needs a `working_dir` this
-      # provider cannot template.
+      # The boundary is therefore asserted rather than granted. plan-check.ts
+      # reads the recorded toolCalls and fails a run that reached into another
+      # scenario, which covers every tool instead of the ones a rule names.
+      # Verified in both directions: with a prompt that deliberately reads a
+      # sibling, the four other scenarios fail with `left its scenario` while
+      # `leave-whole` — whose own files those are — still passes.
       append_allowed_tools:
         - 'Glob'
         - 'Grep'

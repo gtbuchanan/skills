@@ -77,6 +77,57 @@ const VarsSchema = v.object({
 
 const kinds = new Set(['behavioral', 'spike', 'structural']);
 
+const ToolCallSchema = v.looseObject({
+  input: v.optional(v.unknown()),
+  name: v.optional(v.string(), ''),
+});
+const MetadataSchema = v.looseObject({
+  toolCalls: v.optional(v.array(ToolCallSchema)),
+});
+const ProviderResponseSchema = v.looseObject({
+  metadata: v.optional(MetadataSchema),
+});
+const ContextSchema = v.looseObject({
+  providerResponse: v.optional(ProviderResponseSchema),
+});
+
+/**
+ * Tool calls that reached into a scenario other than the one under test.
+ *
+ * The provider grants no boundary here — `append_allowed_tools` appends to a
+ * permissive default rather than restricting it, and the default includes
+ * `Bash`, so an allow rule cannot express this. What can be expressed is the
+ * property itself: the run is asked afterwards whether it stayed put. That
+ * covers every tool rather than the ones a rule happens to name, and it fails
+ * loudly if the recording it depends on is not there, because an isolation
+ * check that quietly measures nothing reads exactly like one that passed.
+ */
+const foreignReach = (call: v.InferOutput<typeof ToolCallSchema>, others: string[]): string[] => {
+  /* Windows paths arrive escaped inside the serialized input, so every run of
+   * backslashes collapses to one separator before matching. */
+  const text = JSON.stringify(call.input ?? {}).replaceAll(/\\+/gv, '/');
+
+  return others
+    .filter(other => text.includes(`scenarios/${other}`))
+    .map(other => `${call.name} → ${other}`);
+};
+
+const trespasses = (context: unknown, scenario: string): string[] => {
+  const parsed = v.parse(ContextSchema, context ?? {});
+  const calls = parsed.providerResponse?.metadata?.toolCalls;
+
+  if (calls === undefined)
+    return [
+      'no toolCalls recorded, so the isolation check could not run — ' +
+      `context had ${Object.keys(parsed).join(', ') || '(nothing)'}`,
+    ];
+
+  const others = scenarios.map(entry => entry.key).filter(key => key !== scenario);
+  const seen = new Set(calls.flatMap(call => foreignReach(call, others)));
+
+  return seen.size > 0 ? [`left its scenario: ${[...seen].join('; ')}`] : [];
+};
+
 /**
  * Normalizes a path for comparison: forward slashes, no leading `./`, and no
  * scenario-root prefix, so `scenarios/fog/src/search/rank.ts`,
@@ -360,6 +411,7 @@ export default function assertPlan(
   const plan = found.output;
 
   return fromProblems([
+    ...trespasses(context, vars.scenario),
     ...checkShape(plan, vars.scenario),
     ...checkCounts(plan, vars),
     ...checkCoverage(plan, vars),

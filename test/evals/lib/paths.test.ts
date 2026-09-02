@@ -103,26 +103,28 @@ testInWorkspace('skillsRoot is independent of the repo it runs from', ({ expect,
 });
 
 testInWorkspace('artifactPath stays anchored to the repo', ({ expect, workspace }) => {
-  const resolved = artifactPath('gtb-pr-review-diff.calls.jsonl');
+  const resolved = artifactPath('gtb-gh-reviewer-followup-plan.calls.jsonl');
 
   expect(resolved).toBe(
-    path.join(repoRoot, 'artifacts', 'skill-evals', 'gtb-pr-review-diff.calls.jsonl'),
+    path.join(repoRoot, 'artifacts', 'skill-evals', 'gtb-gh-reviewer-followup-plan.calls.jsonl'),
   );
   expect(resolved.startsWith(workspace.dir)).toBe(false);
 });
 
 test('suiteName derives the skill from the calling file', ({ expect }) => {
-  expect(suiteName(suiteUrl('gtb-pr-review-apply'))).toBe('gtb-pr-review-apply');
+  expect(suiteName(suiteUrl('gtb-gh-reviewer-followup-apply'))).toBe(
+    'gtb-gh-reviewer-followup-apply',
+  );
 });
 
 test('suiteDir resolves to the calling suite directory', ({ expect }) => {
-  expect(suiteDir(suiteUrl('gtb-pr-review-apply'))).toBe(
-    path.join(repoRoot, 'evals', 'gtb-pr-review-apply'),
+  expect(suiteDir(suiteUrl('gtb-gh-reviewer-followup-apply'))).toBe(
+    path.join(repoRoot, 'evals', 'gtb-gh-reviewer-followup-apply'),
   );
 });
 
 test('suiteCallLog keys the log by suite, under the artifact dir', ({ expect }) => {
-  expect(suiteCallLog(suiteUrl('gtb-pr-review-diff'))).toBe(
-    artifactPath('gtb-pr-review-diff.calls.jsonl'),
+  expect(suiteCallLog(suiteUrl('gtb-gh-reviewer-followup-plan'))).toBe(
+    artifactPath('gtb-gh-reviewer-followup-plan.calls.jsonl'),
   );
 });

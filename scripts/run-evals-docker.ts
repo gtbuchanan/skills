@@ -13,7 +13,7 @@
  *
  *   docker compose up -d               # once: start the results server
  *   pnpm eval:docker                   # all suites, in parallel
- *   pnpm eval:docker gtb-pr-review-apply   # filter to one skill
+ *   pnpm eval:docker gtb-gh-reviewer-followup-apply   # filter to one skill
  *   pnpm eval:docker --repeat 3        # flags forwarded to promptfoo
  *
  * Auth: mounts the local keyless Claude session (~/.claude/.credentials.json,

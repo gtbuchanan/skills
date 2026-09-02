@@ -15,7 +15,7 @@
  * collide — there is no shared log to truncate and no per-test env, which is why
  * the suite runs in parallel. This hook only has to set up once (beforeAll).
  *
- * Like the gtb-pr-review-followup overlay, this mutates .claude/skills, so it is
+ * Like the gtb-gh-reviewer-followup overlay, this mutates .claude/skills, so it is
  * guarded to the harness's ephemeral per-suite context — STUB_BINDIR, set by
  * whichever runner is driving — and never touches a hand-run tree.
  */

@@ -11,15 +11,19 @@ description.
 | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [gtb-change-decomposition](skills/gtb-change-decomposition/SKILL.md)                     | Plan a change into small, independently shippable units before writing code — where to cut, how to order the pieces so each stands alone, and when a change is better left whole.                                                                      |
 | [gtb-gh-pr-authoring](skills/gtb-gh-pr-authoring/SKILL.md)                               | Author-side GitHub pull request conventions — opening one as a draft, what belongs in the title and description, watching checks after every push, acting on review feedback once it is brought to you, and squash-merging with atomic branch cleanup. |
+| [gtb-gh-reviewer-followup](skills/gtb-gh-reviewer-followup/SKILL.md)                     | Follow up on your GitHub PR review after the author pushes changes — re-review only what changed since your last pass, then resolve the threads that were fixed and reply to the ones that weren't (propose-then-confirm).                             |
 | [gtb-git-commit-conventions](skills/gtb-git-commit-conventions/SKILL.md)                 | Git commit conventions — when to commit and how to write the message, including trailers, reverts, and untangling work already piled up in the working tree.                                                                                           |
-| [gtb-pr-review-followup](skills/gtb-pr-review-followup/SKILL.md)                         | Follow up on your GitHub PR review after the author pushes changes — re-review only what changed since your last pass, then resolve the threads that were fixed and reply to the ones that weren't (propose-then-confirm).                             |
 | [gtb-resolve-azp-deployment-backlog](skills/gtb-resolve-azp-deployment-backlog/SKILL.md) | Clear a backlog of pending Azure Pipelines manual-approval deployments — reject every superseded approval and optionally approve only the newest.                                                                                                      |
 
-`gtb-pr-review-followup` composes three internal building-block skills —
-[gtb-pr-review-diff](skills/gtb-pr-review-diff/SKILL.md),
-[gtb-pr-review-verdict](skills/gtb-pr-review-verdict/SKILL.md), and
-[gtb-pr-review-apply](skills/gtb-pr-review-apply/SKILL.md) — which are marked
+`gtb-gh-reviewer-followup` composes three internal building-block skills —
+[gtb-gh-reviewer-followup-plan](skills/gtb-gh-reviewer-followup-plan/SKILL.md),
+[gtb-reviewer-followup-verdict](skills/gtb-reviewer-followup-verdict/SKILL.md), and
+[gtb-gh-reviewer-followup-apply](skills/gtb-gh-reviewer-followup-apply/SKILL.md) — which are marked
 `user-invocable: false` (Claude composes them; they aren't direct `/` commands).
+
+The verdict skill is the only one without a `gh` segment, and that is the point:
+it performs no I/O, so its judgment carries to any review tool that can hand it
+a diff and a list of threads. Everything GitHub-specific lives in its siblings.
 
 ## gtb-change-decomposition needs an accompanying instruction
 

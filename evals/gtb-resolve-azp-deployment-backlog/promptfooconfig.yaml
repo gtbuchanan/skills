@@ -22,9 +22,9 @@
 # az/PowerShell are unreachable.
 #
 # The skill's confirm-before-live-run interaction stays human-verified (like
-# gtb-pr-review-apply's confirmation gate): the prompt pre-grants approval so the
-# agent proceeds past the -WhatIf preview, and the checker asserts the dry-run
-# ordering rather than the interactive prompt itself.
+# gtb-gh-reviewer-followup-apply's confirmation gate): the prompt pre-grants
+# approval so the agent proceeds past the -WhatIf preview, and the checker
+# asserts the dry-run ordering rather than the interactive prompt itself.
 
 ---
 defaultTest:

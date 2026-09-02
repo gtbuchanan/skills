@@ -31,7 +31,7 @@ defaultTest:
   options:
     disableVarExpansion: true
     # Grade the one llm-rubric assertion through the same keyless agent SDK.
-    # The narrow system prompt is the one gtb-pr-review-verdict arrived at:
+    # The narrow system prompt is the one gtb-reviewer-followup-verdict arrived at:
     # promptfoo hands the grader its rubric as a SERIALIZED chat array the agent
     # SDK does not unpack, so wearing the default coding-assistant persona the
     # model sometimes answers ABOUT that blob rather than grading it.

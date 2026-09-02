@@ -41,6 +41,25 @@ export interface ReviewCommentEntry {
 }
 
 /**
+ * One entry in `gh pr checks`.
+ *
+ * `workflow` is what an agent reads to tell a check that ran in CI from one an
+ * automated reviewer posted, so a reviewer's entry states it as empty rather
+ * than omitting it — the field being absent and the field being blank are
+ * different answers, and only the second is what gh sends.
+ */
+export interface CheckEntry {
+  readonly bucket: 'cancel' | 'fail' | 'pass' | 'pending' | 'skipping';
+  /**
+   * What the check says about itself — where a reviewer distinguishes a queued
+   * review from one under way, this is where it says so.
+   */
+  readonly description: string;
+  readonly name: string;
+  readonly workflow: string;
+}
+
+/**
  * A pull request based on the scenario's branch — what the merge path has to
  * find and retarget before deleting anything.
  */
@@ -89,6 +108,12 @@ export interface Scenario {
    * this, or `gh pr checks` reports success and contradicts its own premise.
    */
   readonly checksPending?: boolean | undefined;
+  /**
+   * What `gh pr checks` reports, where the scenario is about the check list
+   * itself. Left out, the double serves one passing CI check — or one pending
+   * one where `checksPending` says so — which is all the other scenarios need.
+   */
+  readonly checks?: readonly CheckEntry[] | undefined;
   readonly deleteBranchOnMerge: boolean;
   readonly dependents: readonly DependentPr[];
   readonly extra?: ExtraCommit | undefined;

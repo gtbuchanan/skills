@@ -43,6 +43,18 @@ and none of its rules are repeated here.
 The description is the exception. It stays in GitHub's UI, so those rules
 govern what it says but not how it is formatted.
 
+## Shape decisions made before a GitHub pull request
+
+How many pull requests the work becomes, what each one branches from, and when
+each opens are not decided here. They are settled while the code is written, by
+`gtb-gh-pr-boundaries` — which is why that skill loads before the first edit while
+this one is reached as a request is being opened.
+
+Arriving here with several units on one branch and none of it decided does not
+change which skill answers it. It changes the price: applying it now costs a
+re-cut of the branches rather than nothing, and that is the whole reason it runs
+earlier.
+
 ## The GitHub pull request pipeline
 
 A PR moves through six stages, and the last three transitions are the human's:
@@ -190,31 +202,15 @@ is filler that reads as diligence, which is what makes it easy to write.
 If you did not exercise the change, say so — an unearned claim here is the one
 part of a description that cannot be checked against the diff.
 
-## Splitting work across stacked GitHub pull requests
+## Stacked GitHub pull requests
 
-**Default to one pull request.** A stack is expensive where it ends: `gh pr
-merge` refuses its members, nothing bypasses a requirement without unstacking
-first, and each PR above the one that lands may need retargeting or restacking
-by hand. Splitting has to buy more than that costs.
+A unit branched from another unit's branch rather than from the trunk arrives
+here as a stack. That topology is settled before the work is written, by
+`gtb-gh-pr-boundaries` — including what a stack costs, which is that skill's argument
+for not having one. What is left here is driving the stack you have.
 
-Where the seams are — what counts as one change, and what has to land whole —
-is settled before any of this by `gtb-change-decomposition`. What is left here
-is narrower: given units, one pull request or a stack.
-
-**Give units their own pull request when a reviewer would otherwise approve two
-decisions in one pass**, or when the bundle is too large to hold in one reading
-even though every unit in it is the right size. The pull request is the unit of
-approval, and a reviewer who cannot keep the whole of one in their head approves
-it on trust.
-
-**Whether those become a stack is the separate question, and dependency answers
-it.** Stack when a later unit is blocked behind one that has not merged, which
-buys you the second pull request early. Independent units go off the trunk
-instead — they cost nothing at merge time and land in any order, and a stack of
-things that needed no ordering is pure overhead.
-
-Once you have decided to split, read `references/stacked-pull-requests.md`:
-creating a stack and merging one both differ from what follows here.
+Read `references/stacked-pull-requests.md` before creating or merging one:
+both differ from what follows here.
 
 ## Watching checks after a push to an open GitHub pull request
 

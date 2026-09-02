@@ -83,7 +83,7 @@ gh pr view <number> --json reviewDecision,reviews,comments
 gh api --paginate repos/{owner}/{repo}/pulls/<number>/comments
 ```
 
-Those are the three surfaces the review-feedback rules name — `--json comments`
+Those are the surfaces the review-feedback rules name — `--json comments`
 never includes the inline ones, which is why the second call is not optional.
 A check saying `pass` argues for none of them being empty.
 

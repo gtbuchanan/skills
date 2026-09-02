@@ -199,23 +199,21 @@ merge` refuses its members, nothing bypasses a requirement without unstacking
 first, and each PR above the one that lands may need retargeting or restacking
 by hand. Splitting has to buy more than that costs.
 
-**Split when a reviewer would otherwise have to accept two decisions at once.**
-An enabling refactor and the feature it enables can be read and approved
-separately; bundled, the reviewer takes both or blocks both. The same goes for
-a bulk rename that would otherwise bury the change it was made for.
+Where the seams are — what counts as one change, and what has to land whole —
+is settled before any of this by `gtb-change-decomposition`. What is left here
+is narrower: given units, one pull request or a stack.
 
-**Split when the diff is too large to hold in one reading.** A reviewer who
-cannot keep the whole change in their head approves it on trust, which is the
-outcome review exists to avoid.
+**Stack when a later unit is blocked behind one that has not merged**, which
+buys you the second pull request early.
 
-**Split when work you need to start is blocked behind work that has not
-merged.** Here the stack buys you the second PR early, and that is worth the
-merge-time cost.
+**Stack when a reviewer would otherwise approve two decisions in one pass**, or
+when the bundle is too large to hold in one reading even though every unit in it
+is the right size. The pull request is the unit of approval, and a reviewer who
+cannot keep the whole of one in their head approves it on trust.
 
-**Do not split when the pieces are independent.** Separate PRs off the trunk
-cost nothing at merge time and land in any order — a stack of things that did
-not need ordering is pure overhead. And do not split what has to land together
-anyway: that is one change wearing several hats.
+**Do not stack units that are independent.** Separate pull requests off the
+trunk cost nothing at merge time and land in any order — a stack of things that
+did not need ordering is pure overhead.
 
 Once you have decided to split, read `references/stacked-pull-requests.md`:
 creating a stack and merging one both differ from what follows here.

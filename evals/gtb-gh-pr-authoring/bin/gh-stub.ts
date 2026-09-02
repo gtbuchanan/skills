@@ -37,9 +37,8 @@
  * Reached as `gh`: the runner installs a wrapper at the front of the eval PATH.
  * The real CLI is never reachable from a suite.
  */
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import * as v from 'valibot';
 import { checkRecord, checksFor } from '../checks.ts';
 import { baseBranch, repoSlug, viewer } from '../repository.ts';
 import type {
@@ -47,8 +46,8 @@ import type {
   PullRequest,
   ReviewCommentEntry,
 } from '../shapes.ts';
+import { type OpenedPr, readState, writeState } from '../state.ts';
 import { locateScenario } from '../world.ts';
-import { parseJson } from '#lib/calls.ts';
 import { appendJsonl, argv, joined, writeLine } from '#lib/stub.ts';
 
 /**
@@ -91,70 +90,11 @@ if (logDir !== undefined)
   });
 
 /**
- * What earlier calls did, so later ones can answer consistently.
- *
- * Each invocation is its own process, so anything a call changes — a PR opened,
- * promoted or merged — has to outlive it or the next `pr view` contradicts the
- * one before. The checkout is where they can agree. Without this the double
- * answers impossibly: a PR it just reported creating cannot be viewed, one it
- * marked ready is still a draft, and one it merged is still open.
+ * Where this scenario's checkout keeps what earlier calls did — see state.ts.
  */
 const statePath = path.join(located.dir, '.eval-state.json');
 
-interface OpenedPr {
-  readonly baseRefName: string;
-  readonly body: string;
-  readonly headRefName: string;
-  readonly title: string;
-}
-
-interface State {
-  readonly merged: number[];
-  readonly opened: Record<string, OpenedPr>;
-  readonly ready: number[];
-  /**
-   * Bases changed by `pr edit --base`, so a retarget the double reported
-   * making is still there when the next `pr view` asks.
-   */
-  readonly retargeted: Record<string, string>;
-}
-
-const emptyState: State = { merged: [], opened: {}, ready: [], retargeted: {} };
-
-const OpenedPrSchema = v.object({
-  baseRefName: v.string(),
-  body: v.string(),
-  headRefName: v.string(),
-  title: v.string(),
-});
-
-const NumberListSchema = v.array(v.number());
-const OpenedMapSchema = v.record(v.string(), OpenedPrSchema);
-
-const BaseMapSchema = v.record(v.string(), v.string());
-
-const StateSchema = v.object({
-  merged: v.optional(NumberListSchema, []),
-  opened: v.optional(OpenedMapSchema, {}),
-  ready: v.optional(NumberListSchema, []),
-  retargeted: v.optional(BaseMapSchema, {}),
-});
-
-const readState = (): State => {
-  if (!existsSync(statePath)) return emptyState;
-
-  /*
-  A half-written or hand-edited file is not worth failing a call over.
-  */
-  const parsed = v.safeParse(StateSchema, parseJson(readFileSync(statePath, 'utf8')));
-  return parsed.success ? parsed.output : emptyState;
-};
-
-const writeState = (next: State): void => {
-  writeFileSync(statePath, `${JSON.stringify(next)}\n`);
-};
-
-const state = readState();
+const state = readState(statePath);
 
 const isMerged = (number: number): boolean => state.merged.includes(number);
 
@@ -432,7 +372,7 @@ if (joined.includes('api user')) {
 } else if (joined.includes('pr create')) {
   const flag = argv.indexOf('--title');
   const base = argv.indexOf('--base');
-  writeState({
+  writeState(statePath, {
     ...state,
     opened: {
       ...state.opened,
@@ -450,13 +390,13 @@ if (joined.includes('api user')) {
   writeLine(prUrl(createdPrNumber));
 } else if (joined.includes('pr ready')) {
   const number = namedNumber() ?? scenario.pr?.number ?? createdPrNumber;
-  writeState({ ...state, ready: [...state.ready, number] });
+  writeState(statePath, { ...state, ready: [...state.ready, number] });
   writeLine(`✓ Pull request ${repoSlug}#${String(number)} is marked as ready`);
 } else if (joined.includes('pr edit')) {
   const flag = argv.indexOf('--base');
   const number = namedNumber() ?? scenario.pr?.number ?? 0;
   if (flag !== -1) {
-    writeState({
+    writeState(statePath, {
       ...state,
       retargeted: { ...state.retargeted, [String(number)]: argv[flag + 1] ?? baseBranch },
     });
@@ -465,7 +405,7 @@ if (joined.includes('api user')) {
 } else if (joined.includes('pr comment')) {
   writeLine(`${prUrl(namedNumber() ?? 0)}#issuecomment-1`);
 } else if (joined.includes('merge-async')) {
-  writeState({
+  writeState(statePath, {
     ...state,
     merged: [...state.merged, namedNumber() ?? scenario.pr?.number ?? 0],
   });
@@ -481,7 +421,7 @@ if (joined.includes('api user')) {
   /* --auto only defers the merge when something is outstanding; nothing here
      is, so it lands now and the record has to say so. */
   const number = namedNumber() ?? scenario.pr?.number ?? createdPrNumber;
-  writeState({ ...state, merged: [...state.merged, number] });
+  writeState(statePath, { ...state, merged: [...state.merged, number] });
   writeLine(`✓ Merged pull request ${repoSlug}#${String(number)}`);
 } else {
   refuse('no canned response');

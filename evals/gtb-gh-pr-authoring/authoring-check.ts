@@ -1,11 +1,11 @@
 /*
- * promptfoo javascript assertion for gtb-gh-pr-authoring.
+ * promptfoo javascript assertion for this suite.
  *
- * The suite's doubles append every `gh` and `git` invocation to
- * artifacts/skill-evals/gtb-gh-pr-authoring.calls.jsonl, `gh` calls carrying the
- * body they were handed on standard input. Almost everything this skill governs
- * shows up there: which flags a merge carried, whether checks were watched,
- * whether all three feedback surfaces were read, which threads were answered.
+ * The suite's doubles append every `gh` and `git` invocation to a per-scenario
+ * log under the suite's run directory, `gh` calls carrying the body they were
+ * handed on standard input. Almost everything this skill governs shows up
+ * there: which flags a merge carried, whether checks were watched, whether all
+ * three feedback surfaces were read, which threads were answered.
  *
  * Expectations are declared per test as vars rather than written as code, so a
  * scenario reads as the rule it is defending:

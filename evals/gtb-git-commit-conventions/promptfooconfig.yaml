@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
 #
-# Eval for gtb-git-commit-conventions. Runs the REAL skill via claude-agent-sdk
+# Eval for this skill. Runs the REAL skill via claude-agent-sdk
 # against real repositories seeded by setup.ts, and commit-check.ts reads the
 # resulting commit objects back with git.
 #

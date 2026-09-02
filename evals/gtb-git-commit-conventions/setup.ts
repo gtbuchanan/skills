@@ -1,5 +1,5 @@
 /*
- * promptfoo beforeAll/beforeEach extension for the gtb-git-commit-conventions suite.
+ * promptfoo beforeAll/beforeEach extension for this suite.
  *
  * Every scenario is seeded fresh before EACH test, not once per run. The
  * checker measures what the agent added on top of a known baseline tip, so a
@@ -17,7 +17,7 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { author, branch, committer, scenarioPath, scenarios } from './scenarios.ts';
-import { artifactPath, skillsRoot } from '#lib/paths.ts';
+import { artifactPath, skillsRoot, suiteName } from '#lib/paths.ts';
 import { resolveRealGit } from '#lib/real-git.ts';
 import { captureGit, seedHistory } from '#lib/seed-repo.ts';
 import { requireHarness } from '#lib/setup.ts';
@@ -44,7 +44,7 @@ export interface Baseline {
  * under a stable path after a run.
  */
 export const baselinesPath = (): string =>
-  artifactPath('gtb-git-commit-conventions.baselines.json');
+  artifactPath(`${suiteName(import.meta.url)}.baselines.json`);
 
 const seedAll = (): Record<string, Baseline> => {
   const git = resolveRealGit();

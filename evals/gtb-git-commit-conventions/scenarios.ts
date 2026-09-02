@@ -1,5 +1,5 @@
 /*
- * The repositories the gtb-git-commit-conventions suite runs against.
+ * The repositories this suite runs against.
  *
  * This skill's output is not a log of intercepted calls — it is the commits the
  * agent writes. So every scenario is a real repository: the baseline history is

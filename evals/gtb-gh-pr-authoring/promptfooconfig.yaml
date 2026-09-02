@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
 #
-# Eval for gtb-gh-pr-authoring. Runs the REAL skill via claude-agent-sdk against
+# Eval for this skill. Runs the REAL skill via claude-agent-sdk against
 # genuine repositories seeded by setup.ts, with `gh` shadowed by a fake that
 # serves each scenario's GitHub world (bin/gh-stub.ts) and `git` shadowed by a
 # passthrough that only records (bin/git-stub.ts). authoring-check.ts reads the

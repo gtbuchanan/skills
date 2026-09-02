@@ -1,5 +1,5 @@
 /*
- * The world each gtb-gh-pr-authoring scenario runs against.
+ * The world each of this suite's scenarios runs against.
  *
  * Two halves that have to agree. The git side is a real repository (setup.ts
  * seeds it against a local bare origin), so `log`, `status`, `diff` and even

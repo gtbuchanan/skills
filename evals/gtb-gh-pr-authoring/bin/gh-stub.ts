@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Fake `gh` for the gtb-gh-pr-authoring eval.
+ * Fake `gh` for this eval.
  *
  * It never reaches the network: it answers from ../scenarios.ts, picking the
  * world by walking up from the working directory to the marker file the seed

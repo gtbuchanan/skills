@@ -1,5 +1,5 @@
 /*
- * promptfoo beforeAll/beforeEach extension for the gtb-gh-pr-authoring suite.
+ * promptfoo beforeAll/beforeEach extension for this suite.
  *
  * The scenario under test is seeded fresh before EACH test. Three of them let
  * the agent commit and push for real, so a checkout carrying a previous test's
@@ -25,18 +25,18 @@ import { author } from './repository.ts';
 import type { ExtraCommit, Scenario } from './shapes.ts';
 import { markerFile, scenarioByKey, scenarioPath } from './world.ts';
 import { parseJson } from '#lib/calls.ts';
-import { artifactPath, skillsRoot, suiteRunDir } from '#lib/paths.ts';
+import { artifactPath, skillsRoot, suiteName, suiteRunDir } from '#lib/paths.ts';
 import { resolveRealGit } from '#lib/real-git.ts';
 import { type GitRunner, captureGit, runGit, seedHistory } from '#lib/seed-repo.ts';
 import { requireHarness, resetRunDir } from '#lib/setup.ts';
 
+const suite = suiteName(import.meta.url);
 const logDir = suiteRunDir(import.meta.url);
 
 /**
  * Where the recorded baselines live, for the checker to read back.
  */
-export const baselinesPath = (): string =>
-  artifactPath('gtb-gh-pr-authoring.baselines.json');
+export const baselinesPath = (): string => artifactPath(`${suite}.baselines.json`);
 
 /**
  * The scenario a beforeEach is firing for. Parsed rather than trusted: an
@@ -103,7 +103,7 @@ const seedOne = (scenario: Scenario, git: string, root: string): string => {
     commits: scenario.commits,
     git,
     localIdentity: author,
-    origin: artifactPath(`gtb-gh-pr-authoring.${scenario.key}.origin.git`),
+    origin: artifactPath(`${suite}.${scenario.key}.origin.git`),
     workspace,
   });
 

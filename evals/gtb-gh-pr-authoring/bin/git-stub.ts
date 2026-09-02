@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Recording `git` for the gtb-gh-pr-authoring eval.
+ * Recording `git` for this eval.
  *
  * Fakes nothing. setup.ts seeds a real checkout against a local bare origin, so
  * every answer git gives — including `push` — is already true; what is missing

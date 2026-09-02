@@ -1,5 +1,5 @@
 /*
- * The repository every gtb-gh-pr-authoring scenario runs in, and the account it
+ * The repository every scenario in this suite runs in, and the account it
  * runs as.
  *
  * The same for all of them, which is why it is here rather than in

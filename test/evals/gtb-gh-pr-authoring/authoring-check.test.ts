@@ -1,5 +1,5 @@
 /*
- * Tests for the matchers the gtb-gh-pr-authoring checker judges a run with.
+ * Tests for the matchers this suite's checker judges a run with.
  *
  * These decide whether a scenario passed, so the expensive error is the lenient
  * one: a matcher that accepts a run it should have failed turns the whole suite

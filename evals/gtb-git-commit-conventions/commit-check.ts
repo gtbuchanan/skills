@@ -1,5 +1,5 @@
 /*
- * promptfoo javascript assertion for the gtb-git-commit-conventions suite.
+ * promptfoo javascript assertion for this suite.
  *
  * The commits the agent wrote ARE the output, so this reads them back out of
  * the seeded repository with real git and checks them against the skill's

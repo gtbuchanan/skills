@@ -1,5 +1,5 @@
 /*
- * Tests for the fake gh the gtb-gh-pr-authoring suite runs the skill against.
+ * Tests for the fake gh this suite runs the skill against.
  *
  * A double is worth exactly what its answers are worth. Every assertion the
  * suite makes about the skill rests on this stub having told the agent the

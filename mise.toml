@@ -48,6 +48,6 @@ pkl = "0.32.1"
 # field); Renovate's shared preset groups both bumps into one PR. Resolving it
 # from package.json instead left mise.lock unbumped, failing every
 # `MISE_LOCKED=1` install — which is how CI runs.
-pnpm = "11.21.0"
+pnpm = "11.25.0"
 shellcheck = "0.11.0"
 shfmt = "3.13.1"

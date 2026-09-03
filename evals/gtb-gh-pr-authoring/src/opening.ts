@@ -17,9 +17,9 @@
  * annotations, so everything here stays erasable syntax.
  */
 import { hermeticGitEnv, resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
+import type { State } from '@gtbuchanan/github-cli-stub/state';
 import spawn from 'cross-spawn';
 import type { Scenario } from './shapes.ts';
-import type { State } from './state.ts';
 
 /**
  * The first PR number a run hands out. Anything the scenarios do not already

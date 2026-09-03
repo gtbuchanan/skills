@@ -5,7 +5,8 @@
   "exports": {
     "./body": "./src/body.ts",
     "./dispatch": "./src/dispatch.ts",
-    "./selection": "./src/selection.ts"
+    "./selection": "./src/selection.ts",
+    "./state": "./src/state.ts"
   },
   "scripts": {
     "coverage:codecov:upload": "gtb task coverage:codecov:upload",
@@ -15,7 +16,9 @@
     "test:vitest:slow": "gtb task test:vitest:slow",
     "typecheck:ts": "gtb task typecheck:ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "valibot": "catalog:"
+  },
   "devDependencies": {
     "@gtbuchanan/cli": "catalog:",
     "@gtbuchanan/eslint-config": "catalog:",

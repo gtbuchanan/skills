@@ -10,9 +10,9 @@
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
  */
+import { emptyState } from '@gtbuchanan/github-cli-stub/state';
 import { test } from 'vitest';
 import { impliedNumber } from '#src/opening.ts';
-import { emptyState } from '#src/state.ts';
 import { scenarioByKey } from '#src/world.ts';
 
 /**

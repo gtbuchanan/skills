@@ -43,6 +43,7 @@ import { appendJsonl, argv, joined, writeLine } from '@gtbuchanan/agent-skills-h
 import { hasStdinBody } from '@gtbuchanan/github-cli-stub/body';
 import { UnmodelledCall } from '@gtbuchanan/github-cli-stub/dispatch';
 import { pick as pickFields, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
+import { type OpenedPr, readState, writeState } from '@gtbuchanan/github-cli-stub/state';
 import { checkRecord, checksFor } from '#src/checks.ts';
 import {
   currentHead,
@@ -56,7 +57,6 @@ import type {
   PullRequest,
   ReviewCommentEntry,
 } from '#src/shapes.ts';
-import { type OpenedPr, readState, writeState } from '#src/state.ts';
 import { locateScenario } from '#src/world.ts';
 
 const stdinDescriptor = 0;

@@ -20,7 +20,7 @@ catalog:
   # itself is `os: [android]`, so every other platform skips it and keeps the
   # real binding.
   '@libsql/android-arm64': npm:@gtbuchanan/libsql-termux-shim@0.1.1
-  '@pnpm/lockfile.types': 1100.0.19
+  '@pnpm/lockfile.types': 1100.1.0
   '@types/cross-spawn': 6.0.6
   '@types/node': 26.2.0
   '@vitest/coverage-v8': 4.1.10

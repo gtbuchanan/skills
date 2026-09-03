@@ -103,8 +103,16 @@ export const hasOpenPrFrom = (
 
 /**
  * The pull request a call means when it names no number — gh answers for the
- * branch you are on. That is the scenario's own where it seeds one, and
- * otherwise whichever this run opened from `head`.
+ * branch you are on, so `head` decides rather than the scenario.
+ *
+ * Letting a seeded pull request win regardless of head was harmless only while
+ * a run could hold one at a time. Once it can open a second, an unnamed
+ * `pr ready`, `pr merge` or `pr view` addresses the seeded one from a branch it
+ * has nothing to do with — and the first two of those write state.
+ *
+ * The seeded pull request is still the last resort, because a scenario that
+ * seeds one and has opened nothing from this branch is better answered with a
+ * pull request that exists than with a number that does not.
  */
 export const impliedNumber = (
   state: State,
@@ -112,10 +120,12 @@ export const impliedNumber = (
   head: string,
 ): number => {
   const own = scenario.pr;
-  if (own !== undefined) return own.number;
+  if (own?.headRefName === head) return own.number;
 
   const entry = Object.entries(state.opened).find(
     ([, opened]) => opened.headRefName === head,
   );
-  return entry === undefined ? firstPrNumber : Number(entry[0]);
+  if (entry !== undefined) return Number(entry[0]);
+
+  return own?.number ?? firstPrNumber;
 };

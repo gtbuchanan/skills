@@ -244,14 +244,16 @@ const dependentRecord = (dependent: DependentPr): Record<string, unknown> => ({
 
 const prRecordFor = (number: number | undefined): Record<string, unknown> => {
   const own = scenario.pr;
-  if (own !== undefined && (number === undefined || number === own.number))
-    return ownRecord(own);
+  if (own !== undefined && number === own.number) return ownRecord(own);
   if (number === undefined) {
     /* Naming no number is not the same as naming nothing: gh answers for the
-       branch you are on. In a scenario that seeds no PR that is whichever one
+       branch you are on, so the head decides which one — the scenario's own
+       only while standing on it. In a scenario that seeds no PR it is whichever
        this run opened, and refusing here fails an agent for doing the ordinary
        thing — creating a PR and then reading it back. */
     const branch = head();
+    if (own?.headRefName === branch) return ownRecord(own);
+
     const entry = Object.entries(state.opened).find(
       ([, pr]) => pr.headRefName === branch,
     );

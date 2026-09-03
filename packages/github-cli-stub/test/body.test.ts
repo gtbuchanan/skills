@@ -37,3 +37,9 @@ test('a -F field reading a named file does not want stdin', ({ expect }) => {
 test('--input - wants stdin', ({ expect }) => {
   expect(hasStdinBody(['api', 'graphql', '--input', '-'])).toBe(true);
 });
+
+test('a raw field is a literal string, not a stdin request', ({ expect }) => {
+  /* `-f` takes its value verbatim, so the `-` is the character. Reading stdin
+     here would block on a call that never intended to send any. */
+  expect(hasStdinBody(['api', 'repos/o/r/issues', '-f', 'body=-'])).toBe(false);
+});

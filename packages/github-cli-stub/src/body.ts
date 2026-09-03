@@ -14,8 +14,12 @@
 
 /**
  * Flags whose following argument may be `-`, meaning standard input.
+ *
+ * `-f`/`--raw-field` is deliberately absent: gh takes its value as a literal
+ * string, so a `-` there is the character rather than a request to read stdin.
+ * Only `-F`/`--field` carries the `@` read-from-file sigil.
  */
-const stdinFlags = new Set(['--body-file', '--field', '--input', '-F', '-f']);
+const stdinFlags = new Set(['--body-file', '--field', '--input', '-F']);
 
 /**
  * Whether this call says its body arrives on standard input.

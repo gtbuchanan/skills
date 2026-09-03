@@ -40,6 +40,9 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { appendJsonl, argv, joined, writeLine } from '@gtbuchanan/agent-skills-harness/stub';
+import { hasStdinBody } from '@gtbuchanan/github-cli-stub/body';
+import { UnmodelledCall } from '@gtbuchanan/github-cli-stub/dispatch';
+import { pick as pickFields, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { checkRecord, checksFor } from '#src/checks.ts';
 import {
   currentHead,
@@ -56,16 +59,6 @@ import type {
 import { type OpenedPr, readState, writeState } from '#src/state.ts';
 import { locateScenario } from '#src/world.ts';
 
-/**
- * The body arrives on standard input only when the call asks for it. Reading
- * unconditionally would block on the calls that do not.
- */
-const bodyFlags = new Set(['--body-file', '--field', '--input', '-F']);
-
-const isWantsStdin =
-  argv.some(arg => arg.endsWith('=@-')) ||
-  argv.some((arg, index) => bodyFlags.has(arg) && argv[index + 1] === '-');
-
 const stdinDescriptor = 0;
 
 const readStdin = (): string => {
@@ -78,7 +71,7 @@ const readStdin = (): string => {
   }
 };
 
-const stdin = isWantsStdin ? readStdin() : '';
+const stdin = hasStdinBody(argv) ? readStdin() : '';
 
 const located = locateScenario(process.cwd());
 const scenario = located.scenario;
@@ -119,32 +112,20 @@ const refuse = (what: string): never => {
 };
 
 /**
- * The fields `--json` asked for, in order. Empty when the flag is absent.
- */
-const requestedFields = (): string[] => {
-  const flag = argv.indexOf('--json');
-  if (flag === -1) return [];
-
-  return (argv[flag + 1] ?? '')
-    .split(',')
-    .map(field => field.trim())
-    .filter(Boolean);
-};
-
-/**
  * `gh` returns exactly the fields named and rejects any it does not know, so an
  * unmodelled one is a gap in this stub rather than something to skip over.
+ *
+ * The shared selection raises its refusal as a value, since it is a library and
+ * cannot exit; this turns it back into the exit the agent sees, keeping the
+ * scenario in the message.
  */
 const pick = (record: Record<string, unknown>): unknown => {
-  const fields = requestedFields();
-  if (fields.length === 0) return record;
-
-  const known = new Set(Object.keys(record));
-  const missing = fields.filter(field => !known.has(field));
-  if (missing.length > 0)
-    refuse(`unmodelled --json field(s) ${missing.join(', ')}`);
-
-  return Object.fromEntries(fields.map(field => [field, record[field]]));
+  try {
+    return pickFields(record, requestedFields(argv));
+  } catch (error) {
+    if (error instanceof UnmodelledCall) return refuse(`unmodelled ${error.message}`);
+    throw error;
+  }
 };
 
 /**
@@ -361,7 +342,7 @@ if (joined.includes('api user')) {
     process.stderr.write(`no checks reported on the '${scenario.branch}' branch\n`);
     process.exit(1);
   }
-  if (requestedFields().length > 0) {
+  if (requestedFields(argv).length > 0) {
     /* `--jq` is not evaluated here — this double has no jq — so a call that
        asked for one gets the selected fields and reads them itself. That is
        more than it asked for, which is normally this file's cardinal sin; it

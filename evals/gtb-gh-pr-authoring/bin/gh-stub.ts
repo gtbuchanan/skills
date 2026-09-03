@@ -342,7 +342,7 @@ if (joined.includes('api user')) {
     process.stderr.write(`no checks reported on the '${scenario.branch}' branch\n`);
     process.exit(1);
   }
-  if (requestedFields(argv).length > 0) {
+  if (requestedFields(argv).kind !== 'all') {
     /* `--jq` is not evaluated here — this double has no jq — so a call that
        asked for one gets the selected fields and reads them itself. That is
        more than it asked for, which is normally this file's cardinal sin; it

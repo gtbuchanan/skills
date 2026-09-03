@@ -13,6 +13,30 @@ jobs:
       run-e2e: false
       run-slow-tests: true
 
+  eval-image:
+    name: Eval Image
+    # The one thing no other job exercises. `check` covers the packages and
+    # the root; neither builds this image, and that gap let a broken one sit
+    # behind green checks — declaring the first workspace glob made skills-npm
+    # find skills it had no agent directory to deploy to, which fails the
+    # build, and nothing noticed until someone rebuilt by hand.
+    #
+    # Unconditional rather than filtered on paths, because that break came
+    # from pnpm-workspace.yaml rather than from the Dockerfile. A filter would
+    # have to guess correctly at everything that can affect an image build,
+    # and guessing wrong is the failure this job exists to catch.
+    #
+    # Builds only. Running a suite needs a real model and would spend budget
+    # on every pull request, so `pnpm eval` and `pnpm eval:docker` stay
+    # deliberate local acts — but a build alone catches this whole class,
+    # since the image is where the dependency graph is resolved.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build the eval image
+        run: docker build --tag agent-skills-eval --file Dockerfile .
+
   pre-commit:
     name: Pre-Commit
     # The eslint step shells out to `pnpm exec`, so it needs node_modules.

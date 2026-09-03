@@ -67,6 +67,8 @@ Pick a runner:
 - `pnpm eval` — one process per skill, on this host. The default, because it needs nothing but Node and so works anywhere, including hosts where Docker cannot run.
 - `pnpm eval:docker` — one container per skill, reporting to a local promptfoo server. Run `docker compose up -d` once, then browse <http://localhost:3000> for the shared results.
 
+Neither runs in CI — a suite needs a real model, and that is budget spent on every pull request. What CI does do is **build the eval image**, which is where the dependency graph is resolved and therefore where a break in it surfaces. So a change that makes the container unbuildable fails a check; a change that makes a suite _fail_ does not, and still has to be run by hand.
+
 Each takes a skill filter and forwards promptfoo flags: `pnpm eval <skill> --repeat 3`. Repeats are independent samples only for a suite that empties its call log per test — see [Authoring an eval](#authoring-an-eval) — since a checker asserting over one shared, append-only log can otherwise be satisfied by an earlier repeat's calls.
 
 They rest on the same guarantee, which was never kernel-level even in the container: real provider CLIs are _absent_, so a command a suite forgot to stub fails with command-not-found instead of quietly hitting production. The container gets that from its own image, which simply never installs them. The native runner reconstructs it — a PATH allowlist, a stub dir at the front of PATH with every provider CLI shadowed, a clean `HOME` holding only the credentials, and a per-suite workspace holding only that suite's skills — and a self-test runs first, aborting if any provider CLI is still reachable.

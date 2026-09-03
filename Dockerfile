@@ -23,5 +23,12 @@ WORKDIR /work
 # lets the Windows-authored lockfile resolve linux-only optional deps. The
 # pnpmfile ships too: it is a no-op here (its os-ungating only matters on
 # Android) but pnpm warns when a lockfile was built with hooks that are absent.
+#
+# The workspace packages' manifests come too, and must: pnpm-workspace.yaml
+# declares them, the root depends on the harness as `workspace:*`, and an
+# install that cannot find the package it is told to link fails. Manifests
+# only — the sources are bind-mounted at run time so a host edit is what the
+# container executes, rather than whatever was baked into the image.
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .pnpmfile.cjs ./
+COPY packages/harness/package.json ./packages/harness/
 RUN pnpm install --no-frozen-lockfile

@@ -118,9 +118,14 @@ const concurrency = 4;
 const network = 'skills-eval-net';
 
 const commonMounts = [
-  // skills/ is the sync source; evals/ carries the suites and their shared lib.
+  /* skills/ is the sync source; evals/ carries the suites. packages/ carries
+     the harness they import — mounted rather than left to the image, so the
+     container runs the source on disk. Its manifest is baked in at build time
+     (see the Dockerfile) because pnpm has to link the workspace package before
+     any of this is mounted. */
   ['skills', '/work/skills'],
   ['evals', '/work/evals'],
+  ['packages', '/work/packages'],
   ['scripts', '/work/scripts'],
   ['artifacts', '/work/artifacts'],
 ].flatMap(([source, destination]) => [

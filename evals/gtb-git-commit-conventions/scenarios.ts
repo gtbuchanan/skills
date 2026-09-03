@@ -15,7 +15,7 @@
  * simply banned the prefix would pass every other scenario here and fail that
  * one, which is what stops this suite from rewarding the wrong lesson.
  */
-import type { SeedCommit } from '#lib/seed-repo.ts';
+import type { SeedCommit } from '@gtbuchanan/agent-skills-harness/seed-repo';
 
 /**
  * A repository to seed, plus the work left uncommitted in it.

@@ -17,7 +17,7 @@
  */
 import * as v from 'valibot';
 import { test } from 'vitest';
-import { findJsonArray } from '#evals/lib/json-scan.ts';
+import { findJsonArray } from '@gtbuchanan/agent-skills-harness/json-scan';
 
 const TitledUnit = v.looseObject({ title: v.string() });
 

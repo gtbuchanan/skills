@@ -15,7 +15,7 @@ import path from 'node:path';
 import { test } from 'vitest';
 import { resolveShas, selectLastOwnReview } from '#evals/gtb-gh-reviewer-followup-plan/scenario.ts';
 import { commitPlan } from '#evals/gtb-gh-reviewer-followup-plan/seed.ts';
-import { repoRoot } from '#evals/lib/paths.ts';
+import { repoRoot } from '@gtbuchanan/agent-skills-harness/paths';
 
 const reviewsTemplate = readFileSync(
   path.join(

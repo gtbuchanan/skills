@@ -11,7 +11,7 @@
  * Loaded by the stubs under plain `node`, whose type stripping only erases
  * annotations, so everything here stays erasable syntax.
  */
-import type { SeedIdentity } from '#lib/seed-repo.ts';
+import type { SeedIdentity } from '@gtbuchanan/agent-skills-harness/seed-repo';
 
 /**
  * The authenticated account — what `gh api user` reports, and the identity the

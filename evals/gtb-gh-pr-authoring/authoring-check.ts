@@ -35,12 +35,12 @@ import path from 'node:path';
 import * as v from 'valibot';
 import { baselinesPath } from './setup.ts';
 import { scenarioPath } from './world.ts';
-import type { AssertionResult } from '#lib/assert.ts';
-import { fromProblems } from '#lib/assert.ts';
-import { parseJson, readJsonl } from '#lib/calls.ts';
-import { skillsRoot, suiteRunDir } from '#lib/paths.ts';
-import { resolveRealGit } from '#lib/real-git.ts';
-import { probeGit } from '#lib/seed-repo.ts';
+import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
+import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
+import { parseJson, readJsonl } from '@gtbuchanan/agent-skills-harness/calls';
+import { skillsRoot, suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
+import { resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
+import { probeGit } from '@gtbuchanan/agent-skills-harness/seed-repo';
 
 const StringListSchema = v.array(v.string());
 const ClauseListSchema = v.array(StringListSchema);

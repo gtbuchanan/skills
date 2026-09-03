@@ -45,7 +45,7 @@ import { parse as parseYaml } from 'yaml';
 import { beginEphemeralRun } from './ephemeral-run.ts';
 import { evalIsolation } from './eval-isolation.ts';
 import { buildEvalEnv } from './scrubbed-path.ts';
-import { resolveSkillsCli } from '#evals/lib/skills-cli.ts';
+import { resolveSkillsCli } from '@gtbuchanan/agent-skills-harness/skills-cli';
 
 const { assertFailSafe, buildScrubbedPath, poisonDangerTools } = evalIsolation;
 

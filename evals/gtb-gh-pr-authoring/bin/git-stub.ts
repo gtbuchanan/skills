@@ -13,8 +13,8 @@
  */
 import spawn from 'cross-spawn';
 import { locateScenario } from '../world.ts';
-import { hermeticGitEnv, resolveRealGit } from '#lib/real-git.ts';
-import { argv, logCallToDir } from '#lib/stub.ts';
+import { hermeticGitEnv, resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
+import { argv, logCallToDir } from '@gtbuchanan/agent-skills-harness/stub';
 
 /* One log per scenario, keyed by the checkout the call was made in, so tests
    can run concurrently without writing over each other's record.

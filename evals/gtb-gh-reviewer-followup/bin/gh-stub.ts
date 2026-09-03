@@ -10,7 +10,7 @@
  * of the eval PATH, that execs this file. The real gh CLI is never reachable
  * from a suite.
  */
-import { joined, logCall, writeLine } from '#lib/stub.ts';
+import { joined, logCall, writeLine } from '@gtbuchanan/agent-skills-harness/stub';
 
 /**
  * The fixture PR every canned response refers to.

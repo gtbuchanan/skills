@@ -19,8 +19,8 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { scenarioPath, scenarios } from './trees.ts';
-import { skillsRoot } from '#lib/paths.ts';
-import { requireHarness } from '#lib/setup.ts';
+import { skillsRoot } from '@gtbuchanan/agent-skills-harness/paths';
+import { requireHarness } from '@gtbuchanan/agent-skills-harness/setup';
 
 const seedAll = (): void => {
   const root = skillsRoot();

@@ -7,8 +7,8 @@
  * runner — so this suite runs only under the harness, where interception is
  * deterministic and the real gh is unreachable.
  */
-import { suiteCallLog } from '#lib/paths.ts';
-import { resetCallLog } from '#lib/setup.ts';
+import { suiteCallLog } from '@gtbuchanan/agent-skills-harness/paths';
+import { resetCallLog } from '@gtbuchanan/agent-skills-harness/setup';
 
 export const extensionHook = (hookName: string): void => {
   if (hookName !== 'beforeAll') return;

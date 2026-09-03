@@ -19,7 +19,7 @@
 import spawn from 'cross-spawn';
 import type { Scenario } from './shapes.ts';
 import type { State } from './state.ts';
-import { hermeticGitEnv, resolveRealGit } from '#lib/real-git.ts';
+import { hermeticGitEnv, resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
 
 /**
  * The first PR number a run hands out. Anything the scenarios do not already

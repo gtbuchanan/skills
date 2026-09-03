@@ -19,7 +19,7 @@ import {
   suiteCallLog,
   suiteDir,
   suiteName,
-} from '#evals/lib/paths.ts';
+} from '@gtbuchanan/agent-skills-harness/paths';
 
 const workspaceVar = 'EVAL_WORKSPACE';
 

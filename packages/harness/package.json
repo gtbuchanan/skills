@@ -1,0 +1,43 @@
+{
+  "name": "@gtbuchanan/agent-skills-harness",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./assert": "./src/assert.ts",
+    "./calls": "./src/calls.ts",
+    "./json-scan": "./src/json-scan.ts",
+    "./paths": "./src/paths.ts",
+    "./real-git": "./src/real-git.ts",
+    "./seed-repo": "./src/seed-repo.ts",
+    "./setup": "./src/setup.ts",
+    "./skills-cli": "./src/skills-cli.ts",
+    "./stub": "./src/stub.ts"
+  },
+  "scripts": {
+    "coverage:codecov:upload": "gtb task coverage:codecov:upload",
+    "coverage:vitest:merge": "gtb task coverage:vitest:merge",
+    "lint:eslint": "gtb task lint:eslint",
+    "test:vitest:fast": "gtb task test:vitest:fast",
+    "test:vitest:slow": "gtb task test:vitest:slow",
+    "typecheck:ts": "gtb task typecheck:ts"
+  },
+  "dependencies": {
+    "cross-spawn": "catalog:",
+    "valibot": "catalog:"
+  },
+  "devDependencies": {
+    "@gtbuchanan/cli": "catalog:",
+    "@gtbuchanan/eslint-config": "catalog:",
+    "@gtbuchanan/tsconfig": "catalog:",
+    "@gtbuchanan/vitest-config": "catalog:",
+    "@types/cross-spawn": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

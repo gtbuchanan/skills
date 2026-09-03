@@ -12,8 +12,8 @@
  * it must resolve the real binary explicitly rather than by name.
  */
 import spawn from 'cross-spawn';
-import { hermeticGitEnv, resolveRealGit } from '#lib/real-git.ts';
-import { argv, logCall } from '#lib/stub.ts';
+import { hermeticGitEnv, resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
+import { argv, logCall } from '@gtbuchanan/agent-skills-harness/stub';
 
 logCall('git');
 

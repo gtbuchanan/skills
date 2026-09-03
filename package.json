@@ -7,7 +7,11 @@
     "#scripts/*": "./scripts/*"
   },
   "scripts": {
+    "build": "gtb turbo run build",
+    "build:ci": "gtb turbo run build:ci",
+    "check": "gtb turbo run check",
     "coverage:codecov:upload": "gtb task coverage:codecov:upload",
+    "coverage:merge": "gtb turbo run coverage:merge",
     "coverage:vitest:merge": "gtb task coverage:vitest:merge",
     "deploy:skills": "gtb task deploy:skills",
     "eval": "node scripts/run-evals-process.ts",
@@ -15,6 +19,7 @@
     "lint:eslint": "gtb task lint:eslint",
     "prepare": "gtb prepare",
     "skills:sync": "node scripts/sync-skills.mjs",
+    "test:slow": "gtb turbo run test:slow",
     "test:vitest:fast": "gtb task test:vitest:fast",
     "test:vitest:slow": "gtb task test:vitest:slow",
     "typecheck:ts": "gtb task typecheck:ts && gtb task typecheck:ts -p evals/tsconfig.json",
@@ -22,6 +27,7 @@
   },
   "devDependencies": {
     "@anthropic-ai/claude-agent-sdk": "catalog:",
+    "@gtbuchanan/agent-skills-harness": "workspace:*",
     "@gtbuchanan/cli": "catalog:",
     "@gtbuchanan/eslint-config": "catalog:",
     "@gtbuchanan/tsconfig": "catalog:",

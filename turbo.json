@@ -5,11 +5,63 @@
     "mise.toml"
   ],
   "tasks": {
+    "//#deploy:skills": {
+      "dependsOn": [
+        "//#lint:eslint"
+      ],
+      "inputs": [
+        "skills-npm.config.ts",
+        "skills/**"
+      ],
+      "outputs": []
+    },
+    "//#lint:eslint": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!packages/**"
+      ],
+      "outputs": [
+        "dist/.eslintcache"
+      ]
+    },
+    "//#test:vitest:fast": {
+      "env": [
+        "CI"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!packages/**"
+      ],
+      "outputs": [
+        "dist/coverage/vitest/fast/**",
+        "dist/test-results/vitest/merge/blob-fast.json"
+      ]
+    },
+    "//#test:vitest:slow": {
+      "env": [
+        "CI"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!packages/**"
+      ],
+      "outputs": [
+        "dist/coverage/vitest/slow/**",
+        "dist/test-results/vitest/merge/blob-slow.json"
+      ]
+    },
+    "//#typecheck:ts": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!packages/**"
+      ],
+      "outputs": []
+    },
     "build": {
       "dependsOn": [
         "check",
         "test:slow",
-        "deploy:skills"
+        "//#deploy:skills"
       ]
     },
     "build:ci": {
@@ -21,7 +73,8 @@
       "dependsOn": [
         "typecheck",
         "lint",
-        "test:vitest:fast"
+        "test:vitest:fast",
+        "//#test:vitest:fast"
       ]
     },
     "coverage:codecov:upload": {
@@ -53,19 +106,10 @@
         "dist/coverage/vitest/merged/**"
       ]
     },
-    "deploy:skills": {
-      "dependsOn": [
-        "lint:eslint"
-      ],
-      "inputs": [
-        "$TURBO_ROOT$/skills-npm.config.ts",
-        "skills/**"
-      ],
-      "outputs": []
-    },
     "lint": {
       "dependsOn": [
-        "lint:eslint"
+        "lint:eslint",
+        "//#lint:eslint"
       ]
     },
     "lint:eslint": {
@@ -79,7 +123,6 @@
         "src/**",
         "test/**",
         "e2e/**",
-        "evals/**",
         "scripts/**",
         "skills/**",
         "eslint.config.*"
@@ -90,7 +133,8 @@
     },
     "test:slow": {
       "dependsOn": [
-        "test:vitest:slow"
+        "test:vitest:slow",
+        "//#test:vitest:slow"
       ]
     },
     "test:vitest:fast": {
@@ -140,7 +184,8 @@
     },
     "typecheck": {
       "dependsOn": [
-        "typecheck:ts"
+        "typecheck:ts",
+        "//#typecheck:ts"
       ]
     },
     "typecheck:ts": {
@@ -150,7 +195,6 @@
       "inputs": [
         "$TURBO_ROOT$/tsconfig.base.json",
         "bin/**",
-        "evals/**",
         "scripts/**",
         "src/**",
         "test/**",

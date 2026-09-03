@@ -17,10 +17,10 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { author, branch, committer, scenarioPath, scenarios } from './scenarios.ts';
-import { artifactPath, skillsRoot, suiteName } from '#lib/paths.ts';
-import { resolveRealGit } from '#lib/real-git.ts';
-import { captureGit, seedHistory } from '#lib/seed-repo.ts';
-import { requireHarness } from '#lib/setup.ts';
+import { artifactPath, skillsRoot, suiteName } from '@gtbuchanan/agent-skills-harness/paths';
+import { resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
+import { captureGit, seedHistory } from '@gtbuchanan/agent-skills-harness/seed-repo';
+import { requireHarness } from '@gtbuchanan/agent-skills-harness/setup';
 
 /**
  * What a scenario looked like before the agent touched it.

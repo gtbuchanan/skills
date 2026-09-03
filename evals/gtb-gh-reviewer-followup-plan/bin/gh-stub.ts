@@ -27,7 +27,7 @@ import {
   selectLastOwnReview,
   viewer,
 } from '../scenario.ts';
-import { joined, logCall, writeLine } from '#lib/stub.ts';
+import { joined, logCall, writeLine } from '@gtbuchanan/agent-skills-harness/stub';
 
 logCall('gh');
 

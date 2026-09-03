@@ -13,7 +13,7 @@
  * non-zero with an error, so a fixture can verify the skill reports the failure
  * instead of claiming success.
  */
-import { joined, logCall, writeJson } from '#lib/stub.ts';
+import { joined, logCall, writeJson } from '@gtbuchanan/agent-skills-harness/stub';
 
 logCall('gh');
 

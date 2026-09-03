@@ -12,9 +12,9 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { resolveRealGit } from '#evals/lib/real-git.ts';
-import type { SeedCommit } from '#evals/lib/seed-repo.ts';
-import { captureGit, runGit, writeCommit } from '#evals/lib/seed-repo.ts';
+import { resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
+import type { SeedCommit } from '@gtbuchanan/agent-skills-harness/seed-repo';
+import { captureGit, runGit, writeCommit } from '@gtbuchanan/agent-skills-harness/seed-repo';
 
 const git = resolveRealGit();
 

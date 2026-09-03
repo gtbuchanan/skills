@@ -8,16 +8,40 @@
  * not found" but as a pile of "missing call for X" — a skill regression that
  * never happened.
  */
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const libDir = path.dirname(fileURLToPath(import.meta.url));
+const srcDir = path.dirname(fileURLToPath(import.meta.url));
 
 /**
- * evals/lib → repo root. Anchors the shared artifact dir (kept in the repo so
- * call logs stay inspectable), regardless of where a suite's skills live.
+ * The workspace root, found by walking up for the file that defines it.
+ *
+ * Counting directories up from this module is what it used to do, and that
+ * broke the moment the module moved — silently, because the wrong answer is
+ * still a path. `pnpm-workspace.yaml` marks the root by definition, so this
+ * survives the next move as well.
  */
-export const repoRoot = path.join(libDir, '..', '..');
+const findWorkspaceRoot = (start: string): string => {
+  let dir = start;
+  for (;;) {
+    if (existsSync(path.join(dir, 'pnpm-workspace.yaml'))) return dir;
+
+    const parent = path.dirname(dir);
+    if (parent === dir)
+      throw new Error(
+        `no pnpm-workspace.yaml at or above ${start}: the harness anchors the ` +
+        'shared artifact directory to the workspace root and cannot find it.',
+      );
+    dir = parent;
+  }
+};
+
+/**
+ * Anchors the shared artifact dir — kept in the repo so call logs stay
+ * inspectable — regardless of where a suite's skills live.
+ */
+export const repoRoot = findWorkspaceRoot(srcDir);
 
 /**
  * The skill tree a suite overlays its test doubles onto, named by

@@ -1,5 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true
+  },
   "extends": [
     "@gtbuchanan/tsconfig/node.json"
   ]

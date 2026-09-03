@@ -25,10 +25,10 @@
  */
 import * as v from 'valibot';
 import { readReviews, scenarioDir, selectLastOwnReview, viewer } from './scenario.ts';
-import type { AssertionResult } from '#lib/assert.ts';
-import { fromProblems } from '#lib/assert.ts';
-import { parseJson, readCommands } from '#lib/calls.ts';
-import { suiteCallLog } from '#lib/paths.ts';
+import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
+import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
+import { parseJson, readCommands } from '@gtbuchanan/agent-skills-harness/calls';
+import { suiteCallLog } from '@gtbuchanan/agent-skills-harness/paths';
 
 /*
  * The baseline is read from the same resolved fixture the fake gh serves it

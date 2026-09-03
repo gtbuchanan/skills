@@ -24,11 +24,21 @@ import * as v from 'valibot';
 import { author } from './repository.ts';
 import type { ExtraCommit, Scenario } from './shapes.ts';
 import { markerFile, scenarioByKey, scenarioPath } from './world.ts';
-import { parseJson } from '#lib/calls.ts';
-import { artifactPath, skillsRoot, suiteName, suiteRunDir } from '#lib/paths.ts';
-import { resolveRealGit } from '#lib/real-git.ts';
-import { type GitRunner, captureGit, runGit, seedHistory } from '#lib/seed-repo.ts';
-import { requireHarness, resetRunDir } from '#lib/setup.ts';
+import { parseJson } from '@gtbuchanan/agent-skills-harness/calls';
+import {
+  artifactPath,
+  skillsRoot,
+  suiteName,
+  suiteRunDir,
+} from '@gtbuchanan/agent-skills-harness/paths';
+import { resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
+import {
+  type GitRunner,
+  captureGit,
+  runGit,
+  seedHistory,
+} from '@gtbuchanan/agent-skills-harness/seed-repo';
+import { requireHarness, resetRunDir } from '@gtbuchanan/agent-skills-harness/setup';
 
 const suite = suiteName(import.meta.url);
 const logDir = suiteRunDir(import.meta.url);

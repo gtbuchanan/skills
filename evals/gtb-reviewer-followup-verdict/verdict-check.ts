@@ -11,8 +11,8 @@
  *     thread is matched by its echoed `threadId` and scored as a fraction.
  */
 import * as v from 'valibot';
-import type { AssertionResult } from '#lib/assert.ts';
-import { findJsonArray } from '#lib/json-scan.ts';
+import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
+import { findJsonArray } from '@gtbuchanan/agent-skills-harness/json-scan';
 
 /**
  * Share of the single-thread score carried by the verdict itself.

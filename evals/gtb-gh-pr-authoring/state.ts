@@ -16,7 +16,7 @@
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import * as v from 'valibot';
-import { parseJson } from '#lib/calls.ts';
+import { parseJson } from '@gtbuchanan/agent-skills-harness/calls';
 
 export interface OpenedPr {
   readonly baseRefName: string;

@@ -17,7 +17,7 @@ import path from 'node:path';
 import { test, vi } from 'vitest';
 import { author, user, viewer } from '#evals/gtb-gh-reviewer-followup-plan/scenario.ts';
 import { commitPlan, seedRepository } from '#evals/gtb-gh-reviewer-followup-plan/seed.ts';
-import { resolveRealGit } from '#evals/lib/real-git.ts';
+import { resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
 
 const git = resolveRealGit();
 
@@ -40,8 +40,14 @@ const inRepo = (workspace: string, ...args: string[]): string =>
   spawnSync(git, args, { cwd: workspace, encoding: 'utf8' }).stdout.trim();
 
 /**
- * Headroom for a case that seeds its own checkout: a seed spawns a dozen git
+ * Headroom for any case that waits on a seed: a seed spawns a dozen git
  * processes, which outruns the default timeout on a slower host.
+ *
+ * Carried by the cases that share the file-scoped checkout as well as the ones
+ * that seed their own, because whichever of them runs first is the one that
+ * pays for the shared seed — and which that is depends on ordering and on
+ * which bucket is running. Budgeting only today's first case would leave the
+ * next reordering to rediscover this.
  */
 const seedTimeout = { timeout: 60_000 };
 
@@ -113,7 +119,9 @@ test('a hostile global config cannot reach the seed', seedTimeout, ({ expect }) 
   }
 });
 
-testSeeded('the checkout answers the identity probe gh agrees with', ({ expect, seeded }) => {
+testSeeded('the checkout answers the identity probe gh agrees with', seedTimeout, (
+  { expect, seeded },
+) => {
   /*
    * An agent asks git who it is before doing anything. The commits carry their
    * own author in the environment, so this repo-local identity is not what
@@ -125,17 +133,21 @@ testSeeded('the checkout answers the identity probe gh agrees with', ({ expect, 
   expect(inRepo(seeded.workspace, 'config', '--get', 'user.email')).toBe(user.email);
 });
 
-testSeeded('the commits are the author\'s, not the reviewer\'s', ({ expect, seeded }) => {
+testSeeded('the commits are the author\'s, not the reviewer\'s', seedTimeout, (
+  { expect, seeded },
+) => {
   expect(inRepo(seeded.workspace, 'log', '-1', '--format=%an')).toBe(author);
 });
 
-testSeeded('every planned commit lands in the history', ({ expect, seeded }) => {
+testSeeded('every planned commit lands in the history', seedTimeout, ({ expect, seeded }) => {
   const names = inRepo(seeded.workspace, 'rev-list', '--reverse', 'HEAD').split('\n');
 
   expect(names).toStrictEqual(commitPlan.map(commit => seeded.shas[commit.key]));
 });
 
-testSeeded('the diff since the baseline is the fix under review', ({ expect, seeded }) => {
+testSeeded('the diff since the baseline is the fix under review', seedTimeout, (
+  { expect, seeded },
+) => {
   const changed = inRepo(
     seeded.workspace,
     'diff',
@@ -149,7 +161,9 @@ testSeeded('the diff since the baseline is the fix under review', ({ expect, see
   ]);
 });
 
-testSeeded('the unaddressed thread\'s file is untouched by it', ({ expect, seeded }) => {
+testSeeded('the unaddressed thread\'s file is untouched by it', seedTimeout, (
+  { expect, seeded },
+) => {
   /*
    * api/order.py is the thread the author resolved without fixing. If the diff
    * ever touched it the fixture would stop being unambiguous.
@@ -164,7 +178,7 @@ testSeeded('the unaddressed thread\'s file is untouched by it', ({ expect, seede
   expect(inRepo(seeded.workspace, 'cat-file', '-e', 'HEAD:api/order.py')).toBe('');
 });
 
-testSeeded('the fix is real code, not a moved line', ({ expect, seeded }) => {
+testSeeded('the fix is real code, not a moved line', seedTimeout, ({ expect, seeded }) => {
   const patch = inRepo(
     seeded.workspace,
     'diff',
@@ -175,7 +189,9 @@ testSeeded('the fix is real code, not a moved line', ({ expect, seeded }) => {
   expect(patch).toContain('+    if user is not None:');
 });
 
-testSeeded('the exact-fix thread\'s fix survives reading the file', ({ expect, seeded }) => {
+testSeeded('the exact-fix thread\'s fix survives reading the file', seedTimeout, (
+  { expect, seeded },
+) => {
   /*
    * The agent judges the working tree, not just the hunk. A fix that used
    * timingSafeEqual without importing it, or that let it throw on a length
@@ -188,7 +204,9 @@ testSeeded('the exact-fix thread\'s fix survives reading the file', ({ expect, s
   expect(source).toContain('actual.length === wanted.length && timingSafeEqual(');
 });
 
-testSeeded('the batch path keeps the defect that makes it partial', ({ expect, seeded }) => {
+testSeeded('the batch path keeps the defect that makes it partial', seedTimeout, (
+  { expect, seeded },
+) => {
   const patch = inRepo(
     seeded.workspace,
     'diff',
@@ -232,7 +250,7 @@ test('a new file in a path the PR owns is still seen', seedTimeout, ({ expect })
   expect(inRepo(workspace, 'status', '--porcelain')).toContain('src/untracked.ts');
 });
 
-testSeeded('fetch reaches the origin without a network', ({ expect, seeded }) => {
+testSeeded('fetch reaches the origin without a network', seedTimeout, ({ expect, seeded }) => {
   const result = spawnSync(git, ['fetch', '--quiet'], {
     cwd: seeded.workspace,
     encoding: 'utf8',

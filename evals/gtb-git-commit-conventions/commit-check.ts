@@ -32,13 +32,13 @@ import {
 } from './message-rules.ts';
 import { scenarioPath, scenarios } from './scenarios.ts';
 import { baselinesPath } from './setup.ts';
-import type { AssertionResult } from '#lib/assert.ts';
-import { fromProblems } from '#lib/assert.ts';
-import { parseJson } from '#lib/calls.ts';
-import { skillsRoot } from '#lib/paths.ts';
-import { resolveRealGit } from '#lib/real-git.ts';
-import type { GitRunner } from '#lib/seed-repo.ts';
-import { captureGit, probeGit } from '#lib/seed-repo.ts';
+import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
+import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
+import { parseJson } from '@gtbuchanan/agent-skills-harness/calls';
+import { skillsRoot } from '@gtbuchanan/agent-skills-harness/paths';
+import { resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
+import type { GitRunner } from '@gtbuchanan/agent-skills-harness/seed-repo';
+import { captureGit, probeGit } from '@gtbuchanan/agent-skills-harness/seed-repo';
 
 // Extracted rather than inlined to keep the schema call nesting shallow.
 const StringListSchema = v.array(v.string());

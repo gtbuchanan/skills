@@ -16,7 +16,11 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test, vi } from 'vitest';
-import { findGitOutsideStub, hermeticGitEnv, resolveRealGit } from '#evals/lib/real-git.ts';
+import {
+  findGitOutsideStub,
+  hermeticGitEnv,
+  resolveRealGit,
+} from '@gtbuchanan/agent-skills-harness/real-git';
 
 const stubDir = path.join(path.sep, 'tmp', 'stub-bin');
 const realDir = path.join(path.sep, 'usr', 'bin');

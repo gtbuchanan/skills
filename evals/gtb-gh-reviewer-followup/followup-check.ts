@@ -12,10 +12,10 @@
  *                       the safety invariant: never merge over unresolved feedback.
  */
 import * as v from 'valibot';
-import type { AssertionResult } from '#lib/assert.ts';
-import { fromProblems } from '#lib/assert.ts';
-import { readCommands } from '#lib/calls.ts';
-import { suiteCallLog } from '#lib/paths.ts';
+import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
+import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
+import { readCommands } from '@gtbuchanan/agent-skills-harness/calls';
+import { suiteCallLog } from '@gtbuchanan/agent-skills-harness/paths';
 
 const VarsSchema = v.object({
   expectMerge: v.optional(v.boolean(), false),

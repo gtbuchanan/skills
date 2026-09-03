@@ -30,7 +30,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
 import { markerFile } from '#evals/gtb-gh-pr-authoring/world.ts';
-import { repoRoot } from '#evals/lib/paths.ts';
+import { repoRoot } from '@gtbuchanan/agent-skills-harness/paths';
 
 const stub = path.join(
   repoRoot,

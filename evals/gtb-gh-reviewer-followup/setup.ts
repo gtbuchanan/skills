@@ -22,9 +22,13 @@
  */
 import path from 'node:path';
 import spawn from 'cross-spawn';
-import { skillsRoot, suiteCallLog, suiteDir } from '#lib/paths.ts';
-import { requireHarness, resetCallLog, truncateCallLog } from '#lib/setup.ts';
-import { resolveSkillsCli } from '#lib/skills-cli.ts';
+import { skillsRoot, suiteCallLog, suiteDir } from '@gtbuchanan/agent-skills-harness/paths';
+import {
+  requireHarness,
+  resetCallLog,
+  truncateCallLog,
+} from '@gtbuchanan/agent-skills-harness/setup';
+import { resolveSkillsCli } from '@gtbuchanan/agent-skills-harness/skills-cli';
 
 const logPath = suiteCallLog(import.meta.url);
 /**

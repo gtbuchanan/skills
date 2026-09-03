@@ -21,8 +21,13 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { skillsRoot, suiteDir, suiteName, suiteRunDir } from '#lib/paths.ts';
-import { requireHarness, resetRunDir } from '#lib/setup.ts';
+import {
+  skillsRoot,
+  suiteDir,
+  suiteName,
+  suiteRunDir,
+} from '@gtbuchanan/agent-skills-harness/paths';
+import { requireHarness, resetRunDir } from '@gtbuchanan/agent-skills-harness/setup';
 
 /**
  * rwxr-xr-x — the agent invokes the overlaid script directly.

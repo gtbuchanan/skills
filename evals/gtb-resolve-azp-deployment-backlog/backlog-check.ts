@@ -39,10 +39,10 @@
  */
 import path from 'node:path';
 import * as v from 'valibot';
-import type { AssertionResult } from '#lib/assert.ts';
-import { fromProblems } from '#lib/assert.ts';
-import { readJsonl } from '#lib/calls.ts';
-import { suiteRunDir } from '#lib/paths.ts';
+import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
+import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
+import { readJsonl } from '@gtbuchanan/agent-skills-harness/calls';
+import { suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
 
 /**
  * The Azure DevOps resource id the one-time `az login --scope` fix names.

@@ -47,6 +47,9 @@ minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
   - '@gtbuchanan/*'
 
+packages:
+  - packages/*
+
 peerDependencyRules:
   allowedVersions:
     # Transitive mismatches in promptfoo's tree for features we don't exercise.

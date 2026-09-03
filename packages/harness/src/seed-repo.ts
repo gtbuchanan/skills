@@ -23,7 +23,7 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import spawn from 'cross-spawn';
-import { hermeticGitEnv } from '#lib/real-git.ts';
+import { hermeticGitEnv } from './real-git.ts';
 
 /**
  * Where to run git, and which git to run — the real one, resolved past any

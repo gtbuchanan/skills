@@ -21,8 +21,8 @@
  * process, so a run is self-consistent whatever the names come out as.
  */
 import { author, authorEmail, branch, user } from './scenario.ts';
-import type { SeedCommit } from '#lib/seed-repo.ts';
-import { seedHistory } from '#lib/seed-repo.ts';
+import type { SeedCommit } from '@gtbuchanan/agent-skills-harness/seed-repo';
+import { seedHistory } from '@gtbuchanan/agent-skills-harness/seed-repo';
 
 /*
  * The fix has to be defensible on a READ of the file, not just as a hunk: the

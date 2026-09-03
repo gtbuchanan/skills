@@ -17,9 +17,15 @@ import { copyFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { readTemplate, resolveShas } from './scenario.ts';
 import { seedRepository } from './seed.ts';
-import { artifactPath, skillsRoot, suiteCallLog, suiteDir, suiteName } from '#lib/paths.ts';
-import { resolveRealGit } from '#lib/real-git.ts';
-import { resetCallLog, truncateCallLog } from '#lib/setup.ts';
+import {
+  artifactPath,
+  skillsRoot,
+  suiteCallLog,
+  suiteDir,
+  suiteName,
+} from '@gtbuchanan/agent-skills-harness/paths';
+import { resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
+import { resetCallLog, truncateCallLog } from '@gtbuchanan/agent-skills-harness/setup';
 
 const suite = suiteName(import.meta.url);
 const logPath = suiteCallLog(import.meta.url);

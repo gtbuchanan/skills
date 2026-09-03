@@ -7,7 +7,7 @@
  *
  * Installed as `git` at the front of the eval PATH by the runner.
  */
-import { logCall } from '#lib/stub.ts';
+import { logCall } from '@gtbuchanan/agent-skills-harness/stub';
 
 logCall('git');
 

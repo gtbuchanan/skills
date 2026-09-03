@@ -16,8 +16,8 @@
  */
 import * as v from 'valibot';
 import { scenarios } from './trees.ts';
-import { type AssertionResult, fromProblems } from '#lib/assert.ts';
-import { findJsonArray } from '#lib/json-scan.ts';
+import { type AssertionResult, fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
+import { findJsonArray } from '@gtbuchanan/agent-skills-harness/json-scan';
 
 const StringArraySchema = v.array(v.string());
 

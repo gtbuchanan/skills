@@ -54,7 +54,7 @@ import type {
 } from '../shapes.ts';
 import { type OpenedPr, readState, writeState } from '../state.ts';
 import { locateScenario } from '../world.ts';
-import { appendJsonl, argv, joined, writeLine } from '#lib/stub.ts';
+import { appendJsonl, argv, joined, writeLine } from '@gtbuchanan/agent-skills-harness/stub';
 
 /**
  * The body arrives on standard input only when the call asks for it. Reading

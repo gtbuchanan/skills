@@ -7,6 +7,14 @@
 #   docker compose up -d      # start the server
 #   docker compose down       # stop it (results persist in artifacts/promptfoo)
 ---
+# Pinned, because everything below is named absolutely — the container, the
+# network — while compose otherwise derives the project from the working
+# directory. Every change here happens in a worktree, so the directory is
+# never the same twice: a server started from one worktree belongs to a
+# project the next one does not share, and compose then refuses the container
+# name it finds already taken and warns that the network is not its own.
+# Naming the project makes all of them the same run wherever it is invoked.
+name: agent-skills-eval
 networks:
   default:
     name: skills-eval-net

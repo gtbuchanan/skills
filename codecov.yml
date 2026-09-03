@@ -30,7 +30,16 @@ component_management:
       name: agent-skills-harness
       paths:
         - packages/harness/src/**
+    - component_id: agent-skills-eval-runner
+      name: agent-skills-eval-runner
+      paths:
+        - packages/eval-runner/bin/**
+        - packages/eval-runner/src/**
 flags:
+  agent-skills-eval-runner:
+    carryforward: true
+    paths:
+      - packages/eval-runner/
   agent-skills-harness:
     carryforward: true
     paths:

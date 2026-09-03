@@ -5,7 +5,7 @@
 # mocks one physically cannot reach the real service.
 #
 # git is the deliberate exception, and not a hole in that: it is in the
-# harness's `neededTools` rather than its `dangerTools` (scripts/eval-isolation.ts)
+# harness's `neededTools` rather than its `dangerTools`
 # because it reaches no service on its own. A suite that wants a real checkout
 # seeds one locally and shadows `git` with its own recorder, exactly as the
 # native runner does — and the base image ships no git at all, so without this

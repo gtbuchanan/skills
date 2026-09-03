@@ -9,4 +9,4 @@ set -e
 export STUB_BINDIR=/usr/local/bin
 
 pnpm run skills:sync
-exec node scripts/run-evals.ts "$@"
+exec node packages/eval-runner/bin/run-evals.ts "$@"

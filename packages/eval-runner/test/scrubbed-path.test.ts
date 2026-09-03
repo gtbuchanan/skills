@@ -21,7 +21,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { createIsolation } from '#scripts/scrubbed-path.ts';
+import { createIsolation } from '#src/scrubbed-path.ts';
 
 const dangerTools = ['az', 'gh'];
 const neededTools = ['pnpm'];

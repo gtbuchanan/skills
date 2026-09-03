@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /*
  * Diagnostic: prints the scrubbed-PATH allowlist and runs the fail-safe
  * self-test, without launching any eval. Run it from whatever shell you use to
@@ -6,8 +5,8 @@
  * there — the ambient PATH differs by shell, so this is worth checking per host.
  */
 import spawn from 'cross-spawn';
-import { beginEphemeralRun } from './ephemeral-run.ts';
-import { evalIsolation } from './eval-isolation.ts';
+import { beginEphemeralRun } from '#src/ephemeral-run.ts';
+import { evalIsolation } from '#src/eval-isolation.ts';
 
 const { assertFailSafe, buildScrubbedPath, poisonDangerTools } = evalIsolation;
 

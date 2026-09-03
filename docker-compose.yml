@@ -1,5 +1,5 @@
 # Local promptfoo results server + UI. Eval containers (run by
-# scripts/run-evals-docker.ts) join the same network and `--share` their
+# packages/eval-runner/bin/run-evals-docker.ts) join the same network and `--share` their
 # results here; browse them at http://localhost:3000.
 #
 # SQLite-backed and unauthenticated — local/trusted use only.

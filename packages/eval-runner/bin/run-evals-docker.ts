@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /*
  * Containerized eval runner — the fully-sealed alternative to `pnpm eval`
  * (run-evals-process.ts) for hosts that prefer a Linux container over the
@@ -25,16 +24,14 @@ import type { SpawnOptions } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
+import { repoRoot as root } from '@gtbuchanan/agent-skills-harness/paths';
 import spawn from 'cross-spawn';
 
 /**
  * `process.argv` leads with the node binary and this script.
  */
 const cliArgsIndex = 2;
-
-const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /**
  * Docker wants forward slashes in volume paths, including on Windows.
@@ -119,10 +116,13 @@ const network = 'skills-eval-net';
 
 const commonMounts = [
   /* skills/ is the sync source; evals/ carries the suites. packages/ carries
-     the harness they import — mounted rather than left to the image, so the
-     container runs the source on disk. Its manifest is baked in at build time
-     (see the Dockerfile) because pnpm has to link the workspace package before
-     any of this is mounted. */
+     the harness they import and this runner's own in-container half — mounted
+     rather than left to the image, so the container runs the source on disk.
+     Their manifests are baked in at build time (see the Dockerfile) because
+     pnpm has to link the workspace packages before any of this is mounted.
+     scripts/ is down to sync-skills.mjs, which the entrypoint runs as
+     `pnpm skills:sync`; it stays at the root with the skills/ tree it
+     deploys. */
   ['skills', '/work/skills'],
   ['evals', '/work/evals'],
   ['packages', '/work/packages'],
@@ -166,7 +166,7 @@ const runSkill = async (
     ...env,
     image,
     'sh',
-    '/work/scripts/docker-entrypoint.sh',
+    '/work/packages/eval-runner/bin/docker-entrypoint.sh',
     name,
     '--share',
     ...passthrough,

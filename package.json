@@ -2,9 +2,6 @@
   "name": "@gtbuchanan/skills",
   "private": true,
   "type": "module",
-  "imports": {
-    "#scripts/*": "./scripts/*"
-  },
   "scripts": {
     "build": "gtb turbo run build",
     "build:ci": "gtb turbo run build:ci",
@@ -13,13 +10,12 @@
     "coverage:merge": "gtb turbo run coverage:merge",
     "coverage:vitest:merge": "gtb task coverage:vitest:merge",
     "deploy:skills": "gtb task deploy:skills",
-    "eval": "node scripts/run-evals-process.ts",
-    "eval:docker": "node scripts/run-evals-docker.ts",
+    "eval": "node packages/eval-runner/bin/run-evals-process.ts",
+    "eval:docker": "node packages/eval-runner/bin/run-evals-docker.ts",
     "lint:eslint": "gtb task lint:eslint",
     "prepare": "gtb prepare",
     "skills:sync": "node scripts/sync-skills.mjs",
     "test:slow": "gtb turbo run test:slow",
-    "test:vitest:fast": "gtb task test:vitest:fast",
     "typecheck:ts": "gtb task typecheck:ts",
     "verify": "gtb verify"
   },

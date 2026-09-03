@@ -10,11 +10,11 @@ import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'vitest';
-import { beginEphemeralRun } from '#scripts/ephemeral-run.ts';
+import { beginEphemeralRun } from '#src/ephemeral-run.ts';
 
 /* A file URL, since the child resolves by path rather than through the
- * package's `#scripts/*` imports. */
-const moduleUrl = new URL('../../scripts/ephemeral-run.ts', import.meta.url).href;
+ * package's `#src/*` imports. */
+const moduleUrl = new URL('../src/ephemeral-run.ts', import.meta.url).href;
 
 /**
  * Lines the kept-directory case prints: the swept dir, then the kept one.

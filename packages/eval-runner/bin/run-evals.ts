@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /*
  * In-container per-suite runner (invoked by docker-entrypoint.sh; canonical
  * entry is `pnpm eval`). Runs each skill's suite as an isolated promptfoo eval —
@@ -14,7 +13,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { repoRoot as root } from '@gtbuchanan/agent-skills-harness/paths';
 import spawn from 'cross-spawn';
 
 /**
@@ -26,7 +25,6 @@ const cliArgsIndex = 2;
  */
 const stubMode = 0o755;
 
-const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const suitesDir = path.join(root, 'evals');
 const outDir = path.join(root, 'artifacts', 'skill-evals');
 

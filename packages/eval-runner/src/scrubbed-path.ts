@@ -196,6 +196,15 @@ const canResolve = (origin: string, specifier: string): boolean => {
  * hardcoding a platform check, because it asks the same question the SDK does.
  * Resolution runs from the SDK's own entry: the platform packages are its
  * dependencies, not ours, so pnpm's layout hides them from here.
+ *
+ * This package deliberately does not declare the SDK, which is why the lookup
+ * is a runtime resolve rather than an import. The question is what the *host's*
+ * install produced, and the container answers it differently from the machine
+ * that built the tree: pnpm shortens `.pnpm` directory names past a length
+ * limit on Windows, so a link created there points at a path the Linux install
+ * does not have. Declaring it here would put such a link under `packages/`,
+ * which the container bind-mounts — and the SDK would then fail to find the
+ * native binary it had actually installed.
  */
 export const hasSdkNativeClaude = (
   resolvedFrom: string = import.meta.url,

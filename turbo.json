@@ -25,20 +25,6 @@
         "dist/.eslintcache"
       ]
     },
-    "//#test:vitest:fast": {
-      "env": [
-        "CI"
-      ],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "!evals/**",
-        "!packages/**"
-      ],
-      "outputs": [
-        "dist/coverage/vitest/fast/**",
-        "dist/test-results/vitest/merge/blob-fast.json"
-      ]
-    },
     "//#typecheck:ts": {
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -63,8 +49,7 @@
       "dependsOn": [
         "typecheck",
         "lint",
-        "test:vitest:fast",
-        "//#test:vitest:fast"
+        "test:vitest:fast"
       ]
     },
     "coverage:codecov:upload": {

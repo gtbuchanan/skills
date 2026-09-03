@@ -18,7 +18,7 @@ import {
   claudeExecutable,
   findOnPath,
   hasSdkNativeClaude,
-} from '#scripts/scrubbed-path.ts';
+} from '#src/scrubbed-path.ts';
 
 const hasSdkBinary = (): boolean => true;
 const hasNoSdkBinary = (): boolean => false;

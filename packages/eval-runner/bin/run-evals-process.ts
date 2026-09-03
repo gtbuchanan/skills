@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /*
  * Container-free eval runner — the cross-platform peer to run-evals-docker.ts.
  * Docker's only load-bearing guarantee was that real provider CLIs are absent
@@ -37,15 +36,15 @@ import {
 } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
+import { repoRoot as root } from '@gtbuchanan/agent-skills-harness/paths';
+import { resolveSkillsCli } from '@gtbuchanan/agent-skills-harness/skills-cli';
 import spawn from 'cross-spawn';
 import * as v from 'valibot';
 import { parse as parseYaml } from 'yaml';
-import { beginEphemeralRun } from './ephemeral-run.ts';
-import { evalIsolation } from './eval-isolation.ts';
-import { buildEvalEnv } from './scrubbed-path.ts';
-import { resolveSkillsCli } from '@gtbuchanan/agent-skills-harness/skills-cli';
+import { beginEphemeralRun } from '#src/ephemeral-run.ts';
+import { evalIsolation } from '#src/eval-isolation.ts';
+import { buildEvalEnv } from '#src/scrubbed-path.ts';
 
 const { assertFailSafe, buildScrubbedPath, poisonDangerTools } = evalIsolation;
 
@@ -53,8 +52,6 @@ const { assertFailSafe, buildScrubbedPath, poisonDangerTools } = evalIsolation;
  * `process.argv` leads with the node binary and this script.
  */
 const cliArgsIndex = 2;
-
-const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /* The skills CLI installs into cwd/.claude/skills (no target-dir flag), so each
  * suite's skills are populated by running it with cwd = that suite's workspace. */
@@ -364,7 +361,7 @@ const runSuite = async (name: string): Promise<SuiteResult> =>
     }
     const child = spawn(
       'node',
-      [path.join(root, 'scripts', 'run-evals.ts'), name, ...passthrough],
+      [path.join(import.meta.dirname, 'run-evals.ts'), name, ...passthrough],
       { cwd: root, env: { ...env, EVAL_WORKSPACE: workspace, LOG_LEVEL: 'debug' } },
     );
     let out = '';

@@ -188,6 +188,19 @@ test('a field the stub does not model refuses instead of answering', ({ expect }
   expect(result.stderr).toContain('mergedAt');
 });
 
+test('a --json naming no fields is refused, as gh refuses it', ({ expect }) => {
+  /*
+   * gh answers this by listing the fields it could have been given, not by
+   * serving the record. Reading a bare flag as "no narrowing" would return
+   * everything — indistinguishable from a call that never asked to narrow, and
+   * the over-serving this double exists to avoid.
+   */
+  const result = gh(worldFor('merge-stacked'), ['pr', 'view', '7', '--json']);
+
+  expect(result.status).toBe(1);
+  expect(result.stderr).toContain('--json');
+});
+
 test('pr view serves the PR named, not the scenario\'s own', ({ expect }) => {
   /*
    * Answering every question with the scenario's own PR makes a dependent look

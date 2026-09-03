@@ -1,9 +1,11 @@
 {
-  "name": "@gtbuchanan/eval-gtb-gh-pr-authoring",
+  "name": "@gtbuchanan/github-cli-stub",
   "private": true,
   "type": "module",
-  "imports": {
-    "#src/*": "./src/*"
+  "exports": {
+    "./body": "./src/body.ts",
+    "./dispatch": "./src/dispatch.ts",
+    "./selection": "./src/selection.ts"
   },
   "scripts": {
     "coverage:codecov:upload": "gtb task coverage:codecov:upload",
@@ -13,18 +15,12 @@
     "test:vitest:slow": "gtb task test:vitest:slow",
     "typecheck:ts": "gtb task typecheck:ts"
   },
-  "dependencies": {
-    "@gtbuchanan/agent-skills-harness": "workspace:*",
-    "@gtbuchanan/github-cli-stub": "workspace:*",
-    "cross-spawn": "catalog:",
-    "valibot": "catalog:"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@gtbuchanan/cli": "catalog:",
     "@gtbuchanan/eslint-config": "catalog:",
     "@gtbuchanan/tsconfig": "catalog:",
     "@gtbuchanan/vitest-config": "catalog:",
-    "@types/cross-spawn": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",

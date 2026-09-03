@@ -30,6 +30,10 @@ component_management:
       name: agent-skills-harness
       paths:
         - packages/harness/src/**
+    - component_id: github-cli-stub
+      name: github-cli-stub
+      paths:
+        - packages/github-cli-stub/src/**
     - component_id: agent-skills-eval-runner
       name: agent-skills-eval-runner
       paths:
@@ -64,3 +68,7 @@ flags:
     carryforward: true
     paths:
       - evals/gtb-reviewer-followup-verdict/
+  github-cli-stub:
+    carryforward: true
+    paths:
+      - packages/github-cli-stub/

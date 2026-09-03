@@ -31,4 +31,12 @@ WORKDIR /work
 # container executes, rather than whatever was baked into the image.
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .pnpmfile.cjs ./
 COPY packages/harness/package.json ./packages/harness/
-RUN pnpm install --no-frozen-lockfile
+# `prepare` deploys authored skills to the agent directories on the machine,
+# and an image has none — so skills-npm finds skills it cannot place and exits
+# non-zero, failing the build. It was silent before this became a workspace:
+# with no `packages:` globs it scanned nothing and had nothing to deploy.
+# Dropped rather than installing with --ignore-scripts, which would also skip
+# dependencies' own install scripts. The container runs evals; it never
+# deploys.
+RUN pnpm pkg delete scripts.prepare \
+  && pnpm install --no-frozen-lockfile

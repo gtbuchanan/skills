@@ -9,8 +9,8 @@
  * of the eval PATH, that execs this file. The real gh CLI is never reachable
  * from a suite.
  *
- * The identity it reports comes from ../scenario.ts, which the fake `git` reads
- * too — the two describe one world, so an agent that cross-checks them with
+ * The identity it reports comes from the scenario module, which the fake `git`
+ * reads too — the two describe one world, so an agent that cross-checks them with
  * `git remote` finds the repository `gh repo view` named.
  *
  * The `reviews` call carries a `--jq` that selects the viewer's latest submitted
@@ -20,14 +20,14 @@
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { joined, logCall, writeLine } from '@gtbuchanan/agent-skills-harness/stub';
 import {
   readReviews,
   repo,
   scenarioDir,
   selectLastOwnReview,
   viewer,
-} from '../scenario.ts';
-import { joined, logCall, writeLine } from '@gtbuchanan/agent-skills-harness/stub';
+} from '#src/scenario.ts';
 
 logCall('gh');
 

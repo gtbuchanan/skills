@@ -3,7 +3,6 @@
   "private": true,
   "type": "module",
   "imports": {
-    "#evals/*": "./evals/*",
     "#scripts/*": "./scripts/*"
   },
   "scripts": {
@@ -21,8 +20,7 @@
     "skills:sync": "node scripts/sync-skills.mjs",
     "test:slow": "gtb turbo run test:slow",
     "test:vitest:fast": "gtb task test:vitest:fast",
-    "test:vitest:slow": "gtb task test:vitest:slow",
-    "typecheck:ts": "gtb task typecheck:ts && gtb task typecheck:ts -p evals/tsconfig.json",
+    "typecheck:ts": "gtb task typecheck:ts",
     "verify": "gtb verify"
   },
   "devDependencies": {

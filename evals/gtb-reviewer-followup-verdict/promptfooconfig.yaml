@@ -22,7 +22,7 @@ defaultTest:
       value: gtb-reviewer-followup-verdict
     # Verdict correctness + reply presence (empty iff exact-fix).
     - type: javascript
-      value: file://verdict-check.ts
+      value: file://src/verdict-check.ts
 
   options:
     # Grade the reply-quality rubric through the same keyless agent SDK.

@@ -1,3 +1,4 @@
+// @ts-check
 /*
  * Node stand-in for scripts/resolve-azp-deployment-backlog.ps1. setup.ts
  * overlays this onto the synced skill copy (with an executable node shebang) so

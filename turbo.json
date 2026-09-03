@@ -18,6 +18,7 @@
     "//#lint:eslint": {
       "inputs": [
         "$TURBO_DEFAULT$",
+        "!evals/**",
         "!packages/**"
       ],
       "outputs": [
@@ -30,6 +31,7 @@
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
+        "!evals/**",
         "!packages/**"
       ],
       "outputs": [
@@ -37,22 +39,10 @@
         "dist/test-results/vitest/merge/blob-fast.json"
       ]
     },
-    "//#test:vitest:slow": {
-      "env": [
-        "CI"
-      ],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "!packages/**"
-      ],
-      "outputs": [
-        "dist/coverage/vitest/slow/**",
-        "dist/test-results/vitest/merge/blob-slow.json"
-      ]
-    },
     "//#typecheck:ts": {
       "inputs": [
         "$TURBO_DEFAULT$",
+        "!evals/**",
         "!packages/**"
       ],
       "outputs": []
@@ -133,8 +123,7 @@
     },
     "test:slow": {
       "dependsOn": [
-        "test:vitest:slow",
-        "//#test:vitest:slow"
+        "test:vitest:slow"
       ]
     },
     "test:vitest:fast": {

@@ -8,40 +8,43 @@
  * not found" but as a pile of "missing call for X" — a skill regression that
  * never happened.
  */
-import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { findUpSync } from 'find-up-simple';
 
 const srcDir = path.dirname(fileURLToPath(import.meta.url));
 
 /**
- * The workspace root, found by walking up for the file that defines it.
+ * The nearest directory at or above `start` holding `marker`.
  *
- * Counting directories up from this module is what it used to do, and that
- * broke the moment the module moved — silently, because the wrong answer is
- * still a path. `pnpm-workspace.yaml` marks the root by definition, so this
- * survives the next move as well.
+ * Counting directories up is what this used to do, and that broke the moment a
+ * module moved — silently, because the wrong answer is still a path. A marker
+ * file names the directory by definition, so it survives the next move too.
+ *
+ * The walk itself is `find-up-simple`; what stays here is the part it has no
+ * opinion on. It answers with the marker's own path and `undefined` for "not
+ * found", where every caller wants the containing directory and none can do
+ * anything useful without one — so `purpose` completes the sentence "…and
+ * cannot find it" and the miss is raised rather than returned.
  */
-const findWorkspaceRoot = (start: string): string => {
-  let dir = start;
-  for (;;) {
-    if (existsSync(path.join(dir, 'pnpm-workspace.yaml'))) return dir;
+const findUp = (start: string, marker: string, purpose: string): string => {
+  const found = findUpSync(marker, { cwd: start });
+  if (found === undefined)
+    throw new Error(`no ${marker} at or above ${start}: ${purpose}`);
 
-    const parent = path.dirname(dir);
-    if (parent === dir)
-      throw new Error(
-        `no pnpm-workspace.yaml at or above ${start}: the harness anchors the ` +
-        'shared artifact directory to the workspace root and cannot find it.',
-      );
-    dir = parent;
-  }
+  return path.dirname(found);
 };
 
 /**
  * Anchors the shared artifact dir — kept in the repo so call logs stay
  * inspectable — regardless of where a suite's skills live.
  */
-export const repoRoot = findWorkspaceRoot(srcDir);
+export const repoRoot = findUp(
+  srcDir,
+  'pnpm-workspace.yaml',
+  'the harness anchors the shared artifact directory to the workspace root ' +
+  'and cannot find it.',
+);
 
 /**
  * The skill tree a suite overlays its test doubles onto, named by
@@ -70,10 +73,22 @@ export const artifactPath = (...segments: string[]): string =>
   path.join(repoRoot, 'artifacts', 'skill-evals', ...segments);
 
 /**
- * The directory of the calling suite file — pass `import.meta.url`.
+ * The root of the calling file's suite — pass `import.meta.url`.
+ *
+ * Found by walking up for the promptfoo config, which is exactly what both
+ * runners key suite discovery on, so a directory is a suite here if and only
+ * if it is one to them. The calling file's own directory was the answer while
+ * every suite file sat at the suite root; a file under `src/` or `bin/` would
+ * have resolved to that subdirectory instead, and the failure would have
+ * surfaced as call logs named `src` rather than as anything pointing here.
  */
 export const suiteDir = (metaUrl: string): string =>
-  path.dirname(fileURLToPath(metaUrl));
+  findUp(
+    path.dirname(fileURLToPath(metaUrl)),
+    'promptfooconfig.yaml',
+    'this file is not part of an eval suite, and the suite is what names its ' +
+    'call log and locates its fixtures.',
+  );
 
 /**
  * The skill a suite exercises. Suite directories are named for their skill

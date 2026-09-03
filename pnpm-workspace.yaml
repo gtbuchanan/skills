@@ -26,6 +26,7 @@ catalog:
   '@vitest/coverage-v8': 4.1.10
   cross-spawn: 7.0.6
   eslint: 10.8.1
+  find-up-simple: 1.0.1
   jiti: 2.7.0
   promptfoo: 0.122.0
   skills: 1.5.22
@@ -48,6 +49,7 @@ minimumReleaseAgeExclude:
   - '@gtbuchanan/*'
 
 packages:
+  - evals/*
   - packages/*
 
 peerDependencyRules:

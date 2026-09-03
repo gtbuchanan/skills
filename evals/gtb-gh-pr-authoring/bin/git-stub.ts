@@ -11,10 +11,10 @@
  * Installed as `git` at the front of the eval PATH by the runner, which is why
  * it resolves the real binary explicitly rather than by name.
  */
-import spawn from 'cross-spawn';
-import { locateScenario } from '../world.ts';
 import { hermeticGitEnv, resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
 import { argv, logCallToDir } from '@gtbuchanan/agent-skills-harness/stub';
+import spawn from 'cross-spawn';
+import { locateScenario } from '#src/world.ts';
 
 /* One log per scenario, keyed by the checkout the call was made in, so tests
    can run concurrently without writing over each other's record.

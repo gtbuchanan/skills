@@ -2,6 +2,7 @@
 # below is host-specific, generated, or huge.
 node_modules
 artifacts
+dist
 .agents
 .claude/skills
 .git

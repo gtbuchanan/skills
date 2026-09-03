@@ -20,7 +20,7 @@ defaultTest:
     - type: skill-used
       value: gtb-gh-reviewer-followup-apply
     - type: javascript
-      value: file://apply-check.ts
+      value: file://src/apply-check.ts
 
   # Keep array vars (expectResolve, expectReply, …) intact instead of expanding
   # each into separate test cases.
@@ -33,7 +33,7 @@ evaluateOptions:
   maxConcurrency: 1
 
 extensions:
-  - file://setup.ts:extensionHook
+  - file://src/setup.ts:extensionHook
 
 prompts:
   - |

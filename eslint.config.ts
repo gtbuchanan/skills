@@ -1,4 +1,4 @@
-import { configure, scriptFileExtensions } from '@gtbuchanan/eslint-config';
+import { configure } from '@gtbuchanan/eslint-config';
 
 export default [
   ...await configure({
@@ -17,22 +17,6 @@ export default [
        * declarative evals; until some skill ships one, this stays off.
        */
       'agent-skills/min-evals': 'off',
-    },
-  },
-  {
-    files: scriptFileExtensions.map(ext => `evals/**/*.${ext}`),
-    rules: {
-      /*
-       * evals/package.json exists only to map `#lib/*` at the suites' own
-       * subpath; it declares no dependencies and installs nothing, because the
-       * suites run out of the root install. This rule resolves the NEAREST
-       * manifest, though, so it reads that empty one and reports every import
-       * as extraneous. Point it at the manifest the deps actually live in.
-       */
-      'import-x/no-extraneous-dependencies': [
-        'warn',
-        { packageDir: import.meta.dirname },
-      ],
     },
   },
   {

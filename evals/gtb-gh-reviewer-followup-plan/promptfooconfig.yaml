@@ -22,7 +22,7 @@ defaultTest:
     - type: skill-used
       value: gtb-gh-reviewer-followup-plan
     - type: javascript
-      value: file://plan-check.ts
+      value: file://src/plan-check.ts
 
 description: gtb-gh-reviewer-followup-plan — read path via claude-agent-sdk with fake gh + git
 
@@ -31,7 +31,7 @@ evaluateOptions:
   maxConcurrency: 1
 
 extensions:
-  - file://setup.ts:extensionHook
+  - file://src/setup.ts:extensionHook
 
 prompts:
   - |

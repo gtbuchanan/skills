@@ -1,0 +1,27 @@
+{
+  "name": "@gtbuchanan/eval-gtb-gh-reviewer-followup-apply",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "scripts": {
+    "lint:eslint": "gtb task lint:eslint",
+    "typecheck:ts": "gtb task typecheck:ts"
+  },
+  "dependencies": {
+    "@gtbuchanan/agent-skills-harness": "workspace:*",
+    "valibot": "catalog:"
+  },
+  "devDependencies": {
+    "@gtbuchanan/cli": "catalog:",
+    "@gtbuchanan/eslint-config": "catalog:",
+    "@gtbuchanan/tsconfig": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

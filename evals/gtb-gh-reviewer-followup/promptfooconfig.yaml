@@ -17,7 +17,7 @@ defaultTest:
     - type: skill-used
       value: gtb-gh-reviewer-followup
     - type: javascript
-      value: file://followup-check.ts
+      value: file://src/followup-check.ts
 
 description: gtb-gh-reviewer-followup — merge gate via claude-agent-sdk with mocked deps
 
@@ -26,7 +26,7 @@ evaluateOptions:
   maxConcurrency: 1
 
 extensions:
-  - file://setup.ts:extensionHook
+  - file://src/setup.ts:extensionHook
 
 prompts:
   - |

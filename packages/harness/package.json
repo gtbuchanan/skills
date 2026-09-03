@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "cross-spawn": "catalog:",
+    "find-up-simple": "catalog:",
     "valibot": "catalog:"
   },
   "devDependencies": {

@@ -2,7 +2,7 @@
 /*
  * Fake `gh` for this eval.
  *
- * It never reaches the network: it answers from ../scenarios.ts, picking the
+ * It never reaches the network: it answers from canned scenarios, picking the
  * world by walking up from the working directory to the marker file the seed
  * dropped, and records every invocation to that scenario's own log under
  * $STUB_LOG_DIR. One log per scenario rather than one for the suite is what
@@ -39,22 +39,22 @@
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { checkRecord, checksFor } from '../checks.ts';
+import { appendJsonl, argv, joined, writeLine } from '@gtbuchanan/agent-skills-harness/stub';
+import { checkRecord, checksFor } from '#src/checks.ts';
 import {
   currentHead,
   hasOpenPrFrom,
   impliedNumber,
   nextPrNumber,
-} from '../opening.ts';
-import { baseBranch, repoSlug, viewer } from '../repository.ts';
+} from '#src/opening.ts';
+import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
 import type {
   DependentPr,
   PullRequest,
   ReviewCommentEntry,
-} from '../shapes.ts';
-import { type OpenedPr, readState, writeState } from '../state.ts';
-import { locateScenario } from '../world.ts';
-import { appendJsonl, argv, joined, writeLine } from '@gtbuchanan/agent-skills-harness/stub';
+} from '#src/shapes.ts';
+import { type OpenedPr, readState, writeState } from '#src/state.ts';
+import { locateScenario } from '#src/world.ts';
 
 /**
  * The body arrives on standard input only when the call asks for it. Reading

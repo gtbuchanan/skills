@@ -3,6 +3,29 @@ codecov:
   require_ci_to_pass: false
 component_management:
   individual_components:
+    - component_id: eval-gtb-reviewer-followup-verdict
+      name: eval-gtb-reviewer-followup-verdict
+      paths:
+        - evals/gtb-reviewer-followup-verdict/src/**
+    - component_id: eval-gtb-resolve-azp-deployment-backlog
+      name: eval-gtb-resolve-azp-deployment-backlog
+      paths:
+        - evals/gtb-resolve-azp-deployment-backlog/bin/**
+        - evals/gtb-resolve-azp-deployment-backlog/src/**
+    - component_id: eval-gtb-gh-reviewer-followup-plan
+      name: eval-gtb-gh-reviewer-followup-plan
+      paths:
+        - evals/gtb-gh-reviewer-followup-plan/bin/**
+        - evals/gtb-gh-reviewer-followup-plan/src/**
+    - component_id: eval-gtb-gh-pr-authoring
+      name: eval-gtb-gh-pr-authoring
+      paths:
+        - evals/gtb-gh-pr-authoring/bin/**
+        - evals/gtb-gh-pr-authoring/src/**
+    - component_id: eval-gtb-change-decomposition
+      name: eval-gtb-change-decomposition
+      paths:
+        - evals/gtb-change-decomposition/src/**
     - component_id: agent-skills-harness
       name: agent-skills-harness
       paths:
@@ -12,3 +35,23 @@ flags:
     carryforward: true
     paths:
       - packages/harness/
+  eval-gtb-change-decomposition:
+    carryforward: true
+    paths:
+      - evals/gtb-change-decomposition/
+  eval-gtb-gh-pr-authoring:
+    carryforward: true
+    paths:
+      - evals/gtb-gh-pr-authoring/
+  eval-gtb-gh-reviewer-followup-plan:
+    carryforward: true
+    paths:
+      - evals/gtb-gh-reviewer-followup-plan/
+  eval-gtb-resolve-azp-deployment-backlog:
+    carryforward: true
+    paths:
+      - evals/gtb-resolve-azp-deployment-backlog/
+  eval-gtb-reviewer-followup-verdict:
+    carryforward: true
+    paths:
+      - evals/gtb-reviewer-followup-verdict/

@@ -24,7 +24,7 @@ defaultTest:
     - type: skill-used
       value: gtb-change-decomposition
     - type: javascript
-      value: file://plan-check.ts
+      value: file://src/plan-check.ts
 
   # Keep array and object vars (layers, isolated, …) intact instead of
   # expanding each into separate test cases.
@@ -58,7 +58,7 @@ evaluateOptions:
   maxConcurrency: 4
 
 extensions:
-  - file://setup.ts:extensionHook
+  - file://src/setup.ts:extensionHook
 
 prompts:
   - |

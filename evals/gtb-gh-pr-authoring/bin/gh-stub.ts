@@ -41,10 +41,16 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { appendJsonl, argv, joined, writeLine } from '@gtbuchanan/agent-skills-harness/stub';
 import { hasStdinBody } from '@gtbuchanan/github-cli-stub/body';
+import { checkRecord } from '@gtbuchanan/github-cli-stub/checks';
 import { UnmodelledCall } from '@gtbuchanan/github-cli-stub/dispatch';
+import type {
+  DependentPr,
+  PullRequest,
+  ReviewCommentEntry,
+} from '@gtbuchanan/github-cli-stub/records';
 import { pick as pickFields, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { type OpenedPr, readState, writeState } from '@gtbuchanan/github-cli-stub/state';
-import { checkRecord, checksFor } from '#src/checks.ts';
+import { checksFor } from '#src/checks.ts';
 import {
   currentHead,
   hasOpenPrFrom,
@@ -52,11 +58,6 @@ import {
   nextPrNumber,
 } from '#src/opening.ts';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
-import type {
-  DependentPr,
-  PullRequest,
-  ReviewCommentEntry,
-} from '#src/shapes.ts';
 import { locateScenario } from '#src/world.ts';
 
 const stdinDescriptor = 0;
@@ -332,7 +333,7 @@ if (joined.includes('api user')) {
   const listed = listRecords().map(record => pick(record));
   writeLine(JSON.stringify(listed));
 } else if (joined.includes('pr checks')) {
-  const records = checks.map(check => checkRecord(check));
+  const records = checks.map(check => checkRecord(check, { repoSlug }));
   if (checks.length === 0) {
     /* An empty list is a failure to gh, not a pass: it says so on stderr and
        exits 1. The skill has a rule about not reading that as red, so a double

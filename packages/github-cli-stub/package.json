@@ -4,7 +4,9 @@
   "type": "module",
   "exports": {
     "./body": "./src/body.ts",
+    "./checks": "./src/checks.ts",
     "./dispatch": "./src/dispatch.ts",
+    "./records": "./src/records.ts",
     "./selection": "./src/selection.ts",
     "./state": "./src/state.ts"
   },

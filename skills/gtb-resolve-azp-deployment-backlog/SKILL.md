@@ -50,8 +50,9 @@ A missing value drops into an interactive prompt the harness can't answer,
 so resolve every one before invoking.
 
 - `-PipelineId <int>` — build definition id.
-- `-Organization <url>` — organization URL,
-  e.g. `https://dev.azure.com/contoso`.
+- `-Organization <name>` — organization **name**, e.g. `contoso`, not a URL.
+  The script fixes the host to `dev.azure.com` itself, so the bearer token it
+  mints cannot be aimed at another host.
 - `-Project <string>` — project name or id.
 
 Resolve all three yourself — see below.
@@ -83,7 +84,8 @@ Work down this list and stop at the first step that yields a single pipeline:
 
 An Azure Repos remote also settles `-Organization` and `-Project`, since both
 appear in the URL (`https://dev.azure.com/<org>/<project>/_git/<repo>`, or
-`git@ssh.dev.azure.com:v3/<org>/<project>/<repo>`). `az devops` picks the same
+`git@ssh.dev.azure.com:v3/<org>/<project>/<repo>`) — pass the `<org>` segment
+alone, not the whole URL. `az devops` picks the same
 values up from git config on its own, so `--org`/`--project` can be omitted
 from the `az` calls above when the working directory is the repo — but the
 script still needs them passed explicitly.
@@ -113,10 +115,10 @@ is skipped:
 
 ```pwsh
 # Dry run — no -Force needed, ShouldProcess previews and skips the PATCH:
-pwsh -NoProfile -File <abs-path>/resolve-azp-deployment-backlog.ps1 -PipelineId 1234 -Organization https://dev.azure.com/contoso -Project my-project -WhatIf
+pwsh -NoProfile -File <abs-path>/resolve-azp-deployment-backlog.ps1 -PipelineId 1234 -Organization contoso -Project my-project -WhatIf
 
 # Live run:
-pwsh -NoProfile -File <abs-path>/resolve-azp-deployment-backlog.ps1 -PipelineId 1234 -Organization https://dev.azure.com/contoso -Project my-project -ApproveLatest -Force
+pwsh -NoProfile -File <abs-path>/resolve-azp-deployment-backlog.ps1 -PipelineId 1234 -Organization contoso -Project my-project -ApproveLatest -Force
 ```
 
 Do **not** substitute `-Confirm:$false` for `-Force`: under `pwsh -File` the

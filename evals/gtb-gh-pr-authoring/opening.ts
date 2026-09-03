@@ -77,14 +77,29 @@ export const currentHead = (options: {
  * The refusal is load-bearing rather than decorative: without it, "the run
  * opened two pull requests" passes for a run that opened both from the same
  * branch, which is the very thing the question is asked to detect.
+ *
+ * Merged records are excluded because the rule is about *open* pull requests —
+ * merging releases the branch. Asking whether a record exists instead would
+ * refuse a legitimate create with the duplicate error, which is the one
+ * refusal indistinguishable from the case this is here to catch.
  */
 export const hasOpenPrFrom = (
   state: State,
   scenario: Scenario,
   head: string,
-): boolean =>
-  scenario.pr?.headRefName === head ||
-  Object.values(state.opened).some(opened => opened.headRefName === head);
+): boolean => {
+  const isOpenFromHead = (number: number, headRefName: string): boolean =>
+    headRefName === head && !state.merged.includes(number);
+
+  const own = scenario.pr;
+
+  return (
+    (own !== undefined && isOpenFromHead(own.number, own.headRefName)) ||
+    Object.entries(state.opened).some(([number, opened]) =>
+      isOpenFromHead(Number(number), opened.headRefName),
+    )
+  );
+};
 
 /**
  * The pull request a call means when it names no number — gh answers for the

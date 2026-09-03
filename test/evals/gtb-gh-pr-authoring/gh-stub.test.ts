@@ -294,6 +294,23 @@ test('a second pull request from one branch is refused, as GitHub does', { tags:
   expect(second.stderr).toContain('fix-retry-backoff');
 });
 
+test('a branch whose pull request merged can open another', { tags: ['slow'] }, (
+  { expect },
+) => {
+  /*
+   * GitHub's rule is one *open* pull request per head branch — merging
+   * releases the branch. A check that asks whether a record exists rather than
+   * whether it is open refuses a legitimate create, and that refusal is
+   * indistinguishable from the duplicate the check exists to catch.
+   */
+  const dir = worldFor('open-draft');
+
+  expect(createPr(dir).status).toBe(0);
+  expect(gh(dir, ['pr', 'merge', '101', '--squash']).status).toBe(0);
+
+  expect(createPr(dir).status).toBe(0);
+});
+
 test('a call the stub has no answer for fails loudly', ({ expect }) => {
   /*
    * A fall-through is an answer: exit 0 with no output reads as "there is

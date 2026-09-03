@@ -245,6 +245,72 @@ test('a draft marked ready stops reporting itself as a draft', { tags: ['slow'] 
   });
 });
 
+test('a second pull request opens beside the first, not over it', { tags: ['slow'] }, (
+  { expect },
+) => {
+  /*
+   * Every create reported one constant number, so a second call replaced the
+   * first in the state file — its title and its body were simply gone, and
+   * `pr list` answered with one PR for a run that had opened two. Anything
+   * asking whether work was split across pull requests reads that answer, and
+   * in a world that cannot hold two it is always no.
+   */
+  const dir = worldFor('open-draft');
+
+  expect(createPr(dir).status).toBe(0);
+  expect(
+    gh(
+      dir,
+      [
+        'pr', 'create', '--draft', '--head', 'add-retry-jitter',
+        '--title', 'Add jitter to the backoff', '--body-file', '-',
+      ],
+      'The second unit.\n',
+    ).status,
+  ).toBe(0);
+
+  expect(ghJson(dir, ['pr', 'list', '--json', 'number,title,headRefName'])).toStrictEqual([
+    { headRefName: 'fix-retry-backoff', number: 101, title: 'Back the retry off' },
+    { headRefName: 'add-retry-jitter', number: 102, title: 'Add jitter to the backoff' },
+  ]);
+});
+
+test('a second pull request from one branch is refused, as GitHub does', { tags: ['slow'] }, (
+  { expect },
+) => {
+  /*
+   * GitHub allows one open pull request per head branch. A double that opens a
+   * second makes an agent that branched indistinguishable from one that piled
+   * both units onto the same branch — so "it opened two pull requests" would
+   * pass for exactly the work the question exists to catch.
+   */
+  const dir = worldFor('open-draft');
+
+  expect(createPr(dir).status).toBe(0);
+
+  const second = createPr(dir);
+
+  expect(second.status).toBe(1);
+  expect(second.stderr).toContain('fix-retry-backoff');
+});
+
+test('a branch whose pull request merged can open another', { tags: ['slow'] }, (
+  { expect },
+) => {
+  /*
+   * GitHub's rule is one *open* pull request per head branch — merging
+   * releases the branch. A check that asks whether a record exists rather than
+   * whether it is open refuses a legitimate create, and that refusal is
+   * indistinguishable from the duplicate the check exists to catch.
+   */
+  const dir = worldFor('open-draft');
+
+  expect(createPr(dir).status).toBe(0);
+  expect(gh(dir, ['pr', 'merge', '101', '--squash']).status).toBe(0);
+
+  expect(createPr(dir).status).toBe(0);
+});
+
 test('a call the stub has no answer for fails loudly', ({ expect }) => {
   /*
    * A fall-through is an answer: exit 0 with no output reads as "there is

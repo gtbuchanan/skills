@@ -40,6 +40,12 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { checkRecord, checksFor } from '../checks.ts';
+import {
+  currentHead,
+  hasOpenPrFrom,
+  impliedNumber,
+  nextPrNumber,
+} from '../opening.ts';
 import { baseBranch, repoSlug, viewer } from '../repository.ts';
 import type {
   DependentPr,
@@ -150,10 +156,11 @@ const namedNumber = (): number | undefined => {
 };
 
 /**
- * The PR gh pr create reports having opened. Any number the scenarios do
- * not already use will do; it only has to look like a real URL.
+ * The branch this call is about, resolved once — see opening.ts, which owns
+ * the identity of the pull request an answer is about.
  */
-const createdPrNumber = 101;
+const head = (): string =>
+  currentHead({ argv, dir: located.dir, fallback: scenario.branch });
 
 /**
  * gh's documented exit status for checks that have not finished.
@@ -237,15 +244,18 @@ const dependentRecord = (dependent: DependentPr): Record<string, unknown> => ({
 
 const prRecordFor = (number: number | undefined): Record<string, unknown> => {
   const own = scenario.pr;
-  if (own !== undefined && (number === undefined || number === own.number))
-    return ownRecord(own);
+  if (own !== undefined && number === own.number) return ownRecord(own);
   if (number === undefined) {
     /* Naming no number is not the same as naming nothing: gh answers for the
-       branch you are on. In a scenario that seeds no PR that is whichever one
+       branch you are on, so the head decides which one — the scenario's own
+       only while standing on it. In a scenario that seeds no PR it is whichever
        this run opened, and refusing here fails an agent for doing the ordinary
        thing — creating a PR and then reading it back. */
+    const branch = head();
+    if (own?.headRefName === branch) return ownRecord(own);
+
     const entry = Object.entries(state.opened).find(
-      ([, pr]) => pr.headRefName === scenario.branch,
+      ([, pr]) => pr.headRefName === branch,
     );
     return entry === undefined
       ? refuse('no pull request named')
@@ -381,24 +391,33 @@ if (joined.includes('api user')) {
 } else if (joined.includes('pr create')) {
   const flag = argv.indexOf('--title');
   const base = argv.indexOf('--base');
+  const branch = head();
+
+  if (hasOpenPrFrom(state, scenario, branch)) {
+    process.stderr.write(
+      `a pull request for branch '${branch}' into branch ` +
+      `'${baseBranch}' already exists\n`,
+    );
+    process.exit(1);
+  }
+
+  const number = nextPrNumber(state, scenario);
   writeState(statePath, {
     ...state,
     opened: {
       ...state.opened,
-      [String(createdPrNumber)]: {
+      [String(number)]: {
         baseRefName: base === -1 ? baseBranch : argv[base + 1] ?? baseBranch,
         body: stdin,
-        headRefName: scenario.branch,
+        headRefName: branch,
         title: flag === -1 ? '' : argv[flag + 1] ?? '',
       },
     },
-    ready: argv.includes('--draft')
-      ? state.ready
-      : [...state.ready, createdPrNumber],
+    ready: argv.includes('--draft') ? state.ready : [...state.ready, number],
   });
-  writeLine(prUrl(createdPrNumber));
+  writeLine(prUrl(number));
 } else if (joined.includes('pr ready')) {
-  const number = namedNumber() ?? scenario.pr?.number ?? createdPrNumber;
+  const number = namedNumber() ?? impliedNumber(state, scenario, head());
   writeState(statePath, { ...state, ready: [...state.ready, number] });
   writeLine(`✓ Pull request ${repoSlug}#${String(number)} is marked as ready`);
 } else if (joined.includes('pr edit')) {
@@ -429,7 +448,7 @@ if (joined.includes('api user')) {
   }
   /* --auto only defers the merge when something is outstanding; nothing here
      is, so it lands now and the record has to say so. */
-  const number = namedNumber() ?? scenario.pr?.number ?? createdPrNumber;
+  const number = namedNumber() ?? impliedNumber(state, scenario, head());
   writeState(statePath, { ...state, merged: [...state.merged, number] });
   writeLine(`✓ Merged pull request ${repoSlug}#${String(number)}`);
 } else {

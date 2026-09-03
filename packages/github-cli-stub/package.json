@@ -6,6 +6,7 @@
     "./body": "./src/body.ts",
     "./checks": "./src/checks.ts",
     "./dispatch": "./src/dispatch.ts",
+    "./pulls": "./src/pulls.ts",
     "./records": "./src/records.ts",
     "./selection": "./src/selection.ts",
     "./state": "./src/state.ts"

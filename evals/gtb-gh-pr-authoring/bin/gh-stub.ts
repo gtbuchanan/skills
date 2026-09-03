@@ -43,6 +43,12 @@ import { appendJsonl, argv, joined, writeLine } from '@gtbuchanan/agent-skills-h
 import { hasStdinBody } from '@gtbuchanan/github-cli-stub/body';
 import { checkRecord } from '@gtbuchanan/github-cli-stub/checks';
 import { UnmodelledCall } from '@gtbuchanan/github-cli-stub/dispatch';
+import {
+  currentHead,
+  hasOpenPrFrom,
+  impliedNumber,
+  nextPrNumber,
+} from '@gtbuchanan/github-cli-stub/pulls';
 import type {
   DependentPr,
   PullRequest,
@@ -50,13 +56,8 @@ import type {
 } from '@gtbuchanan/github-cli-stub/records';
 import { pick as pickFields, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { type OpenedPr, readState, writeState } from '@gtbuchanan/github-cli-stub/state';
+import { branchAt } from '#src/checkout.ts';
 import { checksFor } from '#src/checks.ts';
-import {
-  currentHead,
-  hasOpenPrFrom,
-  impliedNumber,
-  nextPrNumber,
-} from '#src/opening.ts';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
 import { locateScenario } from '#src/world.ts';
 
@@ -138,11 +139,15 @@ const namedNumber = (): number | undefined => {
 };
 
 /**
- * The branch this call is about, resolved once — see opening.ts, which owns
- * the identity of the pull request an answer is about.
+ * The branch this call is about. The shared identity rules decide it; this only
+ * supplies the way to ask the checkout, which is the half that runs git.
  */
 const head = (): string =>
-  currentHead({ argv, dir: located.dir, fallback: scenario.branch });
+  currentHead({
+    argv,
+    checkoutBranch: () => branchAt(located.dir),
+    fallback: scenario.branch,
+  });
 
 /**
  * gh's documented exit status for checks that have not finished.

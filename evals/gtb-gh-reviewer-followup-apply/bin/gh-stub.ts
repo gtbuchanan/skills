@@ -11,53 +11,102 @@
  *
  * Failure injection: any invocation whose args contain the token FAIL exits
  * non-zero with an error, so a fixture can verify the skill reports the failure
- * instead of claiming success.
+ * instead of claiming success. It is first because it is a guard rather than a
+ * command — it decides the outcome whatever was being asked.
+ *
+ * Anything unclaimed is refused rather than answered with an empty `{}`, which
+ * reads as "there is nothing here" rather than "I don't know" — an agent acts
+ * on it, and every assertion about what it did call still passes.
  */
-import { joined, logCall, writeJson } from '@gtbuchanan/agent-skills-harness/stub';
+import { argv, joined, logCall } from '@gtbuchanan/agent-skills-harness/stub';
+import { dispatch } from '@gtbuchanan/github-cli-stub/dispatch';
 
 logCall('gh');
 
-if (joined.includes('FAIL')) {
-  process.stderr.write('gh: GraphQL: Could not resolve to a node (HTTP 422)\n');
-  process.exit(1);
-}
-
-/*
- * `unresolveReviewThread` is checked before `resolveReviewThread` because the
- * latter is a substring of the former — a plain `includes('resolveReviewThread')`
- * would otherwise swallow every unresolve call.
+/**
+ * The thread a mutation names, as gh's `-f threadId=` spells it.
  */
-if (joined.includes('unresolveReviewThread')) {
-  const threadId =
-    /threadId=(?<threadId>\S+)/v.exec(joined)?.groups?.['threadId'] ?? '';
-  writeJson({
-    data: {
-      unresolveReviewThread: { thread: { id: threadId, isResolved: false } },
-    },
-  });
-} else if (joined.includes('resolveReviewThread')) {
-  const threadId =
-    /threadId=(?<threadId>\S+)/v.exec(joined)?.groups?.['threadId'] ?? '';
-  writeJson({
-    data: { resolveReviewThread: { thread: { id: threadId, isResolved: true } } },
-  });
-} else if (/comments\/\d+\/reactions/v.test(joined)) {
-  const id =
-    /comments\/(?<id>\d+)\/reactions/v.exec(joined)?.groups?.['id'] ?? '0';
-  writeJson({ content: 'rocket', id: Number(id) + 1 });
-} else if (/comments\/\d+\/replies/v.test(joined)) {
-  const id =
-    /comments\/(?<id>\d+)\/replies/v.exec(joined)?.groups?.['id'] ?? '0';
-  writeJson({
-    html_url: `https://example.test/pull/42#discussion_r${id}`,
-    id: Number(id) + 1,
-  });
-} else if (joined.includes('api user')) {
-  writeJson({ login: 'reviewer' });
-} else if (joined.includes('repo view')) {
-  writeJson({ nameWithOwner: 'acme/widgets' });
-} else {
-  writeJson({});
-}
+const threadId = (): string =>
+  /threadId=(?<threadId>\S+)/v.exec(joined)?.groups?.['threadId'] ?? '';
 
-process.exit(0);
+/**
+ * The comment a REST path names.
+ */
+const commentId = (pattern: RegExp): string =>
+  pattern.exec(joined)?.groups?.['id'] ?? '0';
+
+const reactionsPath = /comments\/(?<id>\d+)\/reactions/v;
+const repliesPath = /comments\/(?<id>\d+)\/replies/v;
+
+const outcome = dispatch({ argv, stdin: '' }, [
+  {
+    matches: () => joined.includes('FAIL'),
+    name: 'injected failure',
+    respond: () => ({
+      code: 1,
+      stderr: 'gh: GraphQL: Could not resolve to a node (HTTP 422)\n',
+    }),
+  },
+  {
+    /* Checked before `resolveReviewThread`, which is a substring of it — a
+       plain match on the shorter name would swallow every unresolve call. */
+    matches: () => joined.includes('unresolveReviewThread'),
+    name: 'unresolveReviewThread',
+    respond: () => ({
+      stdout: JSON.stringify({
+        data: {
+          unresolveReviewThread: { thread: { id: threadId(), isResolved: false } },
+        },
+      }),
+    }),
+  },
+  {
+    matches: () => joined.includes('resolveReviewThread'),
+    name: 'resolveReviewThread',
+    respond: () => ({
+      stdout: JSON.stringify({
+        data: {
+          resolveReviewThread: { thread: { id: threadId(), isResolved: true } },
+        },
+      }),
+    }),
+  },
+  {
+    matches: () => reactionsPath.test(joined),
+    name: 'comment reactions',
+    respond: () => ({
+      stdout: JSON.stringify({
+        content: 'rocket',
+        id: Number(commentId(reactionsPath)) + 1,
+      }),
+    }),
+  },
+  {
+    matches: () => repliesPath.test(joined),
+    name: 'comment replies',
+    respond: () => {
+      const id = commentId(repliesPath);
+
+      return {
+        stdout: JSON.stringify({
+          html_url: `https://example.test/pull/42#discussion_r${id}`,
+          id: Number(id) + 1,
+        }),
+      };
+    },
+  },
+  {
+    matches: () => joined.includes('api user'),
+    name: 'api user',
+    respond: () => ({ stdout: JSON.stringify({ login: 'reviewer' }) }),
+  },
+  {
+    matches: () => joined.includes('repo view'),
+    name: 'repo view',
+    respond: () => ({ stdout: JSON.stringify({ nameWithOwner: 'acme/widgets' }) }),
+  },
+]);
+
+process.stdout.write(outcome.stdout);
+process.stderr.write(outcome.stderr);
+process.exit(outcome.code);

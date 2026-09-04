@@ -88,6 +88,30 @@ test('a branch nothing was opened from has none', ({ expect }) => {
   expect(hasOpenPrFrom(emptyState, seeded, 'untouched')).toBe(false);
 });
 
+test('a stacked pull request holds its head branch too', ({ expect }) => {
+  /*
+   * A dependent is an open pull request with a head of its own, so GitHub
+   * refuses a second from that branch exactly as it would for any other. A
+   * double that forgets them lets a run open one and calls it new.
+   */
+  const stacked: SeededWorld = {
+    dependents: [{ headRefName: 'add-metrics', number: 300, title: 'Metrics' }],
+    pr: seeded.pr,
+  };
+
+  expect(hasOpenPrFrom(emptyState, stacked, 'add-metrics')).toBe(true);
+});
+
+test('merging a stacked pull request releases its branch', ({ expect }) => {
+  const stacked: SeededWorld = {
+    dependents: [{ headRefName: 'add-metrics', number: 300, title: 'Metrics' }],
+    pr: seeded.pr,
+  };
+  const merged: State = { ...emptyState, merged: [300] };
+
+  expect(hasOpenPrFrom(merged, stacked, 'add-metrics')).toBe(false);
+});
+
 test('merging releases the branch for another pull request', ({ expect }) => {
   /* GitHub allows one *open* pull request per head. Asking whether a record
      exists instead would refuse a legitimate create with the duplicate error,

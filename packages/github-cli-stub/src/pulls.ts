@@ -99,6 +99,12 @@ export const hasOpenPrFrom = (
 
   return (
     (own !== undefined && isOpenFromHead(own.number, own.headRefName)) ||
+    /* Stacked pull requests count. Each is open, with a head of its own, so
+       GitHub refuses a second from that branch exactly as it would for the
+       one this world is about. */
+    world.dependents.some(dependent =>
+      isOpenFromHead(dependent.number, dependent.headRefName),
+    ) ||
     Object.entries(state.opened).some(([number, entry]) =>
       isOpenFromHead(Number(number), entry.headRefName),
     )

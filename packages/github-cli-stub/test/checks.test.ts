@@ -42,6 +42,24 @@ test('a skipped check is distinguishable from a cancelled one', ({ expect }) => 
   expect(checkState('cancel')).toBe('CANCELLED');
 });
 
+test('no two buckets report the same state', ({ expect }) => {
+  /*
+   * Exhaustiveness is the compiler's job — the table cannot omit a bucket. What
+   * it cannot catch is two buckets given the same state by a slipped copy,
+   * which would make a cancelled check indistinguishable from a skipped one.
+   */
+  const buckets: CheckEntry['bucket'][] = [
+    'cancel',
+    'fail',
+    'pass',
+    'pending',
+    'skipping',
+  ];
+  const states = buckets.map(bucket => checkState(bucket));
+
+  expect(new Set(states).size).toBe(buckets.length);
+});
+
 test('a record states a state that agrees with its bucket', ({ expect }) => {
   const record = checkRecord(entry('pending'), { repoSlug });
 

@@ -34,17 +34,28 @@ export interface CheckEntry {
 }
 
 /**
+ * The state gh reports beside each bucket.
+ *
+ * A table rather than a chain of tests, so that adding a bucket fails to
+ * compile until it is given a state. The chain this replaced ended in an
+ * unguarded fallback, which would have answered `CANCELLED` for a bucket
+ * nobody had mapped — a state the agent acts on, from the one package that
+ * exists to refuse rather than guess.
+ */
+const stateOf: Record<CheckEntry['bucket'], string> = {
+  cancel: 'CANCELLED',
+  fail: 'FAILURE',
+  pass: 'SUCCESS',
+  pending: 'PENDING',
+  skipping: 'SKIPPED',
+};
+
+/**
  * gh reports `state` beside `bucket`, and an agent may ask for either, so they
  * have to agree: `pending` in one field and `SUCCESS` in the other is a world
  * no repository produces.
  */
-export const checkState = (bucket: CheckEntry['bucket']): string => {
-  if (bucket === 'pass') return 'SUCCESS';
-  if (bucket === 'fail') return 'FAILURE';
-  if (bucket === 'pending') return 'PENDING';
-  if (bucket === 'skipping') return 'SKIPPED';
-  return 'CANCELLED';
-};
+export const checkState = (bucket: CheckEntry['bucket']): string => stateOf[bucket];
 
 /**
  * A check as `gh pr checks --json` returns it.

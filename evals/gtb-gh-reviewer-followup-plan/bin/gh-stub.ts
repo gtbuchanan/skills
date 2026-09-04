@@ -17,10 +17,17 @@
  * review; jq does not run here, so the stub emulates that selection over
  * reviews.json and returns the resulting object. Scalar `--jq` reads (login,
  * nameWithOwner) are returned as plain strings, matching real gh output.
+ *
+ * Anything else is refused. It used to answer an empty `{}` so a mutating call
+ * would still reach the checker as a read-only violation — but the logging
+ * happens first either way, so the violation is caught regardless, and the same
+ * fall-through was answering unknown *reads* with "there is nothing here",
+ * which an agent believes.
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { joined, logCall, writeLine } from '@gtbuchanan/agent-skills-harness/stub';
+import { argv, joined, logCall } from '@gtbuchanan/agent-skills-harness/stub';
+import { dispatch } from '@gtbuchanan/github-cli-stub/dispatch';
 import {
   readReviews,
   repo,
@@ -50,18 +57,31 @@ const lastOwnReview = (): string => {
   );
 };
 
-if (joined.includes('api user')) {
-  writeLine(viewer);
-} else if (joined.includes('repo view')) {
-  writeLine(repo);
-} else if (joined.includes('graphql')) {
-  writeLine(readFileSync(path.join(dir, 'threads.graphql.json'), 'utf8'));
-} else if (/\breviews\b/v.test(joined)) {
-  writeLine(lastOwnReview());
-} else {
-  /* Unknown/mutating call: it was logged above, so the checker still catches a
-     read-only violation. Return empty success so the skill doesn't crash. */
-  writeLine('{}');
-}
+const outcome = dispatch({ argv, stdin: '' }, [
+  {
+    matches: () => joined.includes('api user'),
+    name: 'api user',
+    respond: () => ({ stdout: `${viewer}\n` }),
+  },
+  {
+    matches: () => joined.includes('repo view'),
+    name: 'repo view',
+    respond: () => ({ stdout: `${repo}\n` }),
+  },
+  {
+    matches: () => joined.includes('graphql'),
+    name: 'api graphql',
+    respond: () => ({
+      stdout: readFileSync(path.join(dir, 'threads.graphql.json'), 'utf8'),
+    }),
+  },
+  {
+    matches: () => /\breviews\b/v.test(joined),
+    name: 'reviews',
+    respond: () => ({ stdout: `${lastOwnReview()}\n` }),
+  },
+]);
 
-process.exit(0);
+process.stdout.write(outcome.stdout);
+process.stderr.write(outcome.stderr);
+process.exit(outcome.code);

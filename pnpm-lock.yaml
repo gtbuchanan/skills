@@ -300,6 +300,9 @@ importers:
       '@gtbuchanan/agent-skills-harness':
         specifier: workspace:*
         version: link:../../packages/harness
+      '@gtbuchanan/github-cli-stub':
+        specifier: workspace:*
+        version: link:../../packages/github-cli-stub
       cross-spawn:
         specifier: 'catalog:'
         version: 7.0.6

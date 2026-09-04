@@ -41,22 +41,24 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { appendJsonl, argv, joined, writeLine } from '@gtbuchanan/agent-skills-harness/stub';
 import { hasStdinBody } from '@gtbuchanan/github-cli-stub/body';
+import { checkRecord } from '@gtbuchanan/github-cli-stub/checks';
 import { UnmodelledCall } from '@gtbuchanan/github-cli-stub/dispatch';
-import { pick as pickFields, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
-import { checkRecord, checksFor } from '#src/checks.ts';
 import {
   currentHead,
   hasOpenPrFrom,
   impliedNumber,
   nextPrNumber,
-} from '#src/opening.ts';
-import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
+} from '@gtbuchanan/github-cli-stub/pulls';
 import type {
   DependentPr,
   PullRequest,
   ReviewCommentEntry,
-} from '#src/shapes.ts';
-import { type OpenedPr, readState, writeState } from '#src/state.ts';
+} from '@gtbuchanan/github-cli-stub/records';
+import { pick as pickFields, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
+import { type OpenedPr, readState, writeState } from '@gtbuchanan/github-cli-stub/state';
+import { branchAt } from '#src/checkout.ts';
+import { checksFor } from '#src/checks.ts';
+import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
 import { locateScenario } from '#src/world.ts';
 
 const stdinDescriptor = 0;
@@ -137,11 +139,15 @@ const namedNumber = (): number | undefined => {
 };
 
 /**
- * The branch this call is about, resolved once — see opening.ts, which owns
- * the identity of the pull request an answer is about.
+ * The branch this call is about. The shared identity rules decide it; this only
+ * supplies the way to ask the checkout, which is the half that runs git.
  */
 const head = (): string =>
-  currentHead({ argv, dir: located.dir, fallback: scenario.branch });
+  currentHead({
+    argv,
+    checkoutBranch: () => branchAt(located.dir),
+    fallback: scenario.branch,
+  });
 
 /**
  * gh's documented exit status for checks that have not finished.
@@ -332,7 +338,7 @@ if (joined.includes('api user')) {
   const listed = listRecords().map(record => pick(record));
   writeLine(JSON.stringify(listed));
 } else if (joined.includes('pr checks')) {
-  const records = checks.map(check => checkRecord(check));
+  const records = checks.map(check => checkRecord(check, { repoSlug }));
   if (checks.length === 0) {
     /* An empty list is a failure to gh, not a pass: it says so on stderr and
        exits 1. The skill has a rule about not reading that as red, so a double

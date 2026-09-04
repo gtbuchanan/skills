@@ -1,85 +1,27 @@
 /*
- * The shape of the GitHub world a scenario states, separate from the list of
- * scenarios stating it.
+ * The GitHub world a scenario states, separate from the list of scenarios
+ * stating it.
  *
  * Split from scenarios.ts so the scenario list reads as a list of situations:
  * the two grow for unrelated reasons — a new scenario adds a situation, a new
  * `gh` answer adds a field — and only the stubs and the seeder need the types.
  *
+ * The record shapes themselves live in `@gtbuchanan/github-cli-stub/records`,
+ * because what `gh` returns is not particular to this suite. What is left here
+ * is the seeding: which situation to build, and the history to build it from.
+ *
  * Loaded by the stubs under plain `node`, whose type stripping only erases
  * annotations, so everything here stays erasable syntax.
  */
 import type { SeedCommit } from '@gtbuchanan/agent-skills-harness/seed-repo';
-
-/**
- * A submitted review, as `gh pr view --json reviews` returns it.
- */
-export interface ReviewEntry {
-  readonly author: { readonly login: string };
-  readonly body: string;
-  readonly state: string;
-}
-
-/**
- * A conversation comment on the PR — `--json comments`, never the inline ones.
- */
-export interface CommentEntry {
-  readonly author: { readonly login: string };
-  readonly body: string;
-}
-
-/**
- * An inline review comment. A thread root has no parent; the stub renders that
- * as the null the REST endpoint actually returns.
- */
-export interface ReviewCommentEntry {
-  readonly body: string;
-  readonly id: number;
-  readonly in_reply_to_id?: number | undefined;
-  readonly path: string;
-  readonly user: { readonly login: string };
-}
-
-/**
- * One entry in `gh pr checks`.
- *
- * `workflow` is what an agent reads to tell a check that ran in CI from one an
- * automated reviewer posted, so a reviewer's entry states it as empty rather
- * than omitting it — the field being absent and the field being blank are
- * different answers, and only the second is what gh sends.
- */
-export interface CheckEntry {
-  readonly bucket: 'cancel' | 'fail' | 'pass' | 'pending' | 'skipping';
-  /**
-   * What the check says about itself — where a reviewer distinguishes a queued
-   * review from one under way, this is where it says so.
-   */
-  readonly description: string;
-  readonly name: string;
-  readonly workflow: string;
-}
-
-/**
- * A pull request based on the scenario's branch — what the merge path has to
- * find and retarget before deleting anything.
- */
-export interface DependentPr {
-  readonly headRefName: string;
-  readonly number: number;
-  readonly title: string;
-}
-
-/**
- * The PR the scenario is about, when it already has one.
- */
-export interface PullRequest {
-  readonly baseRefName: string;
-  readonly body: string;
-  readonly headRefName: string;
-  readonly isDraft: boolean;
-  readonly number: number;
-  readonly title: string;
-}
+import type { CheckEntry } from '@gtbuchanan/github-cli-stub/checks';
+import type {
+  CommentEntry,
+  DependentPr,
+  PullRequest,
+  ReviewCommentEntry,
+  ReviewEntry,
+} from '@gtbuchanan/github-cli-stub/records';
 
 /**
  * An extra commit written after the history is seeded and pushed.

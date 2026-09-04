@@ -18,11 +18,11 @@
  * reviews.json and returns the resulting object. Scalar `--jq` reads (login,
  * nameWithOwner) are returned as plain strings, matching real gh output.
  *
- * Anything else is refused. It used to answer an empty `{}` so a mutating call
- * would still reach the checker as a read-only violation — but the logging
- * happens first either way, so the violation is caught regardless, and the same
- * fall-through was answering unknown *reads* with "there is nothing here",
- * which an agent believes.
+ * Anything else is refused. Answering an empty `{}` instead would let a
+ * mutating call carry on so the checker still sees it as a read-only
+ * violation — but logging happens before the response either way, so the
+ * violation is caught without that, and the same answer tells an agent that an
+ * unknown *read* found nothing.
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';

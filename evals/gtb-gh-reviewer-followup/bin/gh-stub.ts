@@ -6,10 +6,10 @@
  * invocation (argv) to $STUB_LOG so followup-check.ts can assert the merge gate
  * fired (or held) correctly.
  *
- * Anything else is refused rather than answered. This used to end in an empty
- * `{}` with exit 0, which does not read as "I don't know" — it reads as "there
- * is nothing here", and an agent acts on it while every assertion about what it
- * *did* call still passes. A gap in the double has to look like a gap.
+ * Anything else is refused rather than answered. An empty `{}` with exit 0 does
+ * not read as "I don't know" — it reads as "there is nothing here", and an
+ * agent acts on it while every assertion about what it *did* call still passes.
+ * A gap in the double has to look like a gap.
  *
  * Reached as `gh`: the runner installs a wrapper into STUB_BINDIR, at the front
  * of the eval PATH, that execs this file. The real gh CLI is never reachable

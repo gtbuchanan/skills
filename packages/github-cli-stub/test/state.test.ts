@@ -76,6 +76,36 @@ test('a half-written file costs the call nothing', ({ expect }) => {
   expect(readState(statePath('{"merged":[3'))).toStrictEqual(emptyState);
 });
 
+test('a path that cannot be read costs the call nothing', ({ expect }) => {
+  /*
+   * A directory stands in for every way the read itself fails — a permission,
+   * a file that vanished between the check and the read. The guard covered
+   * malformed JSON but not the reading, so those threw out of a `gh` call and
+   * killed it with a stack trace instead of an empty world.
+   */
+  const directory = mkdtempSync(path.join(tmpdir(), 'gh-state-dir-'));
+
+  expect(readState(directory)).toStrictEqual(emptyState);
+});
+
+test('a pull request key that is not a number is refused', ({ expect }) => {
+  /*
+   * Keys are read back through `Number` to work out the next number to hand
+   * out. One that is not a number makes that arithmetic NaN, and the double
+   * then reports a pull request called NaN — so the file is refused instead.
+   */
+  const entry = JSON.stringify({
+    baseRefName: 'main',
+    body: '',
+    headRefName: 'x',
+    title: 't',
+  });
+
+  expect(
+    readState(statePath(`{"opened":{"not-a-number":${entry}}}`)),
+  ).toStrictEqual(emptyState);
+});
+
 test('a file whose shape is wrong is refused rather than trusted', ({ expect }) => {
   /* `merged` holding strings is not a world this double produced. Reading it
      anyway would put the wrong type into an answer the agent acts on. */

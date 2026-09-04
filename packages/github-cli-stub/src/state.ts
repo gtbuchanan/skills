@@ -15,7 +15,7 @@
  * Loaded by stubs running under plain `node`, whose type stripping only erases
  * annotations, so everything here stays erasable syntax.
  */
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import * as v from 'valibot';
 
 /**
@@ -56,8 +56,19 @@ const OpenedPrSchema = v.object({
   title: v.string(),
 });
 
+/**
+ * A pull request number, as an object key spells one.
+ *
+ * Keys are read back through `Number` to work out what to hand out next, so a
+ * key that is not one makes that arithmetic NaN and the double then reports a
+ * pull request called NaN. Leading zeroes are refused for the same reason the
+ * rest is: `String(number)` never writes one, so a file holding one was not
+ * written by this.
+ */
+const PrNumberKeySchema = v.pipe(v.string(), v.regex(/^[1-9]\d*$/v));
+
 const NumberListSchema = v.array(v.number());
-const OpenedMapSchema = v.record(v.string(), OpenedPrSchema);
+const OpenedMapSchema = v.record(PrNumberKeySchema, OpenedPrSchema);
 const BaseMapSchema = v.record(v.string(), v.string());
 
 const StateSchema = v.object({
@@ -66,6 +77,22 @@ const StateSchema = v.object({
   ready: v.optional(NumberListSchema, []),
   retargeted: v.optional(BaseMapSchema, {}),
 });
+
+/**
+ * The file's contents, or nothing.
+ *
+ * Reading is inside the guard, not only parsing: a file that vanished between
+ * the check and the read, or one that cannot be opened at all, fails the same
+ * way a malformed one does and should cost the call the same nothing. Guarding
+ * the read also removes the check, and with it the gap between the two.
+ */
+const contentsOf = (statePath: string): string | undefined => {
+  try {
+    return readFileSync(statePath, 'utf8');
+  } catch {
+    return undefined;
+  }
+};
 
 /**
  * JSON, or nothing. A file half-written by a killed process is not worth
@@ -89,9 +116,10 @@ const parsed = (contents: string): unknown => {
  * answer.
  */
 export const readState = (statePath: string): State => {
-  if (!existsSync(statePath)) return emptyState;
+  const contents = contentsOf(statePath);
+  if (contents === undefined) return emptyState;
 
-  const result = v.safeParse(StateSchema, parsed(readFileSync(statePath, 'utf8')));
+  const result = v.safeParse(StateSchema, parsed(contents));
   return result.success ? result.output : emptyState;
 };
 

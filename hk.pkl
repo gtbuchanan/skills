@@ -2,9 +2,9 @@
 /// `recommended` preset, adds eslint (lints the skills' Markdown and the JS/
 /// JSON/YAML config around them) and a guard against drift in the config
 /// `gtb sync` generates. Tool versions come from mise.toml.
-amends "package://github.com/jdx/hk/releases/download/v1.56.0/hk@1.56.0#/Config.pkl"
+amends "package://github.com/jdx/hk/releases/download/v1.57.0/hk@1.57.0#/Config.pkl"
 
-import "package://github.com/gtbuchanan/tooling/releases/download/hk-config@0.2.4/hk-config@0.2.4#/Defaults.pkl"
+import "package://github.com/gtbuchanan/tooling/releases/download/hk-config@0.3.0/hk-config@0.3.0#/Defaults.pkl"
 
 // eslint args shared by the step's check/fix; only `--fix` differs.
 local eslintArgs = "--max-warnings=0 --no-warn-ignored {{files}}"

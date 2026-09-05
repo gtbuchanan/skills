@@ -27,6 +27,10 @@ import path from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { repoRoot as root } from '@gtbuchanan/agent-skills-harness/paths';
 import spawn from 'cross-spawn';
+import {
+  nodeModulesShadows,
+  workspacePackageDirs,
+} from '#src/workspace-mounts.ts';
 
 /**
  * `process.argv` leads with the node binary and this script.
@@ -132,6 +136,11 @@ const commonMounts = [
   '-v',
   `${toHostPath(path.join(root, String(source)))}:${String(destination)}`,
 ]);
+/* Those mounts carry the host's node_modules into the container along with the
+   source, and the host's layout is not the container's. Each workspace
+   package's is shadowed back to the one the image installed — see
+   workspace-mounts.ts for what goes wrong when it is not. */
+commonMounts.push(...nodeModulesShadows('/work', workspacePackageDirs(root)));
 if (hasCreds) {
   commonMounts.push(
     '-v',

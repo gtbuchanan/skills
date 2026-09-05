@@ -66,7 +66,7 @@ providers:
 tests:
   - description: two unrelated fixes are two units, so two pull requests off the trunk
     vars:
-      maxPullRequests: 3
+      maxPullRequests: 2
       minPullRequests: 2
       repo: scenarios/two-units
       scenario: two-units

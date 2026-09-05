@@ -85,7 +85,7 @@ export const scenarios: readonly Scenario[] = [
     branch: 'main',
     committed: { 'src/cache.ts': cacheBefore, 'src/retry.ts': retryBefore },
     key: 'two-units',
-    maxPullRequests: 3,
+    maxPullRequests: 2,
     minPullRequests: 2,
     uncommitted: { 'src/cache.ts': cacheAfter, 'src/retry.ts': retryAfter },
   },

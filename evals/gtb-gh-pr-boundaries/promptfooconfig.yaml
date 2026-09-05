@@ -1,0 +1,80 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+#
+# Eval for this skill. Runs the REAL skill via claude-agent-sdk against real
+# repositories seeded by setup.ts, with a fake `gh` recording what the run
+# opened and a passthrough `git` recording what it branched.
+#
+# The skill decides how planned units become pull requests, so the measurement
+# has to be what the run produced rather than what it reported. An agent that
+# describes two pull requests and opens one has failed in exactly the way this
+# skill exists to prevent, and only the record separates them.
+#
+# gtb-change-decomposition rides along because boundaries are what becomes of
+# the seams it finds — the skill says to load it alongside whatever plans the
+# units. gtb-gh-pr-authoring is deliberately absent: it governs what a pull
+# request needs once it exists, and loading it would put the draft, the
+# template and the check watch in front of the thing being measured.
+
+---
+defaultTest:
+  assert:
+    - type: skill-used
+      value: gtb-gh-pr-boundaries
+    - type: javascript
+      value: file://src/boundaries-check.ts
+
+description: gtb-gh-pr-boundaries — how many pull requests the work became
+
+# Serial so a scenario's checkout cannot be reseeded while its own repeat is
+# still working in it.
+evaluateOptions:
+  maxConcurrency: 1
+
+extensions:
+  - file://src/setup.ts:extensionHook
+
+prompts:
+  - |
+    You are working in the git repository at ./{{ repo }}, relative to your
+    working directory. Everything relevant is inside that repository — do not
+    look outside it, and leave every other directory alone.
+
+    There is uncommitted work in the tree. Take it all the way to pull requests
+    on GitHub.
+
+    When you are finished, briefly report what you opened and why you divided
+    the work the way you did.
+
+providers:
+  - config:
+      apiKeyRequired: false
+      append_allowed_tools:
+        - 'Bash(gh:*)'
+        - 'Bash(git:*)'
+        - 'Edit(scenarios/**)'
+        - 'Read(scenarios/**)'
+        - 'Write(scenarios/**)'
+      ask_user_question:
+        behavior: first_option
+
+      path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
+      setting_sources: ['project']
+      skills: ['gtb-gh-pr-boundaries', 'gtb-change-decomposition']
+      working_dir: '{{ env.EVAL_WORKSPACE }}'
+    id: anthropic:claude-agent-sdk
+    label: gtb-gh-pr-boundaries
+tests:
+  - description: two unrelated fixes are two units, so two pull requests off the trunk
+    vars:
+      maxPullRequests: 2
+      minPullRequests: 2
+      repo: scenarios/two-units
+      scenario: two-units
+  - description: one idea across two files stays one pull request
+    vars:
+      # The load-bearing negative. Without it the suite passes an agent that
+      # splits on sight, which is the other way to get boundaries wrong.
+      maxPullRequests: 1
+      minPullRequests: 1
+      repo: scenarios/one-unit
+      scenario: one-unit

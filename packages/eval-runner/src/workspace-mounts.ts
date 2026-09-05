@@ -93,6 +93,17 @@ export const workspaceGlobs = (workspaceYaml: string): WorkspaceGlobs => {
 };
 
 /**
+ * Never a workspace package, however a pattern reaches it.
+ *
+ * Every installed dependency carries a manifest, so a recursive pattern like
+ * `packages/**` matches the install rather than the workspace — and the runner
+ * would then shadow one mount per dependency. pnpm ignores these directories
+ * when it resolves the same globs; matching that is what keeps this function's
+ * answer the same as the one the image was built from.
+ */
+const installedTrees = '**/node_modules/**';
+
+/**
  * Every workspace package under `root`, as a `/`-separated path relative to it.
  *
  * Sorted, so the argv a run is launched with reads the same twice.
@@ -101,7 +112,7 @@ export const workspacePackageDirs = (root: string): string[] => {
   const { exclude, include } = workspaceGlobs(
     readFileSync(path.join(root, 'pnpm-workspace.yaml'), 'utf8'),
   );
-  return globSync(include, { cwd: root, exclude })
+  return globSync(include, { cwd: root, exclude: [...exclude, installedTrees] })
     .map(hit => path.dirname(hit).replaceAll('\\', '/'))
     .toSorted((left, right) => left.localeCompare(right));
 };

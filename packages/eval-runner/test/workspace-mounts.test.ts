@@ -98,6 +98,22 @@ test('skips a package a negated pattern subtracts', ({ expect }) => {
   expect(workspacePackageDirs(root)).toStrictEqual(['packages/alpha']);
 });
 
+test('skips manifests inside an installed dependency tree', ({ expect }) => {
+  /*
+   * A recursive pattern reaches into `node_modules`, where every dependency
+   * carries a manifest — so the scan would answer with the install itself and
+   * the runner would shadow a mount per dependency. pnpm ignores those
+   * directories when it resolves the same globs, and a workspace declaring
+   * `packages/**` is what makes the difference visible.
+   */
+  const root = workspaceWith(
+    ['packages/**'],
+    ['packages/alpha', 'packages/alpha/node_modules/some-dep'],
+  );
+
+  expect(workspacePackageDirs(root)).toStrictEqual(['packages/alpha']);
+});
+
 test('names packages relative to the root, separated by /', ({ expect }) => {
   const root = workspaceWith(['nested/*/*'], ['nested/one/two']);
 

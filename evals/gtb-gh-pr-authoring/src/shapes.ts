@@ -13,7 +13,10 @@
  * Loaded by the stubs under plain `node`, whose type stripping only erases
  * annotations, so everything here stays erasable syntax.
  */
-import type { SeedCommit } from '@gtbuchanan/agent-skills-harness/seed-repo';
+import type {
+  SeedCommit,
+  SeedIdentity,
+} from '@gtbuchanan/agent-skills-harness/seed-repo';
 import type { CheckEntry } from '@gtbuchanan/github-cli-stub/checks';
 import type {
   CommentEntry,
@@ -26,12 +29,18 @@ import type {
 /**
  * An extra commit written after the history is seeded and pushed.
  *
- * Two things the shared seeder cannot express, both of which a scenario needs:
- * a commit that exists locally but not on the origin (so there is something to
- * push), and a message carrying trailers (so the squash path has something to
- * carry forward).
+ * What the shared seeder cannot express, all of which a scenario needs: a
+ * commit that exists locally but not on the origin (so there is something to
+ * push), a message carrying trailers (so the squash path has something to carry
+ * forward), and a commit somebody else wrote (so the squash path has credit to
+ * derive that the trailers do not state).
  */
 export interface ExtraCommit {
+  /**
+   * Who wrote it, where that is not the account the rest of the history is
+   * seeded under — a teammate's commit on the branch.
+   */
+  readonly author?: SeedIdentity | undefined;
   readonly push: boolean;
   readonly subject: string;
   readonly trailers: readonly string[];

@@ -375,6 +375,26 @@ final paragraph:
 git log <base>..<head> --format='%(trailers:only,unfold)'
 ```
 
+**Credit the branch's other authors, whom no trailer names.** A teammate's
+commit carries them on the commit object rather than in its message, so a body
+assembled from the trailers alone drops them. GitHub puts them in the message
+it would have generated; supplying your own turns that off. Read the range's
+authors beside its trailers, and give everyone but the author the squash lands
+under a `Co-authored-by:` line:
+
+```sh
+git log <base>..<head> --format='%aN <%aE>'
+```
+
+Dedupe across both sources, not within each: a teammate with several commits,
+or one a trailer already names, otherwise lands twice.
+
+**Ask before crediting what you would not call authorship.** A typo fix, a
+formatting pass and a bot's lockfile bump all leave an author behind, and
+`Co-authored-by:` is a public claim that follows them into their contribution
+history — so a marginal one is the human's call. Where somebody wrote part of
+the change there is nothing to decide: add them and say so.
+
 **The branch has to go, and nothing may still be pointing at it when it does.**
 Those are the two things that matter; the order that gets you there is a
 detail. Deleting a branch some other PR is still based on closes that PR rather

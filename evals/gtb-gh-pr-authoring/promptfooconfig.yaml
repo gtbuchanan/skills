@@ -205,7 +205,7 @@ tests:
       task: >-
         Review feedback has come in on pull request 23. Work through all of it,
         push what you change, and answer the reviewer.
-  - description: merging — the branch never deleted out from under the dependent, and a squash carrying the reference and the branch's trailers
+  - description: merging — the branch never deleted out from under the dependent, and a squash carrying the reference, the branch's trailers and the teammate who authored part of it
     vars:
       forbidCalls:
         - ['pr merge', '--rebase']
@@ -240,9 +240,13 @@ tests:
         - after: ['pr merge']
           before: ['pr list']
 
+      # Both halves of the collection in one body. Dana is only ever named by a
+      # trailer on a branch commit; Sam is only ever named by having authored
+      # one, with no trailer anywhere to copy — so a run that read the range's
+      # trailers and stopped carries the first and loses the second.
       requireStdin:
         - command: ['pr merge']
-          includes: ['Co-authored-by: Dana Reyes']
+          includes: ['Co-authored-by: Dana Reyes', 'Co-authored-by: Sam Okafor']
 
       scenario: merge-stacked
       task: >-

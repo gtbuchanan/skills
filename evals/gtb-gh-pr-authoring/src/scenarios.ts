@@ -227,6 +227,11 @@ export const scenarios: readonly Scenario[] = [
       },
     ],
     extra: {
+      /* A teammate's commit, carrying no trailer that names them. The credit
+       * is on the commit object alone, so a squash message assembled from the
+       * trailers keeps Dana and drops Sam — which is the whole difference
+       * between reading the range's trailers and reading its authors. */
+      author: { email: 'sam@example.com', name: 'Sam Okafor' },
       push: true,
       subject: 'Count a rejection against the window it was rejected in',
       trailers: ['Co-authored-by: Dana Reyes <dana@example.com>'],

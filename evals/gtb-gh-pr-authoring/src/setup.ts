@@ -62,12 +62,13 @@ const seedDate = '2026-05-08T09:00:00-05:00';
 /**
  * Writes the extra commit a scenario asks for.
  *
- * The shared seeder commits with `-m <subject>` and pushes everything, which
- * leaves two things unexpressible: a commit that exists locally but not on the
- * origin, and a message carrying trailers. Both are the point of the scenarios
- * that ask for one.
+ * The shared seeder commits with `-m <subject>`, attributes everything to one
+ * identity and pushes it all, which leaves unexpressible: a commit that exists
+ * locally but not on the origin, a message carrying trailers, and a commit a
+ * teammate wrote. Each is the point of the scenario that asks for one.
  */
 const writeExtra = (runner: GitRunner, extra: ExtraCommit, branch: string): void => {
+  const identity = extra.author ?? author;
   for (const [relative, contents] of Object.entries(extra.tree)) {
     const file = path.join(runner.cwd, ...relative.split('/'));
     mkdirSync(path.dirname(file), { recursive: true });
@@ -86,11 +87,11 @@ const writeExtra = (runner: GitRunner, extra: ExtraCommit, branch: string): void
     {
       env: {
         GIT_AUTHOR_DATE: seedDate,
-        GIT_AUTHOR_EMAIL: author.email,
-        GIT_AUTHOR_NAME: author.name,
+        GIT_AUTHOR_EMAIL: identity.email,
+        GIT_AUTHOR_NAME: identity.name,
         GIT_COMMITTER_DATE: seedDate,
-        GIT_COMMITTER_EMAIL: author.email,
-        GIT_COMMITTER_NAME: author.name,
+        GIT_COMMITTER_EMAIL: identity.email,
+        GIT_COMMITTER_NAME: identity.name,
       },
     },
   );

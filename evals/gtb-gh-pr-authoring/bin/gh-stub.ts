@@ -37,10 +37,9 @@
  * Reached as `gh`: the runner installs a wrapper at the front of the eval PATH.
  * The real CLI is never reachable from a suite.
  */
-import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { appendJsonl, argv, joined, writeLine } from '@gtbuchanan/agent-skills-harness/stub';
-import { hasStdinBody } from '@gtbuchanan/github-cli-stub/body';
+import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
 import { checkRecord } from '@gtbuchanan/github-cli-stub/checks';
 import { UnmodelledCall } from '@gtbuchanan/github-cli-stub/dispatch';
 import {
@@ -61,19 +60,7 @@ import { checksFor } from '#src/checks.ts';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
 import { locateScenario } from '#src/world.ts';
 
-const stdinDescriptor = 0;
-
-const readStdin = (): string => {
-  try {
-    return readFileSync(stdinDescriptor, 'utf8');
-  } catch {
-    /* No stdin attached: the call named it but nothing was piped, which is
-       itself evidence the checker should see as an empty body. */
-    return '';
-  }
-};
-
-const stdin = hasStdinBody(argv) ? readStdin() : '';
+const stdin = stdinBody(argv);
 
 const located = locateScenario(process.cwd());
 const scenario = located.scenario;

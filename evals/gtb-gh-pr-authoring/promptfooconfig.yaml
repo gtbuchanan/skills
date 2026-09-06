@@ -244,9 +244,13 @@ tests:
       # trailer on a branch commit; Sam is only ever named by having authored
       # one, with no trailer anywhere to copy — so a run that read the range's
       # trailers and stopped carries the first and loses the second.
+      # The address, not just the name: it is what makes the trailer resolve to
+      # a person, and a body naming Sam without one credits nobody.
       requireStdin:
         - command: ['pr merge']
-          includes: ['Co-authored-by: Dana Reyes', 'Co-authored-by: Sam Okafor']
+          includes:
+            - 'Co-authored-by: Dana Reyes <dana@example.com>'
+            - 'Co-authored-by: Sam Okafor <sam@example.com>'
 
       scenario: merge-stacked
       task: >-

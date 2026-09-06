@@ -48,19 +48,40 @@ export const readJsonl = <TOutput>(
 const StringListSchema = v.array(v.string());
 
 /**
- * A logged stub invocation: the argv, tagged with the command that ran.
+ * A logged stub invocation: the argv, tagged with the command that ran, and
+ * whatever arrived on standard input.
+ *
+ * `stdin` defaults rather than being required because most stubs never read it
+ * — and a schema insisting on it would drop their lines silently, which surfaces
+ * downstream as a skill that never made the call.
  */
 export const CallSchema = v.object({
   argv: v.optional(StringListSchema, []),
   cmd: v.optional(v.string(), ''),
+  stdin: v.optional(v.string(), ''),
 });
 
 /**
- * Reads a call log as space-joined command lines, optionally limited to one
- * command. Stubs that log a single command omit the `cmd` tag, so filtering is
- * opt-in.
+ * A logged invocation as a checker asks about it: the command line, and the
+ * body that never appears in it.
  */
-export const readCommands = (logPath: string, cmd?: string): string[] =>
+export interface LoggedCall {
+  readonly command: string;
+  readonly stdin: string;
+}
+
+/**
+ * Reads a call log, optionally limited to one command. Stubs that log a single
+ * command omit the `cmd` tag, so filtering is opt-in.
+ */
+export const readCalls = (logPath: string, cmd?: string): LoggedCall[] =>
   readJsonl(logPath, CallSchema)
     .filter(call => cmd === undefined || call.cmd === cmd)
-    .map(call => call.argv.join(' '));
+    .map(call => ({ command: call.argv.join(' '), stdin: call.stdin }));
+
+/**
+ * The same log as space-joined command lines, for checkers with nothing to ask
+ * about a body.
+ */
+export const readCommands = (logPath: string, cmd?: string): string[] =>
+  readCalls(logPath, cmd).map(call => call.command);

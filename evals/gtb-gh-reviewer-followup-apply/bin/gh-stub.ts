@@ -1,9 +1,15 @@
 #!/usr/bin/env node
 /*
  * Fake `gh` for this write-path eval. It never touches the
- * network: it appends the invocation (argv) as a JSON line to $STUB_LOG so the
+ * network: it appends the invocation as a JSON line to $STUB_LOG so the
  * checker can assert exactly which GitHub calls the skill made, and returns
  * canned JSON so the skill can proceed.
+ *
+ * The line carries the body as well as argv, because a reply body does not
+ * appear in argv at all: gh takes prose on standard input, which is what keeps
+ * a reply's backticks and fenced blocks intact. A log of argv alone would hand
+ * the checker a posted reply it cannot read, and the suite would fail a run
+ * that did exactly the right thing.
  *
  * Reached as `gh`: the runner installs a wrapper into STUB_BINDIR, at the front
  * of the eval PATH, that execs this file. The real gh CLI is never reachable
@@ -19,9 +25,12 @@
  * on it, and every assertion about what it did call still passes.
  */
 import { argv, joined, logCall } from '@gtbuchanan/agent-skills-harness/stub';
+import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
 import { dispatch } from '@gtbuchanan/github-cli-stub/dispatch';
 
-logCall('gh');
+const stdin = stdinBody(argv);
+
+logCall('gh', stdin);
 
 /**
  * The thread a mutation names, as gh's `-f threadId=` spells it.
@@ -38,7 +47,7 @@ const commentId = (pattern: RegExp): string =>
 const reactionsPath = /comments\/(?<id>\d+)\/reactions/v;
 const repliesPath = /comments\/(?<id>\d+)\/replies/v;
 
-const outcome = dispatch({ argv, stdin: '' }, [
+const outcome = dispatch({ argv, stdin }, [
   {
     matches: () => joined.includes('FAIL'),
     name: 'injected failure',

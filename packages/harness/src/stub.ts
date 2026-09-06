@@ -46,10 +46,17 @@ export const appendJsonl = (filePath: string, entry: unknown): void => {
 /**
  * Records this invocation to $STUB_LOG, tagged with the command it fakes.
  * Silently does nothing when the suite set no log.
+ *
+ * `stdin` is what the call was handed on standard input, for the CLIs that take
+ * prose there — it never appears in argv, so a log without it cannot tell a
+ * filled-in body from an absent one. It is omitted rather than defaulted so a
+ * stub that does not read stdin says nothing about it, instead of recording an
+ * empty body it never looked for.
  */
-export const logCall = (cmd: string): void => {
+export const logCall = (cmd: string, stdin?: string): void => {
   const stubLog = process.env['STUB_LOG'];
-  if (stubLog) appendJsonl(stubLog, { argv, cmd });
+  if (stubLog)
+    appendJsonl(stubLog, stdin === undefined ? { argv, cmd } : { argv, cmd, stdin });
 };
 
 /**

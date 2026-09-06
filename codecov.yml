@@ -17,6 +17,11 @@ component_management:
       paths:
         - evals/gtb-gh-reviewer-followup-plan/bin/**
         - evals/gtb-gh-reviewer-followup-plan/src/**
+    - component_id: eval-gtb-gh-reviewer-followup-apply
+      name: eval-gtb-gh-reviewer-followup-apply
+      paths:
+        - evals/gtb-gh-reviewer-followup-apply/bin/**
+        - evals/gtb-gh-reviewer-followup-apply/src/**
     - component_id: eval-gtb-gh-pr-authoring
       name: eval-gtb-gh-pr-authoring
       paths:
@@ -56,6 +61,10 @@ flags:
     carryforward: true
     paths:
       - evals/gtb-gh-pr-authoring/
+  eval-gtb-gh-reviewer-followup-apply:
+    carryforward: true
+    paths:
+      - evals/gtb-gh-reviewer-followup-apply/
   eval-gtb-gh-reviewer-followup-plan:
     carryforward: true
     paths:

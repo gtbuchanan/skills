@@ -386,6 +386,9 @@ under a `Co-authored-by:` line:
 git log <base>..<head> --format='%aN <%aE>'
 ```
 
+Dedupe across both sources, not within each: a teammate with several commits,
+or one a trailer already names, otherwise lands twice.
+
 **Ask before crediting what you would not call authorship.** A typo fix, a
 formatting pass and a bot's lockfile bump all leave an author behind, and
 `Co-authored-by:` is a public claim that follows them into their contribution

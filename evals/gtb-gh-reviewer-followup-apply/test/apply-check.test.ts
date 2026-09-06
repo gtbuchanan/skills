@@ -2,15 +2,14 @@
  * Tests for the matcher this suite judges a posted reply with.
  *
  * A reply body is prose, and gh takes prose two ways: as an inline field
- * argument, where it lands in argv, and on standard input, where it lands
- * nowhere argv can see. A matcher reading only the command line therefore
- * reports the second form as a reply that was never posted — a failure the
- * agent did not earn, on the run that chose the sturdier spelling.
+ * argument, where a shell parses it on the way past, and on standard input,
+ * where nothing does. The skill prescribes the second, so the suite has to
+ * observe both — a matcher blind to the argument form would pass the run that
+ * used it, which is the one the rule exists to catch.
  *
- * So both forms are checked here, and so is the case they must stay distinct
- * from: a reply that reached the right thread carrying the wrong words is a
- * different mistake from one that was never sent, and the two have to be told
- * apart in the report or neither can be acted on.
+ * That leaves three ways a reply can be wrong, and they have to stay distinct
+ * in the report or none of them can be acted on: nothing posted at all, the
+ * right thread with the wrong words, and the right words sent the fragile way.
  *
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
@@ -43,15 +42,17 @@ test('a body piped in on standard input is seen', ({ expect }) => {
   expect(checkReplies([call(`${endpoint} -F body=@-`, body)], vars)).toStrictEqual([]);
 });
 
-test('a body passed as an inline field argument is seen too', ({ expect }) => {
+test('a body passed as an inline field argument is refused', ({ expect }) => {
   /*
-   * The suite has no business failing a run over which spelling it picked —
-   * that is what the skill is for. Whether the argv form is the one to
-   * prescribe is a separate question from whether the checker can see it.
+   * The words are right and the thread is right, so this is not a reply that
+   * went missing — it is the fragile spelling, where a shell gets between the
+   * approved body and GitHub. The report has to say which, or the reader goes
+   * looking for a reply that was in fact posted.
    */
-  expect(
-    checkReplies([call(`${endpoint} -f body=${body}`)], vars),
-  ).toStrictEqual([]);
+  const problems = checkReplies([call(`${endpoint} -f body=${body}`)], vars);
+
+  expect(problems).toHaveLength(1);
+  expect(problems[0]).toContain('standard input');
 });
 
 test('a reply carrying the wrong words is not', ({ expect }) => {

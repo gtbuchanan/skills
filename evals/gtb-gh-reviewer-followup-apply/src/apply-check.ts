@@ -92,28 +92,15 @@ const checkExpectedCalls = (
 };
 
 /**
- * Whether this call carried `text`, wherever gh took it from.
+ * Each expected reply reached its own thread, carrying the wording it was
+ * approved with, on standard input.
  *
- * A reply body reaches gh one of two ways — inline as `-f body='…'`, which puts
- * it in argv, or piped as `-F body=@-`, which keeps it out of argv entirely.
- * Only the recorded pair can see both, and a checker reading the command line
- * alone reports the piped form as a reply that never happened.
- *
- * The two are searched separately rather than concatenated, so a needle can
- * never be matched half out of the command and half out of the body.
- */
-const didCarry = (call: LoggedCall, text: string): boolean =>
-  call.command.includes(text) || (call.stdin ?? '').includes(text);
-
-/**
- * Each expected reply reached its own thread carrying the wording it was
- * approved with.
- *
- * The thread and the wording fail separately because they are different
- * mistakes: nothing posted at all is a skill that skipped the action, while a
- * reply on the right thread saying the wrong thing is one that rewrote an
- * approved body — and a single "missing reply containing …" sends the reader
- * hunting for wording that may not exist.
+ * The three failures stay separate because they are three different mistakes,
+ * and a report that merged them would send the reader after the wrong one:
+ * nothing posted at all is an action the skill skipped, the wrong wording is an
+ * approved body it rewrote, and the wording found in argv is the right reply
+ * sent the way the skill rules out — `-f body='…'`, where the shell parses the
+ * prose on its way past and Markdown is what suffers.
  */
 export const checkReplies = (
   calls: readonly LoggedCall[],
@@ -124,9 +111,13 @@ export const checkReplies = (
       call.command.includes(`comments/${String(reply.id)}/replies`),
     );
     if (hits.length === 0) return [`missing reply to ${String(reply.id)}`];
+    if (hits.some(hit => hit.stdin?.includes(reply.bodyIncludes) ?? false)) return [];
 
-    return hits.some(hit => didCarry(hit, reply.bodyIncludes))
-      ? []
+    return hits.some(hit => hit.command.includes(reply.bodyIncludes))
+      ? [
+          `reply to ${String(reply.id)} passed its body as an argument — ` +
+          'it goes in on standard input',
+        ]
       : [`reply to ${String(reply.id)} did not carry "${reply.bodyIncludes}"`];
   });
 

@@ -50,11 +50,6 @@ each opens are not decided here. They are settled while the code is written, by
 `gtb-gh-pr-boundaries` — which is why that skill loads before the first edit while
 this one is reached as a request is being opened.
 
-Arriving here with several units on one branch and none of it decided does not
-change which skill answers it. It changes the price: applying it now costs a
-re-cut of the branches rather than nothing, and that is the whole reason it runs
-earlier.
-
 ## The GitHub pull request pipeline
 
 A PR moves through six stages, and the last three transitions are the human's:
@@ -70,10 +65,6 @@ A PR moves through six stages, and the last three transitions are the human's:
 1. **Ready** — the human promotes, which invites human reviewers and starts
    anything that was skipping the draft.
 1. **Human peer review** — and then the merge.
-
-Each gate spares the next reader what the previous one would have caught:
-checks before the author, the author before the machine, the machine before the
-peers. Skipping ahead costs somebody real budget or real attention.
 
 ## Pushing to a GitHub branch
 

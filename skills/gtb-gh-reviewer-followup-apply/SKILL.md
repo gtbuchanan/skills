@@ -96,29 +96,24 @@ Act on each approved item by its `action`:
    under discussion. What arrives on the thread is then a body the human never
    approved.
 
-   **Write the approved body to a file and redirect it in.** Never paste it into
-   a heredoc or a here-string. Those end at a fixed delimiter — a lone `BODY`
-   line, a lone `'@` — and a reply quotes the code under review, which is
-   written by someone else. A body carrying that delimiter closes the quoting
-   early and hands every line after it to the shell as commands.
-
-   Write the file with your editing tool rather than by echoing it through a
-   shell, which would put the prose back on a command line:
-
    ```bash
    gh api repos/$OWNER/$NAME/pulls/<pr>/comments/<rootCommentId>/replies \
-     -F body=@- < reply-body.md
-   ```
-
-   ```powershell
-   Get-Content reply-body.md -Raw |
-     gh api 'repos/<owner>/<name>/pulls/<pr>/comments/<rootCommentId>/replies' -F body=@-
+     -F body=@- <<'BODY'
+   <replyBody>
+   BODY
    ```
 
    The `@` belongs to gh rather than the shell, and only `@-` means standard
-   input — `-F body=@reply-body.md` would have gh read the file itself, which
-   works too but leaves nothing on standard input for a reviewer's tooling to
-   see. Delete the file once the reply is posted.
+   input. In PowerShell the here-string is piped rather than passed, because
+   `-F body=@'…'@` never reaches PowerShell's parser at all — gh reads the `@`
+   as its own read-from-file syntax and dies opening a file named after the
+   first line of the reply:
+
+   ```powershell
+   @'
+   <replyBody>
+   '@ | gh api 'repos/<owner>/<name>/pulls/<pr>/comments/<rootCommentId>/replies' -F body=@-
+   ```
 
    For a partial fix, some reviewers prefer to reply _and_ leave the thread open
    (the default here) so the author sees it still needs work. Only resolve a

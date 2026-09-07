@@ -1,16 +1,10 @@
 /*
  * Tests for the matcher this suite judges a posted reply with.
  *
- * A reply body is prose, and gh takes prose two ways: as an inline field
- * argument, where it lands in argv, and on standard input, where it lands
- * nowhere argv can see. A matcher reading only the command line therefore
- * reports the second form as a reply that was never posted — a failure the
- * agent did not earn, on the run that chose the sturdier spelling.
- *
- * So both forms are checked here, and so is the case they must stay distinct
- * from: a reply that reached the right thread carrying the wrong words is a
- * different mistake from one that was never sent, and the two have to be told
- * apart in the report or neither can be acted on.
+ * The skill prescribes `-F body=@-`, so the matcher has to observe the argument
+ * form too — blind to it, it would pass the very run the rule exists to catch.
+ * Each case is one of the three ways a reply goes wrong, which the report keeps
+ * apart: nothing posted, the wrong words, or the right words sent inline.
  *
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
@@ -43,15 +37,13 @@ test('a body piped in on standard input is seen', ({ expect }) => {
   expect(checkReplies([call(`${endpoint} -F body=@-`, body)], vars)).toStrictEqual([]);
 });
 
-test('a body passed as an inline field argument is seen too', ({ expect }) => {
-  /*
-   * The suite has no business failing a run over which spelling it picked —
-   * that is what the skill is for. Whether the argv form is the one to
-   * prescribe is a separate question from whether the checker can see it.
-   */
-  expect(
-    checkReplies([call(`${endpoint} -f body=${body}`)], vars),
-  ).toStrictEqual([]);
+test('a body passed as an inline field argument is refused', ({ expect }) => {
+  /* Right thread, right words — so the report must name the spelling rather
+     than send the reader after a reply that was in fact posted. */
+  const problems = checkReplies([call(`${endpoint} -f body=${body}`)], vars);
+
+  expect(problems).toHaveLength(1);
+  expect(problems[0]).toContain('standard input');
 });
 
 test('a reply carrying the wrong words is not', ({ expect }) => {
@@ -65,21 +57,39 @@ test('a reply carrying the wrong words is not', ({ expect }) => {
 });
 
 test('a reply that was never posted fails as its own thing', ({ expect }) => {
-  /*
-   * Distinct from the wording failure above: nothing reached the thread, so
-   * there is no body to have got wrong, and telling the human otherwise sends
-   * them looking at wording that does not exist.
-   */
+  // Nothing reached the thread, so there is no wording to have got wrong.
   expect(checkReplies([call('api graphql -f query=resolveReviewThread')], vars))
     .toStrictEqual(['missing reply to 11002']);
 });
 
+test('a thread answered both ways is still refused', ({ expect }) => {
+  /* The piped call alone would pass. A body also went through a shell, and
+     nothing else reports that. */
+  const problems = checkReplies(
+    [call(`${endpoint} -f body=${body}`), call(`${endpoint} -F body=@-`, body)],
+    vars,
+  );
+
+  expect(problems).toHaveLength(1);
+  expect(problems[0]).toContain('standard input');
+});
+
+test('wording elsewhere in the command is not an inline body', ({ expect }) => {
+  /* The command is a flattened argv, so matching the body text against it calls
+     any argument carrying that text an inline body. Here the body was piped and
+     simply says something else — a wording failure, not a spelling one. */
+  const problems = checkReplies(
+    [call(`${endpoint} --jq .notify_batch -F body=@-`, 'Thanks — fixed.')],
+    vars,
+  );
+
+  expect(problems).toHaveLength(1);
+  expect(problems[0]).toContain('did not carry');
+});
+
 test('a reply to a different thread is not the one asked for', ({ expect }) => {
-  /*
-   * The endpoint carries the root comment id, so a matcher that looked only for
-   * "some reply happened" would pass a run that answered the wrong thread —
-   * publicly, on someone else's conversation.
-   */
+  /* A matcher keying on "some reply happened" would pass a run that answered
+     someone else's conversation, publicly. */
   const problems = checkReplies(
     [call('api repos/acme/widgets/pulls/42/comments/11003/replies -F body=@-', body)],
     vars,

@@ -92,28 +92,27 @@ const checkExpectedCalls = (
 };
 
 /**
- * Whether this call carried `text`, wherever gh took it from.
+ * gh's inline body field, whatever its value.
  *
- * A reply body reaches gh one of two ways — inline as `-f body='…'`, which puts
- * it in argv, or piped as `-F body=@-`, which keeps it out of argv entirely.
- * Only the recorded pair can see both, and a checker reading the command line
- * alone reports the piped form as a reply that never happened.
- *
- * The two are searched separately rather than concatenated, so a needle can
- * never be matched half out of the command and half out of the body.
+ * The rule is about the form, not about where the wording ended up, so this
+ * matches the argument itself. Searching the flattened command for the body
+ * text instead would call an endpoint that happens to contain that text an
+ * inline body — and `-F body=@-` never puts the text in argv at all, so there
+ * is nothing there to match on a correct run.
  */
-const didCarry = (call: LoggedCall, text: string): boolean =>
-  call.command.includes(text) || (call.stdin ?? '').includes(text);
+const inlineBody = /(?:^| )(?:-f|--raw-field) body=/v;
 
 /**
- * Each expected reply reached its own thread carrying the wording it was
- * approved with.
+ * Each expected reply reached its own thread, carrying the wording it was
+ * approved with, on standard input.
  *
- * The thread and the wording fail separately because they are different
- * mistakes: nothing posted at all is a skill that skipped the action, while a
- * reply on the right thread saying the wrong thing is one that rewrote an
- * approved body — and a single "missing reply containing …" sends the reader
- * hunting for wording that may not exist.
+ * The three failures report separately because they are three different
+ * mistakes: nothing posted, the wrong wording, or the right wording sent the
+ * way the skill rules out.
+ *
+ * The inline form is judged first. A thread answered twice — once piped, once
+ * inline — has still had a body through a shell, and accepting the piped one
+ * would let that pass unreported.
  */
 export const checkReplies = (
   calls: readonly LoggedCall[],
@@ -124,8 +123,14 @@ export const checkReplies = (
       call.command.includes(`comments/${String(reply.id)}/replies`),
     );
     if (hits.length === 0) return [`missing reply to ${String(reply.id)}`];
+    if (hits.some(hit => inlineBody.test(hit.command))) {
+      return [
+        `reply to ${String(reply.id)} passed its body as an argument — ` +
+        'it goes in on standard input',
+      ];
+    }
 
-    return hits.some(hit => didCarry(hit, reply.bodyIncludes))
+    return hits.some(hit => hit.stdin?.includes(reply.bodyIncludes) ?? false)
       ? []
       : [`reply to ${String(reply.id)} did not carry "${reply.bodyIncludes}"`];
   });

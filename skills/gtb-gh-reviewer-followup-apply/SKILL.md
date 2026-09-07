@@ -88,11 +88,31 @@ Act on each approved item by its `action`:
 
 1. **reply** — post a reply onto the existing thread. Reply to the thread's root
    comment (`rootCommentId` — the `databaseId` from `gtb-gh-reviewer-followup-plan`, not an id
-   from any `--json comments` output, which is a different id space and 404s):
+   from any `--json comments` output, which is a different id space and 404s).
+
+   The body goes in on standard input — `-F body=@-`, never `-f body='…'`. An
+   inline field argument is shell prose, and a review reply is made of exactly
+   what a shell eats: backticks, quotes, and fenced blocks quoting the code
+   under discussion. What arrives on the thread is then a body the human never
+   approved.
 
    ```bash
    gh api repos/$OWNER/$NAME/pulls/<pr>/comments/<rootCommentId>/replies \
-     -f body='<replyBody>'
+     -F body=@- <<'BODY'
+   <replyBody>
+   BODY
+   ```
+
+   The `@` belongs to gh rather than the shell, and only `@-` means standard
+   input. In PowerShell the here-string is piped rather than passed, because
+   `-F body=@'…'@` never reaches PowerShell's parser at all — gh reads the `@`
+   as its own read-from-file syntax and dies opening a file named after the
+   first line of the reply:
+
+   ```powershell
+   @'
+   <replyBody>
+   '@ | gh api 'repos/<owner>/<name>/pulls/<pr>/comments/<rootCommentId>/replies' -F body=@-
    ```
 
    For a partial fix, some reviewers prefer to reply _and_ leave the thread open
@@ -148,6 +168,7 @@ counts into anything durable.
   itself is a silent state change, but it is publicly visible and reverses a
   teammate's resolve, so it must be a deliberate, approved judgment — never a
   reflex on every resolved thread you didn't close.
-- Never fabricate or reword an approved `replyBody` — post it as approved.
+- Never fabricate or reword an approved `replyBody` — post it as approved, and
+  pipe it in so that no shell rewords it on the way.
 - If a write fails (permissions, stale thread id, network), stop and report it
   rather than retrying blindly or moving the action to a different thread.

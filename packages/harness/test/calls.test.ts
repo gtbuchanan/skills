@@ -43,13 +43,24 @@ test('a recorded body comes back with its call', ({ expect }) => {
   ]);
 });
 
-test('a call that recorded no body reads as an empty one', ({ expect }) => {
-  /* Every stub that does not read stdin writes a line without the key, so a
-     reader that required it would drop those calls entirely — and a checker
-     would then report the skill as never having made them. */
+test('a call that recorded no body is kept, and says so', ({ expect }) => {
+  /* Stubs that never read stdin write a line without the key. Requiring it
+     would drop those calls; defaulting it to '' would claim they read and
+     found nothing. */
   const logPath = logOf({ argv: ['pr', 'view', '42'], cmd: 'gh' });
 
-  expect(readCalls(logPath)).toStrictEqual([{ command: 'pr view 42', stdin: '' }]);
+  expect(readCalls(logPath)).toStrictEqual([
+    { command: 'pr view 42', stdin: undefined },
+  ]);
+});
+
+test('an empty body stays distinct from an absent one', ({ expect }) => {
+  const logPath = logOf(
+    { argv: ['api', 'user'], cmd: 'gh' },
+    { argv: ['api', 'user'], cmd: 'gh', stdin: '' },
+  );
+
+  expect(readCalls(logPath).map(call => call.stdin)).toStrictEqual([undefined, '']);
 });
 
 test('the command filter still selects by the tag its stub wrote', ({ expect }) => {

@@ -51,23 +51,27 @@ const StringListSchema = v.array(v.string());
  * A logged stub invocation: the argv, tagged with the command that ran, and
  * whatever arrived on standard input.
  *
- * `stdin` defaults rather than being required because most stubs never read it
- * — and a schema insisting on it would drop their lines silently, which surfaces
- * downstream as a skill that never made the call.
+ * `stdin` is optional and undefaulted. Most stubs never read standard input, so
+ * requiring it would drop their lines silently — but defaulting it to `''` says
+ * they read and found nothing, which is a different claim.
  */
 export const CallSchema = v.object({
   argv: v.optional(StringListSchema, []),
   cmd: v.optional(v.string(), ''),
-  stdin: v.optional(v.string(), ''),
+  stdin: v.optional(v.string()),
 });
 
 /**
  * A logged invocation as a checker asks about it: the command line, and the
  * body that never appears in it.
+ *
+ * `undefined` is "this stub does not record bodies", distinct from `''`, "it
+ * recorded an empty one". A checker that cannot tell them apart blames the
+ * skill for a body its own double never captured.
  */
 export interface LoggedCall {
   readonly command: string;
-  readonly stdin: string;
+  readonly stdin: string | undefined;
 }
 
 /**

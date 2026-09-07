@@ -103,7 +103,7 @@ const checkExpectedCalls = (
  * never be matched half out of the command and half out of the body.
  */
 const didCarry = (call: LoggedCall, text: string): boolean =>
-  call.command.includes(text) || call.stdin.includes(text);
+  call.command.includes(text) || (call.stdin ?? '').includes(text);
 
 /**
  * Each expected reply reached its own thread carrying the wording it was

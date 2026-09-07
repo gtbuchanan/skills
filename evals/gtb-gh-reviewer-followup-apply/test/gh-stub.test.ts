@@ -7,10 +7,9 @@
  * fenced blocks intact. A double logging argv alone therefore hands the checker
  * a reply it cannot read, and the suite fails a run that was correct.
  *
- * The reading has to be conditional, too: standard input on a call that piped
- * nothing blocks, which a suite reports as a timeout rather than as a failure.
- * So the case that pipes nothing is here alongside the one that does, and it
- * would hang rather than fail if the guard went missing.
+ * What the stub records is all these cases can reach. Whether it read at all is
+ * settled in github-cli-stub's body tests, which can fail the reader for
+ * running; a child process reaches EOF either way.
  *
  * Driven as a subprocess rather than by importing the module, because the log
  * line is written by a process reading its own file descriptor — there is no
@@ -56,11 +55,13 @@ test('a body piped in on standard input is recorded', ({ expect }) => {
   ]);
 });
 
-test('a call naming no body records none, without reading for one', ({ expect }) => {
+test('a call naming no body records an empty one', ({ expect }) => {
   /*
-   * Nothing is piped here, so a stub reading standard input unconditionally
-   * never returns and this case times out rather than failing — which is the
-   * failure mode worth a case of its own.
+   * Only that the stub looked and recorded the result. It cannot show that the
+   * read was skipped: spawnSync closes the child's stdin after writing its
+   * input, so an unconditional read would reach EOF and return '' too. That
+   * guarantee is pinned in github-cli-stub's body tests, where the reader
+   * itself fails the case if it runs.
    */
   expect(logged(['api', 'user'])).toStrictEqual([
     { argv: ['api', 'user'], cmd: 'gh', stdin: '' },

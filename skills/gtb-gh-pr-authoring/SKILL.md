@@ -426,3 +426,11 @@ succeeds but prints `fatal: 'main' is already used by worktree at ...`, the PR
 merged and the remote branch was deleted; only the local deletion failed,
 because the base branch is checked out in another worktree. Do not re-run the
 merge.
+
+**Fast-forwarding marks the request merged only if its head commit reaches the
+base** — GitHub infers that once and never revisits it, and a branch rewritten
+since its last push no longer carries it. Confirm before merging:
+
+```sh
+git merge-base --is-ancestor "$(gh pr view <number> --json headRefOid --jq .headRefOid)" HEAD
+```

@@ -95,12 +95,9 @@ const checkExpectedCalls = (
  * Each expected reply reached its own thread, carrying the wording it was
  * approved with, on standard input.
  *
- * The three failures stay separate because they are three different mistakes,
- * and a report that merged them would send the reader after the wrong one:
- * nothing posted at all is an action the skill skipped, the wrong wording is an
- * approved body it rewrote, and the wording found in argv is the right reply
- * sent the way the skill rules out — `-f body='…'`, where the shell parses the
- * prose on its way past and Markdown is what suffers.
+ * The three failures report separately because they are three different
+ * mistakes: nothing posted, the wrong wording, or the right wording sent the
+ * way the skill rules out.
  */
 export const checkReplies = (
   calls: readonly LoggedCall[],

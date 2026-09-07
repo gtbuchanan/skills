@@ -1,15 +1,10 @@
 /*
  * Tests for the matcher this suite judges a posted reply with.
  *
- * A reply body is prose, and gh takes prose two ways: as an inline field
- * argument, where a shell parses it on the way past, and on standard input,
- * where nothing does. The skill prescribes the second, so the suite has to
- * observe both — a matcher blind to the argument form would pass the run that
- * used it, which is the one the rule exists to catch.
- *
- * That leaves three ways a reply can be wrong, and they have to stay distinct
- * in the report or none of them can be acted on: nothing posted at all, the
- * right thread with the wrong words, and the right words sent the fragile way.
+ * The skill prescribes `-F body=@-`, so the matcher has to observe the argument
+ * form too — blind to it, it would pass the very run the rule exists to catch.
+ * Each case is one of the three ways a reply goes wrong, which the report keeps
+ * apart: nothing posted, the wrong words, or the right words sent inline.
  *
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
@@ -43,12 +38,8 @@ test('a body piped in on standard input is seen', ({ expect }) => {
 });
 
 test('a body passed as an inline field argument is refused', ({ expect }) => {
-  /*
-   * The words are right and the thread is right, so this is not a reply that
-   * went missing — it is the fragile spelling, where a shell gets between the
-   * approved body and GitHub. The report has to say which, or the reader goes
-   * looking for a reply that was in fact posted.
-   */
+  /* Right thread, right words — so the report must name the spelling rather
+     than send the reader after a reply that was in fact posted. */
   const problems = checkReplies([call(`${endpoint} -f body=${body}`)], vars);
 
   expect(problems).toHaveLength(1);
@@ -66,21 +57,14 @@ test('a reply carrying the wrong words is not', ({ expect }) => {
 });
 
 test('a reply that was never posted fails as its own thing', ({ expect }) => {
-  /*
-   * Distinct from the wording failure above: nothing reached the thread, so
-   * there is no body to have got wrong, and telling the human otherwise sends
-   * them looking at wording that does not exist.
-   */
+  // Nothing reached the thread, so there is no wording to have got wrong.
   expect(checkReplies([call('api graphql -f query=resolveReviewThread')], vars))
     .toStrictEqual(['missing reply to 11002']);
 });
 
 test('a reply to a different thread is not the one asked for', ({ expect }) => {
-  /*
-   * The endpoint carries the root comment id, so a matcher that looked only for
-   * "some reply happened" would pass a run that answered the wrong thread —
-   * publicly, on someone else's conversation.
-   */
+  /* A matcher keying on "some reply happened" would pass a run that answered
+     someone else's conversation, publicly. */
   const problems = checkReplies(
     [call('api repos/acme/widgets/pulls/42/comments/11003/replies -F body=@-', body)],
     vars,

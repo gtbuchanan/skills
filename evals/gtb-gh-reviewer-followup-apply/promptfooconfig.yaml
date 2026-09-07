@@ -3,8 +3,9 @@
 # Write-path eval for this skill. Runs the REAL skill via claude-agent-sdk
 # against pre-approved action-list fixtures, but shadows the `gh` CLI with a
 # fake (bin/gh-stub.ts) so NOTHING is written to a real PR. The stub records
-# every invocation's argv to the suite's log under artifacts/skill-evals/,
-# and apply-check.ts asserts the skill made the right GitHub calls.
+# every invocation to the suite's log under artifacts/skill-evals/ — argv, and
+# the body gh was handed on standard input, where a reply's prose goes — and
+# apply-check.ts asserts the skill made the right GitHub calls.
 #
 # Runs only under the eval runner, where the fake gh sits at the front of PATH
 # and the real gh is unreachable — so interception is deterministic and a call

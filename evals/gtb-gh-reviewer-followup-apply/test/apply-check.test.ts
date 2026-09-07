@@ -62,6 +62,31 @@ test('a reply that was never posted fails as its own thing', ({ expect }) => {
     .toStrictEqual(['missing reply to 11002']);
 });
 
+test('a thread answered both ways is still refused', ({ expect }) => {
+  /* The piped call alone would pass. A body also went through a shell, and
+     nothing else reports that. */
+  const problems = checkReplies(
+    [call(`${endpoint} -f body=${body}`), call(`${endpoint} -F body=@-`, body)],
+    vars,
+  );
+
+  expect(problems).toHaveLength(1);
+  expect(problems[0]).toContain('standard input');
+});
+
+test('wording elsewhere in the command is not an inline body', ({ expect }) => {
+  /* The command is a flattened argv, so matching the body text against it calls
+     any argument carrying that text an inline body. Here the body was piped and
+     simply says something else — a wording failure, not a spelling one. */
+  const problems = checkReplies(
+    [call(`${endpoint} --jq .notify_batch -F body=@-`, 'Thanks — fixed.')],
+    vars,
+  );
+
+  expect(problems).toHaveLength(1);
+  expect(problems[0]).toContain('did not carry');
+});
+
 test('a reply to a different thread is not the one asked for', ({ expect }) => {
   /* A matcher keying on "some reply happened" would pass a run that answered
      someone else's conversation, publicly. */

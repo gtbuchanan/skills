@@ -92,12 +92,27 @@ const checkExpectedCalls = (
 };
 
 /**
+ * gh's inline body field, whatever its value.
+ *
+ * The rule is about the form, not about where the wording ended up, so this
+ * matches the argument itself. Searching the flattened command for the body
+ * text instead would call an endpoint that happens to contain that text an
+ * inline body — and `-F body=@-` never puts the text in argv at all, so there
+ * is nothing there to match on a correct run.
+ */
+const inlineBody = /(?:^| )(?:-f|--raw-field) body=/v;
+
+/**
  * Each expected reply reached its own thread, carrying the wording it was
  * approved with, on standard input.
  *
  * The three failures report separately because they are three different
  * mistakes: nothing posted, the wrong wording, or the right wording sent the
  * way the skill rules out.
+ *
+ * The inline form is judged first. A thread answered twice — once piped, once
+ * inline — has still had a body through a shell, and accepting the piped one
+ * would let that pass unreported.
  */
 export const checkReplies = (
   calls: readonly LoggedCall[],
@@ -108,13 +123,15 @@ export const checkReplies = (
       call.command.includes(`comments/${String(reply.id)}/replies`),
     );
     if (hits.length === 0) return [`missing reply to ${String(reply.id)}`];
-    if (hits.some(hit => hit.stdin?.includes(reply.bodyIncludes) ?? false)) return [];
+    if (hits.some(hit => inlineBody.test(hit.command))) {
+      return [
+        `reply to ${String(reply.id)} passed its body as an argument — ` +
+        'it goes in on standard input',
+      ];
+    }
 
-    return hits.some(hit => hit.command.includes(reply.bodyIncludes))
-      ? [
-          `reply to ${String(reply.id)} passed its body as an argument — ` +
-          'it goes in on standard input',
-        ]
+    return hits.some(hit => hit.stdin?.includes(reply.bodyIncludes) ?? false)
+      ? []
       : [`reply to ${String(reply.id)} did not carry "${reply.bodyIncludes}"`];
   });
 

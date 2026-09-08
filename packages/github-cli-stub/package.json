@@ -6,8 +6,10 @@
     "./body": "./src/body.ts",
     "./checks": "./src/checks.ts",
     "./dispatch": "./src/dispatch.ts",
+    "./pr-records": "./src/pr-records.ts",
     "./pulls": "./src/pulls.ts",
     "./records": "./src/records.ts",
+    "./scenario-world": "./src/scenario-world.ts",
     "./selection": "./src/selection.ts",
     "./state": "./src/state.ts"
   },
@@ -20,6 +22,7 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
+    "@gtbuchanan/git-fixtures": "workspace:*",
     "valibot": "catalog:"
   },
   "devDependencies": {

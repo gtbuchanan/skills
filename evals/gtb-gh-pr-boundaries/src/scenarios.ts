@@ -110,11 +110,3 @@ export const scenarios: readonly Scenario[] = [
     },
   },
 ];
-
-export const scenarioByKey = (key: string): Scenario => {
-  const found = scenarios.find(scenario => scenario.key === key);
-  if (found === undefined)
-    throw new Error(`no scenario named "${key}" in this suite`);
-
-  return found;
-};

@@ -1,5 +1,5 @@
 /*
- * Tests for the matchers this suite's checker judges a run with.
+ * Tests for the matchers a suite's expectations are judged with.
  *
  * These decide whether a scenario passed, so the expensive error is the lenient
  * one: a matcher that accepts a run it should have failed turns the whole suite
@@ -21,7 +21,7 @@ import {
   checkForbiddenStdin,
   checkOrder,
   checkStdin,
-} from '#src/authoring-check.ts';
+} from '@gtbuchanan/agent-skills-harness/expectations';
 
 interface Call {
   readonly command: string;

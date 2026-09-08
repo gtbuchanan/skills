@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./checkout": "./src/checkout.ts",
     "./real-git": "./src/real-git.ts",
+    "./scenario": "./src/scenario.ts",
     "./seed-repo": "./src/seed-repo.ts"
   },
   "scripts": {

@@ -84,7 +84,7 @@ Auth: each reads `~/.claude/.credentials.json` when present (keyless), otherwise
 A suite lives in `evals/<name>/`, outside the skill it exercises — `skills/<name>/` is copied verbatim into every deployed and published skill, so test doubles, fixtures and harness config must not live there:
 
 - `promptfooconfig.yaml` — uses the `anthropic:claude-agent-sdk` provider with `setting_sources: ['project']` and `skills: ['<name>']` so it exercises the real skill; scope `append_allowed_tools` to the minimum. Assert `skill-used` plus a `javascript` checker over the output. It stays at the suite root: both runners key discovery on it, and so does the harness's own `suiteDir`.
-- `src/` — the checker and the setup extension, named through `file://src/…` from the config.
+- `src/` — the checker and the setup extension, named through `file://src/…` from the config. For a suite that runs against a seeded repository both are thin: `scenarioSetup` from `@gtbuchanan/agent-skills-harness/scenario-setup` does the seeding and records the baseline tips, and `expectationAssertion` from `@gtbuchanan/agent-skills-harness/expectations` does the matching. Each takes the suite's own `import.meta.url`, because that is what names the call log — pass the harness's and it reads a log that does not exist, which surfaces as a pile of missing calls rather than as a missing log. What is left in `src/` is the worlds: `scenarios.ts`, the file contents they commit, and the repository facts they are told against.
 - `fixtures/` — inputs the agent reads.
 - `package.json`, `tsconfig.json`, `eslint.config.ts`, and `vitest.config.ts` where the suite has unit tests — a suite is a workspace package, so a new one needs `pnpm install` to link it and `gtb sync` to write its scripts. Copy an existing suite's; only the name and the dependencies differ.
 
@@ -96,7 +96,7 @@ A double written as `.cjs` needs `// @ts-check` at the top of the file. The gene
 
 For a skill that calls an external CLI, mock it instead of hitting the network:
 
-- Ship `evals/<name>/bin/<cmd>-stub.ts` — a fake CLI that logs its argv to `$STUB_LOG` and returns canned output. Either runner installs it as `<cmd>` at the front of the eval `PATH`, and the real one is unreachable either way: absent from the container image, shadowed on the native path.
+- Ship `evals/<name>/bin/<cmd>-stub.ts` — a fake CLI that logs its argv to `$STUB_LOG` and returns canned output. Either runner installs it as `<cmd>` at the front of the eval `PATH`, and the real one is unreachable either way: absent from the container image, shadowed on the native path. Build it as a `dispatch` handler table rather than an if/else chain, and list only the commands the suite's own scenarios motivate — `dispatch` refuses everything else by construction, which is the property an added `else` branch quietly gives up. What each handler answers with is `@gtbuchanan/github-cli-stub/pr-records` for a pull request world; a handler that has to invent a record is a sign the record belongs there too.
 - A `setup.ts` beforeAll extension sets `STUB_LOG` (and truncates it per run, via `resetCallLog`).
 - The checker asserts against the logged calls. These suites run only under the harness — a suite that overlays files into a skill tree calls `requireHarness` and refuses a hand-run `promptfoo eval`.
 

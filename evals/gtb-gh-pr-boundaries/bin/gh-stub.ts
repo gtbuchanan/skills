@@ -17,16 +17,17 @@
  * The real CLI is never reachable from a suite.
  */
 import path from 'node:path';
+import { branchAt } from '@gtbuchanan/git-fixtures/checkout';
+import { locateScenario } from '@gtbuchanan/git-fixtures/scenario';
 import { dispatch } from '@gtbuchanan/github-cli-stub/dispatch';
 import { currentHead, nextPrNumber } from '@gtbuchanan/github-cli-stub/pulls';
 import { pick, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { readState, writeState } from '@gtbuchanan/github-cli-stub/state';
 import { appendJsonl, argv, joined } from '@gtbuchanan/stub-runtime/stub';
-import { branchAt } from '#src/checkout.ts';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
-import { locateScenario } from '#src/world.ts';
+import { scenarios } from '#src/scenarios.ts';
 
-const located = locateScenario(process.cwd());
+const located = locateScenario(scenarios, process.cwd());
 const scenario = located.scenario;
 
 const logDir = process.env['STUB_LOG_DIR'];

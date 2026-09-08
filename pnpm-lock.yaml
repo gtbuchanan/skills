@@ -610,6 +610,9 @@ importers:
 
   packages/github-cli-stub:
     dependencies:
+      '@gtbuchanan/git-fixtures':
+        specifier: workspace:*
+        version: link:../git-fixtures
       valibot:
         specifier: 'catalog:'
         version: 1.4.2(typescript@6.0.3)
@@ -644,6 +647,12 @@ importers:
 
   packages/harness:
     dependencies:
+      '@gtbuchanan/git-fixtures':
+        specifier: workspace:*
+        version: link:../git-fixtures
+      '@gtbuchanan/stub-runtime':
+        specifier: workspace:*
+        version: link:../stub-runtime
       find-up-simple:
         specifier: 'catalog:'
         version: 1.0.1

@@ -21,11 +21,12 @@ import {
 } from '@gtbuchanan/agent-skills-harness/paths';
 import { requireHarness, resetRunDir } from '@gtbuchanan/agent-skills-harness/setup';
 import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
+import { markerFile, scenarioByKey, scenarioPath } from '@gtbuchanan/git-fixtures/scenario';
 import { seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
 import * as v from 'valibot';
 import { author } from './repository.ts';
-import { type Scenario, scenarioByKey } from './scenarios.ts';
-import { markerFile } from './world.ts';
+import type { Scenario } from './scenarios.ts';
+import { scenarios } from './scenarios.ts';
 
 const suite = suiteName(import.meta.url);
 const logDir = suiteRunDir(import.meta.url);
@@ -40,13 +41,6 @@ const seedDate = '2026-05-08T09:00:00-05:00';
 const HookVarsSchema = v.object({ scenario: v.string() });
 const HookTestSchema = v.object({ vars: HookVarsSchema });
 const HookContextSchema = v.object({ test: HookTestSchema });
-
-/**
- * Where a scenario's checkout lives, relative to the agent's workspace. Named
- * so the prompt can point at it without the suite and the prompt agreeing by
- * coincidence.
- */
-export const scenarioPath = (key: string): string => `scenarios/${key}`;
 
 /**
  * Writes a tree into the checkout, creating directories as it goes.
@@ -100,7 +94,11 @@ const seedOne = (scenario: Scenario, git: string, root: string): void => {
 export const extensionHook = (hookName: string, context: unknown): void => {
   if (hookName === 'beforeEach') {
     const { test } = v.parse(HookContextSchema, context);
-    seedOne(scenarioByKey(test.vars.scenario), resolveRealGit(), skillsRoot());
+    seedOne(
+      scenarioByKey(scenarios, test.vars.scenario),
+      resolveRealGit(),
+      skillsRoot(),
+    );
     return;
   }
 
@@ -109,3 +107,8 @@ export const extensionHook = (hookName: string, context: unknown): void => {
   requireHarness(suite);
   resetRunDir(logDir);
 };
+
+/* Re-exported so the checker resolves a scenario's checkout through the same
+   call the seed wrote it with, rather than spelling the layout a second time
+   and agreeing with the seed only by coincidence. */
+export { scenarioPath } from '@gtbuchanan/git-fixtures/scenario';

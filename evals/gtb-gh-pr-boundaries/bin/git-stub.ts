@@ -11,8 +11,8 @@
  * Installed as `git` at the front of the eval PATH by the runner, which is why
  * it resolves the real binary explicitly rather than by name.
  */
-import { argv, logCallToDir } from '@gtbuchanan/agent-skills-harness/stub';
 import { hermeticGitEnv, resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
+import { argv, logCallToDir } from '@gtbuchanan/stub-runtime/stub';
 import spawn from 'cross-spawn';
 import { locateScenario } from '#src/world.ts';
 

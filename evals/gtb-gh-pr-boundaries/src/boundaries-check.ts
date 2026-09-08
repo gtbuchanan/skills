@@ -21,9 +21,9 @@
 import path from 'node:path';
 import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { CallSchema, readJsonl } from '@gtbuchanan/agent-skills-harness/calls';
 import { skillsRoot, suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
 import { readState } from '@gtbuchanan/github-cli-stub/state';
+import { CallSchema, readJsonl } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 import { scenarioPath } from './setup.ts';
 

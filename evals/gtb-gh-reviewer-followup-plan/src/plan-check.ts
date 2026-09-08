@@ -25,8 +25,8 @@
  */
 import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { parseJson, readCommands } from '@gtbuchanan/agent-skills-harness/calls';
 import { suiteCallLog } from '@gtbuchanan/agent-skills-harness/paths';
+import { parseJson, readCommands } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 import { readReviews, scenarioDir, selectLastOwnReview, viewer } from './scenario.ts';
 

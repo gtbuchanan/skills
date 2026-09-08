@@ -13,6 +13,7 @@
     "@gtbuchanan/agent-skills-harness": "workspace:*",
     "@gtbuchanan/git-fixtures": "workspace:*",
     "@gtbuchanan/github-cli-stub": "workspace:*",
+    "@gtbuchanan/stub-runtime": "workspace:*",
     "cross-spawn": "catalog:",
     "valibot": "catalog:"
   },

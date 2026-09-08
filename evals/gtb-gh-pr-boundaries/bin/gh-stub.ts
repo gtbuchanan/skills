@@ -17,11 +17,11 @@
  * The real CLI is never reachable from a suite.
  */
 import path from 'node:path';
-import { appendJsonl, argv, joined } from '@gtbuchanan/agent-skills-harness/stub';
 import { dispatch } from '@gtbuchanan/github-cli-stub/dispatch';
 import { currentHead, nextPrNumber } from '@gtbuchanan/github-cli-stub/pulls';
 import { pick, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { readState, writeState } from '@gtbuchanan/github-cli-stub/state';
+import { appendJsonl, argv, joined } from '@gtbuchanan/stub-runtime/stub';
 import { branchAt } from '#src/checkout.ts';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
 import { locateScenario } from '#src/world.ts';

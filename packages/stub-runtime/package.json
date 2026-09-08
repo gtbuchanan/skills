@@ -1,13 +1,10 @@
 {
-  "name": "@gtbuchanan/agent-skills-harness",
+  "name": "@gtbuchanan/stub-runtime",
   "private": true,
   "type": "module",
   "exports": {
-    "./assert": "./src/assert.ts",
-    "./json-scan": "./src/json-scan.ts",
-    "./paths": "./src/paths.ts",
-    "./setup": "./src/setup.ts",
-    "./skills-cli": "./src/skills-cli.ts"
+    "./calls": "./src/calls.ts",
+    "./stub": "./src/stub.ts"
   },
   "scripts": {
     "coverage:codecov:upload": "gtb task coverage:codecov:upload",
@@ -18,7 +15,6 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
-    "find-up-simple": "catalog:",
     "valibot": "catalog:"
   },
   "devDependencies": {

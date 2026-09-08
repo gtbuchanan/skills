@@ -22,7 +22,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { parseJson } from '@gtbuchanan/agent-skills-harness/calls';
+import { parseJson } from '@gtbuchanan/stub-runtime/calls';
 import { test } from 'vitest';
 
 const stub = path.join(import.meta.dirname, '..', 'bin', 'gh-stub.ts');

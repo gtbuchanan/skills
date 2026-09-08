@@ -20,7 +20,6 @@
  */
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { parseJson } from '@gtbuchanan/agent-skills-harness/calls';
 import {
   artifactPath,
   skillsRoot,
@@ -35,6 +34,7 @@ import {
   runGit,
   seedHistory,
 } from '@gtbuchanan/git-fixtures/seed-repo';
+import { parseJson } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 import { author } from './repository.ts';
 import type { ExtraCommit, Scenario } from './shapes.ts';

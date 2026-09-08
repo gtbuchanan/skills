@@ -38,7 +38,6 @@
  * The real CLI is never reachable from a suite.
  */
 import path from 'node:path';
-import { appendJsonl, argv, joined, writeLine } from '@gtbuchanan/agent-skills-harness/stub';
 import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
 import { checkRecord } from '@gtbuchanan/github-cli-stub/checks';
 import { UnmodelledCall } from '@gtbuchanan/github-cli-stub/dispatch';
@@ -55,6 +54,7 @@ import type {
 } from '@gtbuchanan/github-cli-stub/records';
 import { pick as pickFields, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { type OpenedPr, readState, writeState } from '@gtbuchanan/github-cli-stub/state';
+import { appendJsonl, argv, joined, writeLine } from '@gtbuchanan/stub-runtime/stub';
 import { branchAt } from '#src/checkout.ts';
 import { checksFor } from '#src/checks.ts';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';

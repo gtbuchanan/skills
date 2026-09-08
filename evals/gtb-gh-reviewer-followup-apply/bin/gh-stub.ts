@@ -24,9 +24,9 @@
  * reads as "there is nothing here" rather than "I don't know" — an agent acts
  * on it, and every assertion about what it did call still passes.
  */
-import { argv, joined, logCall } from '@gtbuchanan/agent-skills-harness/stub';
 import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
 import { dispatch } from '@gtbuchanan/github-cli-stub/dispatch';
+import { argv, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
 
 const stdin = stdinBody(argv);
 

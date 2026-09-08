@@ -12,6 +12,7 @@
   "dependencies": {
     "@gtbuchanan/agent-skills-harness": "workspace:*",
     "@gtbuchanan/git-fixtures": "workspace:*",
+    "@gtbuchanan/stub-runtime": "workspace:*",
     "valibot": "catalog:"
   },
   "devDependencies": {

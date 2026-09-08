@@ -31,6 +31,10 @@ component_management:
       name: eval-gtb-change-decomposition
       paths:
         - evals/gtb-change-decomposition/src/**
+    - component_id: stub-runtime
+      name: stub-runtime
+      paths:
+        - packages/stub-runtime/src/**
     - component_id: agent-skills-harness
       name: agent-skills-harness
       paths:
@@ -89,3 +93,7 @@ flags:
     carryforward: true
     paths:
       - packages/github-cli-stub/
+  stub-runtime:
+    carryforward: true
+    paths:
+      - packages/stub-runtime/

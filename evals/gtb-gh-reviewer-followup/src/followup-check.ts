@@ -13,8 +13,8 @@
  */
 import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { readCommands } from '@gtbuchanan/agent-skills-harness/calls';
 import { suiteCallLog } from '@gtbuchanan/agent-skills-harness/paths';
+import { readCommands } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 
 const VarsSchema = v.object({

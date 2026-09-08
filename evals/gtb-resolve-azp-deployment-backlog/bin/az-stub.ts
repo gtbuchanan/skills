@@ -12,7 +12,7 @@
  * `az pipelines list` — no cross-test az-call correlation needed, which is what
  * lets the suite run in parallel. The log is kept only for debugging.
  */
-import { joined, logCallToDir, writeLine } from '@gtbuchanan/agent-skills-harness/stub';
+import { joined, logCallToDir, writeLine } from '@gtbuchanan/stub-runtime/stub';
 
 /**
  * The id the fake `pipelines runs update` echoes back.

@@ -26,8 +26,8 @@
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { argv, joined, logCall } from '@gtbuchanan/agent-skills-harness/stub';
 import { dispatch } from '@gtbuchanan/github-cli-stub/dispatch';
+import { argv, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
 import {
   readReviews,
   repo,

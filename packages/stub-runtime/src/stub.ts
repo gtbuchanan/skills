@@ -1,17 +1,22 @@
 /*
- * Shared plumbing for the fake CLIs the runner installs onto the eval
- * PATH. Every stub does the same three things: read its argv, record the call
- * so the checker can assert on it, and write a canned response.
+ * Shared plumbing for a fake CLI installed at the front of PATH. Every stub
+ * does the same three things: read its argv, record the call so a checker can
+ * assert on it, and write a canned response.
  *
  * Logging is best-effort by design — a stub must never fail the call it is
  * standing in for just because it could not write its own log.
+ *
+ * `STUB_LOG` and `STUB_LOG_DIR` name where a call is recorded: a convention
+ * between whoever installs the stub and whoever reads the log, not something
+ * the code under test knows about. Unset, a stub records nothing and still
+ * answers.
  *
  * These run under plain `node`, whose type stripping only erases annotations,
  * so everything here (and in the stubs) stays erasable syntax — no enums, no
  * namespaces, no parameter properties.
  *
- * Not used by bin/script-stub.cjs: that one is overlaid onto a .ps1 and run
- * through Node's CommonJS path, so it cannot import an ES module.
+ * A stub overlaid onto a `.ps1` and run through Node's CommonJS path cannot
+ * import an ES module, so it reimplements this rather than reaching for it.
  */
 import { appendFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -45,7 +50,7 @@ export const appendJsonl = (filePath: string, entry: unknown): void => {
 
 /**
  * Records this invocation to $STUB_LOG, tagged with the command it fakes.
- * Silently does nothing when the suite set no log.
+ * Silently does nothing when no log was set.
  *
  * `stdin` is what the call was handed on standard input, for the CLIs that take
  * prose there — it never appears in argv, so a log without it cannot tell a
@@ -60,7 +65,7 @@ export const logCall = (cmd: string, stdin?: string): void => {
 };
 
 /**
- * Records this invocation into $STUB_LOG_DIR under `fileName`, for suites that
+ * Records this invocation into $STUB_LOG_DIR under `fileName`, for callers that
  * key one log file per test rather than sharing one.
  */
 export const logCallToDir = (cmd: string, fileName: string): void => {

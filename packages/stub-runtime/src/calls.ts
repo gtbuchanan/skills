@@ -3,8 +3,9 @@
  *
  * A missing log is deliberately not an error: it yields an empty list so the
  * caller's presence checks fail with their own specific reasons rather than an
- * exception. Malformed lines are dropped the same way — the checkers assert on
- * what a skill DID call, so a line that cannot be parsed simply is not evidence.
+ * exception. Malformed lines are dropped the same way — a checker asserts on
+ * what the code under test DID call, so a line that cannot be parsed simply is
+ * not evidence.
  */
 import fs from 'node:fs';
 import * as v from 'valibot';
@@ -67,7 +68,7 @@ export const CallSchema = v.object({
  *
  * `undefined` is "this stub does not record bodies", distinct from `''`, "it
  * recorded an empty one". A checker that cannot tell them apart blames the
- * skill for a body its own double never captured.
+ * code under test for a body its own double never captured.
  */
 export interface LoggedCall {
   readonly command: string;

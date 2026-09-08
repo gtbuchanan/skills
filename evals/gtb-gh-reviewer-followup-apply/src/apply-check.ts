@@ -21,9 +21,9 @@
  */
 import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import type { LoggedCall } from '@gtbuchanan/agent-skills-harness/calls';
-import { readCalls } from '@gtbuchanan/agent-skills-harness/calls';
 import { suiteCallLog } from '@gtbuchanan/agent-skills-harness/paths';
+import type { LoggedCall } from '@gtbuchanan/stub-runtime/calls';
+import { readCalls } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 
 const StringListSchema = v.array(v.string());

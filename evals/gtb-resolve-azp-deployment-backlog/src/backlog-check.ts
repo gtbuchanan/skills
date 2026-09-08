@@ -40,8 +40,8 @@
 import path from 'node:path';
 import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { readJsonl } from '@gtbuchanan/agent-skills-harness/calls';
 import { suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
+import { readJsonl } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 
 /**

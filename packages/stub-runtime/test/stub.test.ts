@@ -12,8 +12,8 @@ import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { parseJson } from '@gtbuchanan/agent-skills-harness/calls';
-import { logCall } from '@gtbuchanan/agent-skills-harness/stub';
+import { parseJson } from '@gtbuchanan/stub-runtime/calls';
+import { logCall } from '@gtbuchanan/stub-runtime/stub';
 
 /**
  * A log for one case, pointed at by $STUB_LOG. Disposable because that variable
@@ -66,7 +66,7 @@ test('a body the stub was handed is recorded', ({ expect }) => {
   expect(log.entries()[0]).toHaveProperty('stdin', 'Applied in 2f8665e.');
 });
 
-test('a suite that set no log has nothing written for it', ({ expect }) => {
+test('a caller that set no log has nothing written for it', ({ expect }) => {
   using log = stubLog();
   delete process.env['STUB_LOG'];
 

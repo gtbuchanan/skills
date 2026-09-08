@@ -3,9 +3,9 @@
  *
  * What a checker can assert is bounded by what the reader hands it, and the
  * expensive failure is silent: a body a stub recorded but the reader drops
- * cannot be asserted on, and the assertion that needed it fails as "the skill
- * never did this" rather than as "the harness cannot see it". So the cases
- * below are about the body surviving the trip, including from a log line
+ * cannot be asserted on, and the assertion that needed it fails as "the code
+ * under test never did this" rather than as "the reader cannot see it". So the
+ * cases below are about the body surviving the trip, including from a log line
  * written before stdin was ever recorded.
  *
  * The log is a real file because that is the whole interface between the stub
@@ -18,7 +18,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { readCalls, readCommands } from '@gtbuchanan/agent-skills-harness/calls';
+import { readCalls, readCommands } from '@gtbuchanan/stub-runtime/calls';
 
 /**
  * A log holding `lines`, each already a JSON object.

@@ -46,9 +46,14 @@ jobs:
 
 name: PR
 
+# Every pull request, not only the ones based on main. A stacked pull request
+# is based on the branch below it, so a `branches: [main]` filter gave the
+# whole stack no CI at all — every member below the top ran nothing until its
+# parent merged and GitHub retargeted it, which is after review rather than
+# before it. The cost is re-running these jobs on the same commits once a
+# member is retargeted; the alternative was reviewing code no job had built.
 on:
-  pull_request:
-    branches: [main]
+  pull_request: {}
 
 permissions:
   contents: read

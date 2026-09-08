@@ -19,9 +19,9 @@ import {
   suiteName,
   suiteRunDir,
 } from '@gtbuchanan/agent-skills-harness/paths';
-import { resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
-import { seedHistory } from '@gtbuchanan/agent-skills-harness/seed-repo';
 import { requireHarness, resetRunDir } from '@gtbuchanan/agent-skills-harness/setup';
+import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
+import { seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
 import * as v from 'valibot';
 import { author } from './repository.ts';
 import { type Scenario, scenarioByKey } from './scenarios.ts';

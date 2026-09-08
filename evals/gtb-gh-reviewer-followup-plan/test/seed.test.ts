@@ -14,7 +14,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
+import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { test, vi } from 'vitest';
 import { author, user, viewer } from '#src/scenario.ts';
 import { commitPlan, seedRepository } from '#src/seed.ts';

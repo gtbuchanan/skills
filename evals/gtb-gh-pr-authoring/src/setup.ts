@@ -27,14 +27,14 @@ import {
   suiteName,
   suiteRunDir,
 } from '@gtbuchanan/agent-skills-harness/paths';
-import { resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
+import { requireHarness, resetRunDir } from '@gtbuchanan/agent-skills-harness/setup';
+import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import {
   type GitRunner,
   captureGit,
   runGit,
   seedHistory,
-} from '@gtbuchanan/agent-skills-harness/seed-repo';
-import { requireHarness, resetRunDir } from '@gtbuchanan/agent-skills-harness/setup';
+} from '@gtbuchanan/git-fixtures/seed-repo';
 import * as v from 'valibot';
 import { author } from './repository.ts';
 import type { ExtraCommit, Scenario } from './shapes.ts';

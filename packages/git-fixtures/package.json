@@ -1,9 +1,10 @@
 {
-  "name": "@gtbuchanan/eval-gtb-gh-reviewer-followup-plan",
+  "name": "@gtbuchanan/git-fixtures",
   "private": true,
   "type": "module",
-  "imports": {
-    "#src/*": "./src/*"
+  "exports": {
+    "./real-git": "./src/real-git.ts",
+    "./seed-repo": "./src/seed-repo.ts"
   },
   "scripts": {
     "coverage:codecov:upload": "gtb task coverage:codecov:upload",
@@ -14,11 +15,7 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
-    "@gtbuchanan/agent-skills-harness": "workspace:*",
-    "@gtbuchanan/git-fixtures": "workspace:*",
-    "@gtbuchanan/github-cli-stub": "workspace:*",
-    "cross-spawn": "catalog:",
-    "valibot": "catalog:"
+    "cross-spawn": "catalog:"
   },
   "devDependencies": {
     "@gtbuchanan/cli": "catalog:",

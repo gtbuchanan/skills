@@ -22,9 +22,9 @@ import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
 import { parseJson } from '@gtbuchanan/agent-skills-harness/calls';
 import { skillsRoot } from '@gtbuchanan/agent-skills-harness/paths';
-import { resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
-import type { GitRunner } from '@gtbuchanan/agent-skills-harness/seed-repo';
-import { captureGit, probeGit } from '@gtbuchanan/agent-skills-harness/seed-repo';
+import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
+import type { GitRunner } from '@gtbuchanan/git-fixtures/seed-repo';
+import { captureGit, probeGit } from '@gtbuchanan/git-fixtures/seed-repo';
 import * as v from 'valibot';
 import {
   grammarProblems,

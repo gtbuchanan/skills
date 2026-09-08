@@ -39,6 +39,10 @@ component_management:
       name: github-cli-stub
       paths:
         - packages/github-cli-stub/src/**
+    - component_id: git-fixtures
+      name: git-fixtures
+      paths:
+        - packages/git-fixtures/src/**
     - component_id: agent-skills-eval-runner
       name: agent-skills-eval-runner
       paths:
@@ -77,6 +81,10 @@ flags:
     carryforward: true
     paths:
       - evals/gtb-reviewer-followup-verdict/
+  git-fixtures:
+    carryforward: true
+    paths:
+      - packages/git-fixtures/
   github-cli-stub:
     carryforward: true
     paths:

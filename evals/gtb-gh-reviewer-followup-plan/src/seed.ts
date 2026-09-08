@@ -20,8 +20,8 @@
  * setup.ts seeds and resolves the canned fixtures against each other in one
  * process, so a run is self-consistent whatever the names come out as.
  */
-import type { SeedCommit } from '@gtbuchanan/agent-skills-harness/seed-repo';
-import { seedHistory } from '@gtbuchanan/agent-skills-harness/seed-repo';
+import type { SeedCommit } from '@gtbuchanan/git-fixtures/seed-repo';
+import { seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
 import { author, authorEmail, branch, user } from './scenario.ts';
 
 /*

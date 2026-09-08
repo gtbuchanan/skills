@@ -1,24 +1,24 @@
 /*
- * Seeding a genuine git repository for a suite to run against.
+ * Seeding a genuine git repository for a test to run against.
  *
- * Some skills are best evaluated against real history rather than a stubbed
- * one: `log`, `diff`, `status` and `rev-parse` are then true by construction,
- * and a suite's double only has to record what was asked. That is worth more
- * than it sounds — a stub's fall-through is an answer, and an empty `log` reads
- * as "there is nothing here" rather than "I did not mock this".
+ * Some code is best exercised against real history rather than a stubbed one:
+ * `log`, `diff`, `status` and `rev-parse` are then true by construction, and a
+ * double only has to record what was asked. That is worth more than it sounds
+ * — a stub's fall-through is an answer, and an empty `log` reads as "there is
+ * nothing here" rather than "I did not mock this".
  *
- * Reproducibility is the other reason this is shared. Seeding runs git with no
- * sight of the developer's own config ({@link hermeticGitEnv}) and supplies
- * authorship and both timestamps explicitly, so a plan yields the same object
- * names on every run of a given host — which is what lets a suite's canned
+ * Reproducibility is the other reason this is worth sharing. Seeding runs git
+ * with no sight of the developer's own config ({@link hermeticGitEnv}) and
+ * supplies authorship and both timestamps explicitly, so a plan yields the same
+ * object names on every run of a given host — which is what lets canned
  * fixtures reference a seeded commit at all. It is deliberately not a
- * cross-platform guarantee; nothing needs one, because a suite seeds and
+ * cross-platform guarantee; nothing needs one, because a caller seeds and
  * resolves its fixtures against each other in the same process.
  *
  * Two environmental concerns are opt-in rather than default, because they are
- * properties of where a suite seeds, not of seeding: `origin` (a bare remote,
- * so `fetch`/`push` work with no network) and `excludeUnplanned` (for seeding
- * into a directory that already holds files the plan does not own).
+ * properties of where the seeding happens, not of seeding: `origin` (a bare
+ * remote, so `fetch`/`push` work with no network) and `excludeUnplanned` (for
+ * seeding into a directory that already holds files the plan does not own).
  */
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -27,7 +27,7 @@ import { hermeticGitEnv } from './real-git.ts';
 
 /**
  * Where to run git, and which git to run — the real one, resolved past any
- * stub a suite has installed ({@link resolveRealGit}).
+ * double the caller has installed ({@link resolveRealGit}).
  */
 export interface GitRunner {
   readonly cwd: string;
@@ -60,8 +60,8 @@ export interface SeedIdentity {
 }
 
 /**
- * One commit in a plan: the files it writes, when it was made, and the key a
- * suite's fixtures refer to it by.
+ * One commit in a plan: the files it writes, when it was made, and the key the
+ * caller's fixtures refer to it by.
  */
 export interface SeedCommit {
   readonly date: string;
@@ -139,12 +139,12 @@ export const captureGit = (
  * Resolves a tree key against the repository it belongs to, refusing one that
  * lands outside it.
  *
- * Keys come from a suite's own plan rather than from anything untrusted, so
+ * Keys come from the caller's own plan rather than from anything untrusted, so
  * this is not a sandbox — it is a guard against an authoring slip. Git does
  * object to an outside path, but not until `git add`, by which point the file
  * is already written: a run would silently overwrite something beside the tree
- * the runner and the agent both work in. Refusing before the write puts the
- * error where the mistake was made.
+ * it was told to seed. Refusing before the write puts the error where the
+ * mistake was made.
  */
 const resolveInTree = (cwd: string, relative: string): string => {
   const root = path.resolve(cwd);
@@ -206,11 +206,11 @@ const planRoots = (commits: readonly SeedCommit[]): string[] => [
 /**
  * Ignore everything at the top level except what the plan writes.
  *
- * Stated as an inverse on purpose. A suite seeding into a directory it shares
- * — a runner's workspace holding installed skills and staged fixtures, or a
- * mounted repo with its own node_modules — cannot list what to exclude without
- * encoding one runner's shape and leaving another's tree dirty. What the plan
- * owns is the same on every host.
+ * Stated as an inverse on purpose. Seeding into a directory shared with
+ * something else — a workspace holding staged fixtures, or a mounted repo with
+ * its own node_modules — cannot list what to exclude without encoding one
+ * host's shape and leaving another's tree dirty. What the plan owns is the
+ * same on every host.
  */
 const excludeFile = (commits: readonly SeedCommit[]): string =>
   ['/*', ...planRoots(commits).map(root => `!/${root}`), ''].join('\n');
@@ -236,10 +236,10 @@ export interface SeedHistoryOptions {
   readonly git: string;
   /**
    * The repo-local `user.name` / `user.email`. Not what the commits are
-   * attributed to — that is {@link author} — but the identity an agent probes
-   * for on startup. With global config disabled a repo-local one is the only
-   * place left to read it, and absent one git reports no identity at all,
-   * which no real checkout would.
+   * attributed to — that is {@link author} — but the identity anything reading
+   * the checkout probes for. With global config disabled a repo-local one is
+   * the only place left to read it, and absent one git reports no identity at
+   * all, which no real checkout would.
    */
   readonly localIdentity: SeedIdentity;
   /**
@@ -252,7 +252,7 @@ export interface SeedHistoryOptions {
 
 /**
  * Seeds the checkout (and its origin, when asked) and returns each commit's
- * object name by plan key — what a suite's canned fixtures resolve against.
+ * object name by plan key — what the caller's canned fixtures resolve against.
  */
 export const seedHistory = (
   options: SeedHistoryOptions,

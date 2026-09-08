@@ -7,8 +7,6 @@
     "./calls": "./src/calls.ts",
     "./json-scan": "./src/json-scan.ts",
     "./paths": "./src/paths.ts",
-    "./real-git": "./src/real-git.ts",
-    "./seed-repo": "./src/seed-repo.ts",
     "./setup": "./src/setup.ts",
     "./skills-cli": "./src/skills-cli.ts",
     "./stub": "./src/stub.ts"
@@ -22,7 +20,6 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
-    "cross-spawn": "catalog:",
     "find-up-simple": "catalog:",
     "valibot": "catalog:"
   },
@@ -31,7 +28,6 @@
     "@gtbuchanan/eslint-config": "catalog:",
     "@gtbuchanan/tsconfig": "catalog:",
     "@gtbuchanan/vitest-config": "catalog:",
-    "@types/cross-spawn": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",

@@ -1,12 +1,12 @@
 /*
  * Tests for finding the real git while a stub is shadowing it.
  *
- * The runner puts STUB_BINDIR at the front of PATH, so a suite that seeds a
- * genuine repository has to reach PAST its own double to do it. Getting this
- * wrong is quiet: the seed would "succeed" against a stub that does nothing,
- * and the suite would then run against an empty repository — the same shape of
- * silent lie the fake world was fixed to stop telling. So the cases that matter
- * are the ones where a wrong answer looks like a right one.
+ * STUB_BINDIR sits at the front of PATH, so seeding a genuine repository has to
+ * reach PAST that double to do it. Getting this wrong is quiet: the seed would
+ * "succeed" against a stub that does nothing, and the test would then run
+ * against an empty repository — the same shape of silent lie a fake world is
+ * built to stop telling. So the cases that matter are the ones where a wrong
+ * answer looks like a right one.
  *
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
@@ -20,7 +20,7 @@ import {
   findGitOutsideStub,
   hermeticGitEnv,
   resolveRealGit,
-} from '@gtbuchanan/agent-skills-harness/real-git';
+} from '@gtbuchanan/git-fixtures/real-git';
 
 const stubDir = path.join(path.sep, 'tmp', 'stub-bin');
 const realDir = path.join(path.sep, 'usr', 'bin');
@@ -107,10 +107,10 @@ test.for(['GIT_CONFIG_GLOBAL', 'GIT_CONFIG_SYSTEM'])(
   (variable, { expect }) => {
     /*
      * A developer's config names one (Git Credential Manager, on Windows), and
-     * an eval agent shelling out to `git push` against a real URL would
-     * otherwise authenticate as them and write to a live repository. The suites
-     * shadow `gh` for exactly this reason; git reaching the same service
-     * through a credential helper would walk around that.
+     * code under test shelling out to `git push` against a real URL would
+     * otherwise authenticate as them and write to a live repository. A harness
+     * shadows the network-reaching tools for exactly this reason; git reaching
+     * the same service through a credential helper would walk around that.
      *
      * The helper is planted rather than borrowed from the host: reading the
      * developer's own config would make this assert a property of the machine,

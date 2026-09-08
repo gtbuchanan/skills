@@ -12,9 +12,9 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
-import type { SeedCommit } from '@gtbuchanan/agent-skills-harness/seed-repo';
-import { captureGit, runGit, writeCommit } from '@gtbuchanan/agent-skills-harness/seed-repo';
+import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
+import type { SeedCommit } from '@gtbuchanan/git-fixtures/seed-repo';
+import { captureGit, runGit, writeCommit } from '@gtbuchanan/git-fixtures/seed-repo';
 
 const git = resolveRealGit();
 
@@ -43,11 +43,11 @@ const scratch = (): { outside: string; workspace: string } => {
 
 test('a tree key that escapes the workspace is refused', ({ expect }) => {
   /*
-   * The keys come from a suite's own plan rather than anything untrusted, so
-   * this is not a sandbox — it is a guard against an authoring slip. Without
+   * The keys come from the caller's own plan rather than anything untrusted,
+   * so this is not a sandbox — it is a guard against an authoring slip. Without
    * it the write lands outside the workspace and only the following `git add`
-   * objects, by which point the damage is done: an eval run would silently
-   * clobber a file beside the tree the runner and the agent both work in.
+   * objects, by which point the damage is done: a run would silently clobber a
+   * file beside the tree it was told to seed.
    */
   const { outside, workspace } = scratch();
   const runner = { cwd: workspace, git };

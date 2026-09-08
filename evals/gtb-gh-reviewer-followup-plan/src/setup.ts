@@ -22,8 +22,8 @@ import {
   suiteDir,
   suiteName,
 } from '@gtbuchanan/agent-skills-harness/paths';
-import { resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
 import { resetCallLog, truncateCallLog } from '@gtbuchanan/agent-skills-harness/setup';
+import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { readTemplate, resolveShas } from './scenario.ts';
 import { seedRepository } from './seed.ts';
 

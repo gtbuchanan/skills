@@ -1,11 +1,16 @@
 /*
- * Finding the real git while a suite's own double shadows it.
+ * Finding the real git while a double shadows it.
  *
- * The runner installs each suite's stubs into STUB_BINDIR at the FRONT of the
- * eval PATH, which is what makes interception deterministic for the agent. A
- * suite that seeds a genuine repository needs the opposite: the real binary,
- * reached past its own stub. Resolving `git` by name would find the double and
- * seed nothing at all, so the search is explicit about which directory to skip.
+ * A test that intercepts `git` installs its own at the FRONT of PATH, which is
+ * what makes the interception deterministic. Seeding a genuine repository wants
+ * the opposite: the real binary, reached past that double. Resolving `git` by
+ * name would find the double and seed nothing at all, so the search is explicit
+ * about which directory to skip.
+ *
+ * `STUB_BINDIR` is where {@link resolveRealGit} reads that directory from — a
+ * convention between whoever installs the double and whoever seeds past it,
+ * rather than anything git knows about. {@link findGitOutsideStub} takes the
+ * directory outright, for a caller that keeps its own.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -51,10 +56,10 @@ const gitNames = process.platform === 'win32'
  * fails for want of a key), `init.templateDir` installs hooks into a new
  * repository — so a seeded checkout is only reproducible without it.
  *
- * And `credential.helper`, which a system config routinely names, would let an
- * agent's `git push` authenticate as the developer against a live repository.
- * The suites shadow `gh` precisely so a skill cannot reach the real service;
- * git holding credentials of its own would walk around that.
+ * And `credential.helper`, which a system config routinely names, would let a
+ * `git push` under test authenticate as the developer against a live
+ * repository. A harness that shadows the network-reaching tools to keep a test
+ * offline gains nothing while git still holds credentials of its own.
  *
  * Repo-local config is untouched, so a seeded checkout keeps its origin,
  * branch and identity.
@@ -80,8 +85,8 @@ export const resolveRealGit = (): string => {
   });
   if (found === undefined)
     throw new Error(
-      'no real git on PATH outside STUB_BINDIR: the suite would seed its ' +
-      'repository through its own stub and leave an empty one behind.',
+      'no real git on PATH outside STUB_BINDIR: seeding would run through the ' +
+      'double and leave an empty repository behind.',
     );
 
   return found;

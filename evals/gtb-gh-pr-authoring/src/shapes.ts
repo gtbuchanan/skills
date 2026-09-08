@@ -16,7 +16,7 @@
 import type {
   SeedCommit,
   SeedIdentity,
-} from '@gtbuchanan/agent-skills-harness/seed-repo';
+} from '@gtbuchanan/git-fixtures/seed-repo';
 import type { CheckEntry } from '@gtbuchanan/github-cli-stub/checks';
 import type {
   CommentEntry,

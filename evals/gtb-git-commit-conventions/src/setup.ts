@@ -17,9 +17,9 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { artifactPath, skillsRoot, suiteName } from '@gtbuchanan/agent-skills-harness/paths';
-import { resolveRealGit } from '@gtbuchanan/agent-skills-harness/real-git';
-import { captureGit, seedHistory } from '@gtbuchanan/agent-skills-harness/seed-repo';
 import { requireHarness } from '@gtbuchanan/agent-skills-harness/setup';
+import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
+import { captureGit, seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
 import { author, branch, committer, scenarioPath, scenarios } from './scenarios.ts';
 
 /**

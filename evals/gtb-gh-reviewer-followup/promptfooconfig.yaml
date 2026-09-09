@@ -8,6 +8,11 @@
 # makes itself — pr review --approve and pr merge --squash — and
 # followup-check.ts asserts the gate.
 #
+# The fake git (bin/git-stub.ts) refuses every call rather than answering one.
+# There is no repository here to be right about, so a git call means the run
+# went somewhere this suite does not model, and the double says so rather than
+# inventing a clean tree.
+#
 # Runs only under the eval runner, where the fakes sit at the front of PATH and
 # the real CLIs are unreachable.
 

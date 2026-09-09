@@ -23,8 +23,8 @@ import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { captureGit, runGit, seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
 import { scenarioPath } from '@gtbuchanan/stub-runtime/scenario';
 import { test } from 'vitest';
+import { callExpectationAssertion } from '@gtbuchanan/agent-skills-harness/call-expectations';
 import { commitCountCheck } from '@gtbuchanan/agent-skills-harness/commit-count';
-import { expectationAssertion } from '@gtbuchanan/agent-skills-harness/expectations';
 import { suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
 
 const git = resolveRealGit();
@@ -68,7 +68,7 @@ test('a call the log contains satisfies the clause that names it', ({ expect }) 
     { argv: ['pr', 'create', '--draft', '--body-file', '-'], stdin: '### Description' },
   ]);
 
-  const assertion = expectationAssertion({ metaUrl: suite.metaUrl });
+  const assertion = callExpectationAssertion({ metaUrl: suite.metaUrl });
 
   const result = assertion(undefined, {
     vars: {
@@ -89,7 +89,7 @@ test('every failing rule is reported, not only the first', ({ expect }) => {
   const suite = fakeSuite();
   writeLog(suite.metaUrl, 'open-draft', [{ argv: ['pr', 'ready', '44'] }]);
 
-  const assertion = expectationAssertion({ metaUrl: suite.metaUrl });
+  const assertion = callExpectationAssertion({ metaUrl: suite.metaUrl });
 
   const result = assertion(undefined, {
     vars: {
@@ -114,7 +114,7 @@ test('a scenario reads its own log, not another scenario’s', ({ expect }) => {
   writeLog(suite.metaUrl, 'open-draft', [{ argv: ['pr', 'create', '--draft'] }]);
   writeLog(suite.metaUrl, 'promote-ready', [{ argv: ['pr', 'ready', '44'] }]);
 
-  const assertion = expectationAssertion({ metaUrl: suite.metaUrl });
+  const assertion = callExpectationAssertion({ metaUrl: suite.metaUrl });
 
   const result = assertion(undefined, {
     vars: { requireCalls: [['pr create']], scenario: 'promote-ready' },
@@ -196,8 +196,8 @@ test('commits are counted from the recorded baseline, not from the branch point'
   const suite = fakeSuite();
   writeLog(suite.metaUrl, scenario, [{ argv: ['pr', 'view', '23'] }]);
 
-  const assertion = expectationAssertion({
-    checks: [commitCountCheck({ baselinesPath: () => baselines })],
+  const assertion = callExpectationAssertion({
+    outcomeChecks: [commitCountCheck({ baselinesPath: () => baselines })],
     metaUrl: suite.metaUrl,
   });
 
@@ -223,8 +223,8 @@ test('a scenario with no recorded baseline says so rather than reporting none ad
   const suite = fakeSuite();
   writeLog(suite.metaUrl, 'never-seeded', [{ argv: ['pr', 'view', '23'] }]);
 
-  const assertion = expectationAssertion({
-    checks: [commitCountCheck({ baselinesPath: () => baselines })],
+  const assertion = callExpectationAssertion({
+    outcomeChecks: [commitCountCheck({ baselinesPath: () => baselines })],
     metaUrl: suite.metaUrl,
   });
 

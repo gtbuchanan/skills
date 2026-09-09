@@ -58,7 +58,7 @@ const StdinSchema = v.object({
  * Exported so a test can build the same fully-defaulted shape the assertion
  * runs on rather than hand-rolling one that drifts from it.
  */
-export const VarsSchema = v.object({
+export const CallVarsSchema = v.object({
   forbidCalls: v.optional(ClauseListSchema, []),
   forbidOrder: v.optional(v.array(OrderSchema), []),
   forbidStdin: v.optional(v.array(StdinSchema), []),
@@ -90,7 +90,7 @@ const describe = (clause: readonly string[]): string => clause.join(' + ');
 
 const checkPresence = (
   calls: readonly Call[],
-  vars: v.InferOutput<typeof VarsSchema>,
+  vars: v.InferOutput<typeof CallVarsSchema>,
 ): string[] => [
   ...vars.requireCalls
     .filter(clause => calls.every(call => !isMatch(call, clause)))
@@ -109,7 +109,7 @@ const checkPresence = (
  */
 const checkOneOf = (
   calls: readonly Call[],
-  vars: v.InferOutput<typeof VarsSchema>,
+  vars: v.InferOutput<typeof CallVarsSchema>,
 ): string[] => {
   if (vars.requireOneOf.length === 0) return [];
   const isHit = vars.requireOneOf.some(clause =>
@@ -130,7 +130,7 @@ const checkOneOf = (
  */
 export const checkForbiddenOrder = (
   calls: readonly Call[],
-  vars: v.InferOutput<typeof VarsSchema>,
+  vars: v.InferOutput<typeof CallVarsSchema>,
 ): string[] =>
   vars.forbidOrder.flatMap(({ after, before }) => {
     const beforeIndex = calls.findIndex(call => isMatch(call, before));
@@ -146,7 +146,7 @@ export const checkForbiddenOrder = (
  */
 export const checkOrder = (
   calls: readonly Call[],
-  vars: v.InferOutput<typeof VarsSchema>,
+  vars: v.InferOutput<typeof CallVarsSchema>,
 ): string[] =>
   vars.requireOrder.flatMap(({ after, before }) => {
     const beforeIndex = calls.findIndex(call => isMatch(call, before));
@@ -163,7 +163,7 @@ export const checkOrder = (
  */
 export const checkStdin = (
   calls: readonly Call[],
-  vars: v.InferOutput<typeof VarsSchema>,
+  vars: v.InferOutput<typeof CallVarsSchema>,
 ): string[] =>
   vars.requireStdin.flatMap(({ command, includes }) => {
     const hits = calls.filter(call => isMatch(call, command));
@@ -206,7 +206,7 @@ export const checkStdin = (
  */
 export const checkForbiddenStdin = (
   calls: readonly Call[],
-  vars: v.InferOutput<typeof VarsSchema>,
+  vars: v.InferOutput<typeof CallVarsSchema>,
 ): string[] =>
   vars.forbidStdin.flatMap(({ command, includes }) =>
     calls
@@ -227,16 +227,17 @@ export const checkForbiddenStdin = (
  * never heard of is the whole reason for the seam — `commit-count.ts` is one,
  * and it is the only thing in this package that needs a repository.
  */
-export type ExpectationCheck = (rawVars: unknown) => string[];
+export type OutcomeCheck = (rawVars: unknown) => string[];
 
 /**
  * What a suite supplies so the assertion can find its own artifacts.
  */
-export interface ExpectationOptions {
+export interface CallExpectationOptions {
   /**
-   * Expectations beyond the call log itself.
+   * Expectations about the world the run left behind, which this module has no
+   * way to read.
    */
-  readonly checks?: readonly ExpectationCheck[] | undefined;
+  readonly outcomeChecks?: readonly OutcomeCheck[] | undefined;
   /**
    * `import.meta.url` of the suite module calling this, which is what names
    * the suite and therefore its call logs.
@@ -252,11 +253,11 @@ export interface ExpectationOptions {
  * asking decides where the logs are — and deriving that from this module's own
  * location would name the harness rather than the suite.
  */
-export const expectationAssertion = (
-  options: ExpectationOptions,
+export const callExpectationAssertion = (
+  options: CallExpectationOptions,
 ): ((output: unknown, context: { vars?: unknown }) => AssertionResult) =>
   (_output, context) => {
-    const vars = v.parse(VarsSchema, context.vars ?? {});
+    const vars = v.parse(CallVarsSchema, context.vars ?? {});
     /* This scenario's own log, not a shared one: the doubles key a file per
        workspace, so a concurrent test's calls are never in here to be
        matched. */
@@ -275,6 +276,6 @@ export const expectationAssertion = (
       ...checkForbiddenOrder(calls, vars),
       ...checkStdin(calls, vars),
       ...checkForbiddenStdin(calls, vars),
-      ...(options.checks ?? []).flatMap(check => check(context.vars)),
+      ...(options.outcomeChecks ?? []).flatMap(check => check(context.vars)),
     ]);
   };

@@ -16,12 +16,12 @@
 import * as v from 'valibot';
 import { test } from 'vitest';
 import {
-  VarsSchema,
+  CallVarsSchema,
   checkForbiddenOrder,
   checkForbiddenStdin,
   checkOrder,
   checkStdin,
-} from '@gtbuchanan/agent-skills-harness/expectations';
+} from '@gtbuchanan/agent-skills-harness/call-expectations';
 
 interface Call {
   readonly command: string;
@@ -30,8 +30,8 @@ interface Call {
 
 const call = (command: string, stdin = ''): Call => ({ command, stdin });
 
-const varsOf = (declared: Record<string, unknown>): v.InferOutput<typeof VarsSchema> =>
-  v.parse(VarsSchema, { scenario: 'merge-stacked', ...declared });
+const varsOf = (declared: Record<string, unknown>): v.InferOutput<typeof CallVarsSchema> =>
+  v.parse(CallVarsSchema, { scenario: 'merge-stacked', ...declared });
 
 const mergeBody = [
   { command: ['pr', 'merge'], includes: ['Co-authored-by:', 'rate limiter'] },

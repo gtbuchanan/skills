@@ -16,7 +16,7 @@
  * Loaded by stubs under plain `node`, whose type stripping only erases
  * annotations, so everything here stays erasable syntax.
  */
-import { unmodelled } from './dispatch.ts';
+import { unmodelled } from '@gtbuchanan/stub-runtime/dispatch';
 import type { ReviewCommentEntry, ReviewEntry } from './records.ts';
 import type { Scenario } from './scenario-world.ts';
 import type { State } from './state.ts';

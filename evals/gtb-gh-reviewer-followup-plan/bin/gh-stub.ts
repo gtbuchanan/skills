@@ -26,7 +26,7 @@
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { dispatch } from '@gtbuchanan/github-cli-stub/dispatch';
+import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
 import { argv, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
 import {
   readReviews,
@@ -57,7 +57,7 @@ const lastOwnReview = (): string => {
   );
 };
 
-const outcome = dispatch({ argv, stdin: '' }, [
+const outcome = dispatch({ argv, cmd: 'gh', stdin: '' }, [
   {
     matches: () => joined.includes('api user'),
     name: 'api user',

@@ -1,5 +1,5 @@
 /*
- * Tests for the shared `gh` double's dispatch.
+ * Tests for the dispatch a double answers through.
  *
  * The rule this enforces is the one CONTRIBUTING calls the cardinal sin: a
  * double's fall-through is an answer. Empty output with exit 0 does not read as
@@ -16,10 +16,17 @@
  * setup's per-test assertion count sees it.
  */
 import { test } from 'vitest';
-import { dispatch, unmodelled } from '@gtbuchanan/github-cli-stub/dispatch';
+import { dispatch, unmodelled } from '@gtbuchanan/stub-runtime/dispatch';
 
-const call = (...argv: string[]): { argv: string[]; stdin: string } => ({
+/**
+ * A call to some double. `gh` stands in for a CLI in the cases where which one
+ * it is does not matter.
+ */
+const call = (
+  ...argv: string[]
+): { argv: string[]; cmd: string; stdin: string } => ({
   argv,
+  cmd: 'gh',
   stdin: '',
 });
 
@@ -43,6 +50,19 @@ test('the refusal names the call so the author can model it', ({ expect }) => {
   const outcome = dispatch(call('pr', 'diff', '--name-only'), []);
 
   expect(outcome.stderr).toContain('pr diff --name-only');
+});
+
+test('the refusal names the CLI the double stands in for', ({ expect }) => {
+  /* An author reading a refusal is looking at a PATH with several doubles on
+     it, so the message has to say which one declined — and quote the command
+     back the way they would retype it. */
+  const outcome = dispatch(
+    { argv: ['devops', 'invoke'], cmd: 'az', stdin: '' },
+    [],
+  );
+
+  expect(outcome.stderr).toContain('az-stub');
+  expect(outcome.stderr).toContain('"az devops invoke"');
 });
 
 test('a matching handler answers and succeeds', ({ expect }) => {

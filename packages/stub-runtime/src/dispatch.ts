@@ -1,5 +1,5 @@
 /*
- * Dispatch for a fake `gh`, where the default answer is a refusal.
+ * Dispatch for a fake CLI, where the default answer is a refusal.
  *
  * A double's fall-through is an answer. Exit 0 with empty output does not read
  * as "I don't know" — it reads as "there is nothing here", and an agent acts on
@@ -17,19 +17,33 @@
  * entry-point exemption from `unicorn/no-process-exit`, which the shared ESLint
  * config grants only under `bin/` and `scripts/`. The executable that calls
  * this does the writing and the exiting.
+ *
+ * Which CLI is being faked is the call's to say, so this knows nothing about
+ * any of them — the same reason `passthrough` takes the binary rather than
+ * resolving one. A double that hands the call to the real tool and a double
+ * that refuses it are the two halves of the same job, and they live together.
+ *
+ * Loaded by stubs under plain `node`, whose type stripping only erases
+ * annotations, so everything here stays erasable syntax.
  */
 
 /**
  * Exit status for a call the double cannot answer. Any non-zero status would
- * do; 1 is what gh uses for an ordinary failure.
+ * do; 1 is what these CLIs use for an ordinary failure.
  */
 const refusedExit = 1;
 
 /**
- * A `gh` invocation, as the double receives it.
+ * An invocation, as the double receives it.
+ *
+ * `cmd` is the CLI being stood in for — `gh`, `az` — and exists so a refusal
+ * can name it. A PATH under test carries several doubles, and a message that
+ * did not say which one declined would send the author looking through all of
+ * them.
  */
 export interface StubCall {
   readonly argv: readonly string[];
+  readonly cmd: string;
   readonly stdin: string;
 }
 
@@ -87,7 +101,7 @@ export const unmodelled = (what: string): UnmodelledCall =>
 const refusal = (call: StubCall, what: string): StubOutcome => ({
   code: refusedExit,
   stderr:
-    `gh-stub: ${what} for "gh ${call.argv.join(' ')}". ` +
+    `${call.cmd}-stub: ${what} for "${call.cmd} ${call.argv.join(' ')}". ` +
     'Model it rather than letting the call return empty success.\n',
   stdout: '',
 });

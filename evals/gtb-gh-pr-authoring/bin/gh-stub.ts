@@ -29,7 +29,6 @@ import path from 'node:path';
 import { branchAt } from '@gtbuchanan/git-fixtures/checkout';
 import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
 import { checkRecord } from '@gtbuchanan/github-cli-stub/checks';
-import { dispatch } from '@gtbuchanan/github-cli-stub/dispatch';
 import { prRecords, toWireComment } from '@gtbuchanan/github-cli-stub/pr-records';
 import {
   currentHead,
@@ -40,6 +39,7 @@ import {
 import { checksFor } from '@gtbuchanan/github-cli-stub/scenario-world';
 import { pick, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { readState, writeState } from '@gtbuchanan/github-cli-stub/state';
+import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
 import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
 import { appendJsonl, argv, joined } from '@gtbuchanan/stub-runtime/stub';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
@@ -147,7 +147,7 @@ const checksResponse = (): { code?: number; stderr?: string; stdout: string } =>
   };
 };
 
-const outcome = dispatch({ argv, stdin }, [
+const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
   {
     matches: () => joined.includes('api user'),
     name: 'api user',

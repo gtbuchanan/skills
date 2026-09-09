@@ -650,6 +650,9 @@ importers:
       '@gtbuchanan/git-fixtures':
         specifier: workspace:*
         version: link:../git-fixtures
+      '@gtbuchanan/stub-runtime':
+        specifier: workspace:*
+        version: link:../stub-runtime
       valibot:
         specifier: 'catalog:'
         version: 1.4.2(typescript@6.0.3)

@@ -1,9 +1,5 @@
 # Cut lines, worked
 
-Read this when a change resists the obvious cut, or when two cuts both look
-viable and the choice is not clear. The catalogue itself is in `SKILL.md`; this
-is the part that does not need to be in context every time.
-
 ## Contents
 
 - [Choosing between two viable cuts](#choosing-between-two-viable-cuts)
@@ -111,9 +107,9 @@ usually planning avoidance rather than genuine uncertainty.
 
 ## Cuts that look right and are not
 
-**By layer.** Covered in `SKILL.md`, and it is the most common wrong cut,
-because each piece genuinely does look self-contained while you write it. The
-tell is that no unit but the last can be demonstrated.
+**By layer.** The most common wrong cut, because each piece genuinely does look
+self-contained while you write it. The tell is that no unit but the last can be
+demonstrated.
 
 **By file.** Files are an artifact of how the code is organized, not of what the
 change means. One idea touching six files is one unit; two ideas in one file are

@@ -1,4 +1,21 @@
 ---
+# One run per pull request at a time, the older one cancelled. Without this,
+# widening the trigger below multiplies what a stack costs rather than only
+# what it covers: pushing to a member starts a full matrix beside the one
+# already running, and the superseded run finishes anyway against a commit
+# nobody is waiting on.
+#
+# Keyed on the pull request number rather than the branch, because a stacked
+# member keeps its number when GitHub retargets it onto main — where its base,
+# and so `github.ref`, changes underneath it.
+#
+# Cancelling is safe for every job here: each builds, checks or uploads for a
+# single commit, and a cancelled upload leaves no partial report because the
+# coverage merge feeding it never completes either.
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-pr-${{ github.event.pull_request.number }}
+
 jobs:
   ci:
     name: CI

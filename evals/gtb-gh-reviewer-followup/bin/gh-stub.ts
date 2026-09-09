@@ -15,7 +15,7 @@
  * of the eval PATH, that execs this file. The real gh CLI is never reachable
  * from a suite.
  */
-import { dispatch } from '@gtbuchanan/github-cli-stub/dispatch';
+import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
 import { argv, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
 
 /**
@@ -25,7 +25,7 @@ const pullNumber = 42;
 
 logCall('gh');
 
-const outcome = dispatch({ argv, stdin: '' }, [
+const outcome = dispatch({ argv, cmd: 'gh', stdin: '' }, [
   {
     matches: () => /\bpr\s+merge\b/v.test(joined),
     name: 'pr merge',

@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     "./calls": "./src/calls.ts",
+    "./dispatch": "./src/dispatch.ts",
     "./passthrough": "./src/passthrough.ts",
     "./scenario": "./src/scenario.ts",
     "./stub": "./src/stub.ts"

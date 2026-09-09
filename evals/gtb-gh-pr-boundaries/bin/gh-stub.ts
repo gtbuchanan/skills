@@ -18,10 +18,10 @@
  */
 import path from 'node:path';
 import { branchAt } from '@gtbuchanan/git-fixtures/checkout';
-import { dispatch } from '@gtbuchanan/github-cli-stub/dispatch';
 import { currentHead, nextPrNumber } from '@gtbuchanan/github-cli-stub/pulls';
 import { pick, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { readState, writeState } from '@gtbuchanan/github-cli-stub/state';
+import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
 import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
 import { appendJsonl, argv, joined } from '@gtbuchanan/stub-runtime/stub';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
@@ -74,7 +74,7 @@ const repoRecord: Record<string, unknown> = {
   squashMergeAllowed: true,
 };
 
-const outcome = dispatch({ argv, stdin: '' }, [
+const outcome = dispatch({ argv, cmd: 'gh', stdin: '' }, [
   {
     matches: () => joined.includes('api user'),
     name: 'api user',

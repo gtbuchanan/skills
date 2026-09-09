@@ -60,6 +60,36 @@ test('a branch with no commits yet answers empty', ({ expect }) => {
   expect(branchAt(workspace)).toBe('');
 });
 
+test('a detached checkout answers empty rather than naming HEAD', {
+  tags: ['slow'],
+}, ({ expect }) => {
+  /*
+   * `rev-parse --abbrev-ref` answers `HEAD` when nothing is checked out by
+   * name. It looks like a branch and is not one, so a caller that trusted it
+   * would put it in a pull request URL — which is why it collapses to the same
+   * empty answer as no repository at all.
+   */
+  const workspace = scratch();
+  seedHistory({
+    author: identity,
+    branch: 'fix-retry-backoff',
+    commits: [
+      {
+        date: '2026-05-01T09:00:00-05:00',
+        key: 'base',
+        subject: 'Add the scheduler retry helper',
+        tree: { 'src/scheduler.ts': 'export const backoff = (): number => 1000;\n' },
+      },
+    ],
+    git,
+    localIdentity: identity,
+    workspace,
+  });
+  runGit({ cwd: workspace, git }, ['checkout', '-q', '--detach']);
+
+  expect(branchAt(workspace)).toBe('');
+});
+
 test('a directory that is not a repository answers empty rather than throwing', ({ expect }) => {
   /*
    * `git --version` from outside every checkout is a legitimate call, and a

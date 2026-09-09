@@ -17,18 +17,26 @@ import { resolveRealGit } from './real-git.ts';
 import { probeGit } from './seed-repo.ts';
 
 /**
- * The checkout's branch, or an empty string where there is no checkout to ask.
+ * The checkout's branch, or an empty string where there is no branch to name —
+ * no repository, or a detached checkout.
  *
  * Empty rather than thrown because the caller is usually a double deciding
  * which pull request a bare command refers to: it has a fallback of its own,
  * and a directory that is not a repository is one of the cases it handles
- * rather than an error it can act on.
+ * rather than an error it can act on. Both answers collapse to the same empty
+ * string for the same reason — neither names a branch, so neither is something
+ * a caller should put in front of the code under test.
  */
 export const branchAt = (dir: string): string => {
   const result = probeGit(
     { cwd: dir, git: resolveRealGit() },
     ['rev-parse', '--abbrev-ref', 'HEAD'],
   );
+  if (result.status !== 0) return '';
 
-  return result.status === 0 ? result.stdout.trim() : '';
+  /* A detached checkout answers `HEAD`, which is not a branch and would go
+     into a pull request URL as though it were one. Git refuses to name a
+     branch `HEAD`, so treating it as the sentinel it is costs nothing. */
+  const branch = result.stdout.trim();
+  return branch === 'HEAD' ? '' : branch;
 };

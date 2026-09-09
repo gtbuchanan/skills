@@ -198,9 +198,6 @@ importers:
       '@gtbuchanan/stub-runtime':
         specifier: workspace:*
         version: link:../../packages/stub-runtime
-      cross-spawn:
-        specifier: 'catalog:'
-        version: 7.0.6
       valibot:
         specifier: 'catalog:'
         version: 1.4.2(typescript@6.0.3)
@@ -217,9 +214,6 @@ importers:
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
         version: 0.1.3(vitest@4.1.10)
-      '@types/cross-spawn':
-        specifier: 'catalog:'
-        version: 6.0.6
       '@types/node':
         specifier: 'catalog:'
         version: 26.2.0
@@ -250,9 +244,6 @@ importers:
       '@gtbuchanan/stub-runtime':
         specifier: workspace:*
         version: link:../../packages/stub-runtime
-      cross-spawn:
-        specifier: 'catalog:'
-        version: 7.0.6
       valibot:
         specifier: 'catalog:'
         version: 1.4.2(typescript@6.0.3)
@@ -266,9 +257,6 @@ importers:
       '@gtbuchanan/tsconfig':
         specifier: 'catalog:'
         version: 0.2.0(typescript@6.0.3)
-      '@types/cross-spawn':
-        specifier: 'catalog:'
-        version: 6.0.6
       '@types/node':
         specifier: 'catalog:'
         version: 26.2.0
@@ -293,9 +281,6 @@ importers:
       '@gtbuchanan/stub-runtime':
         specifier: workspace:*
         version: link:../../packages/stub-runtime
-      cross-spawn:
-        specifier: 'catalog:'
-        version: 7.0.6
       valibot:
         specifier: 'catalog:'
         version: 1.4.2(typescript@6.0.3)
@@ -312,9 +297,6 @@ importers:
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
         version: 0.1.3(vitest@4.1.10)
-      '@types/cross-spawn':
-        specifier: 'catalog:'
-        version: 6.0.6
       '@types/node':
         specifier: 'catalog:'
         version: 26.2.0
@@ -428,9 +410,6 @@ importers:
       '@gtbuchanan/stub-runtime':
         specifier: workspace:*
         version: link:../../packages/stub-runtime
-      cross-spawn:
-        specifier: 'catalog:'
-        version: 7.0.6
       valibot:
         specifier: 'catalog:'
         version: 1.4.2(typescript@6.0.3)
@@ -447,9 +426,6 @@ importers:
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
         version: 0.1.3(vitest@4.1.10)
-      '@types/cross-spawn':
-        specifier: 'catalog:'
-        version: 6.0.6
       '@types/node':
         specifier: 'catalog:'
         version: 26.2.0
@@ -742,6 +718,9 @@ importers:
 
   packages/stub-runtime:
     dependencies:
+      cross-spawn:
+        specifier: 'catalog:'
+        version: 7.0.6
       valibot:
         specifier: 'catalog:'
         version: 1.4.2(typescript@6.0.3)
@@ -758,6 +737,9 @@ importers:
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
         version: 0.1.3(vitest@4.1.10)
+      '@types/cross-spawn':
+        specifier: 'catalog:'
+        version: 6.0.6
       '@types/node':
         specifier: 'catalog:'
         version: 26.2.0

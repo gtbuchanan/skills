@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     "./calls": "./src/calls.ts",
+    "./passthrough": "./src/passthrough.ts",
     "./scenario": "./src/scenario.ts",
     "./stub": "./src/stub.ts"
   },
@@ -16,6 +17,7 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
+    "cross-spawn": "catalog:",
     "valibot": "catalog:"
   },
   "devDependencies": {
@@ -23,6 +25,7 @@
     "@gtbuchanan/eslint-config": "catalog:",
     "@gtbuchanan/tsconfig": "catalog:",
     "@gtbuchanan/vitest-config": "catalog:",
+    "@types/cross-spawn": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",

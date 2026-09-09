@@ -14,14 +14,12 @@
     "@gtbuchanan/git-fixtures": "workspace:*",
     "@gtbuchanan/github-cli-stub": "workspace:*",
     "@gtbuchanan/stub-runtime": "workspace:*",
-    "cross-spawn": "catalog:",
     "valibot": "catalog:"
   },
   "devDependencies": {
     "@gtbuchanan/cli": "catalog:",
     "@gtbuchanan/eslint-config": "catalog:",
     "@gtbuchanan/tsconfig": "catalog:",
-    "@types/cross-spawn": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "typescript": "catalog:"

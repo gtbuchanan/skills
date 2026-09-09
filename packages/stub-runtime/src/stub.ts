@@ -20,6 +20,8 @@
  */
 import { appendFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
+import { locateScenario } from './scenario.ts';
+import type { Keyed } from './scenario.ts';
 
 /**
  * `process.argv` leads with the node binary and the stub itself.
@@ -71,6 +73,42 @@ export const logCall = (cmd: string, stdin?: string): void => {
 export const logCallToDir = (cmd: string, fileName: string): void => {
   const logDir = process.env['STUB_LOG_DIR'];
   if (logDir) appendJsonl(path.join(logDir, fileName), { argv, cmd });
+};
+
+/**
+ * The key of the world `start` stands in, or `undefined` when nothing can
+ * attribute it.
+ */
+const scenarioKey = (
+  scenarios: readonly Keyed[],
+  start: string,
+): string | undefined => {
+  try {
+    return locateScenario(scenarios, start).scenario.key;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * Records this invocation into the log named for the world it was made in —
+ * one file per scenario, which is what lets a suite's tests run concurrently
+ * without writing over each other's record.
+ *
+ * A call nothing can attribute is recorded nowhere rather than refused, on the
+ * same terms as {@link appendJsonl}: a double must never fail the call it is
+ * standing in for because it could not write its own log. `git --version` from
+ * outside every seeded workspace is a legitimate call, and a passthrough
+ * answers it. A double that has to know which world it is in to answer at all
+ * should locate the scenario itself and let the failure stand.
+ */
+export const logCallToScenario = (
+  cmd: string,
+  scenarios: readonly Keyed[],
+  start: string = process.cwd(),
+): void => {
+  const key = scenarioKey(scenarios, start);
+  if (key !== undefined) logCallToDir(cmd, `${key}.jsonl`);
 };
 
 /**

@@ -42,18 +42,6 @@ export const poolBefore = [
   '',
 ].join('\n');
 
-export const limiterBefore = [
-  'export const allow = (count: number, cap: number): boolean => {',
-  '  return count < cap;',
-  '};',
-  '',
-].join('\n');
-
-export const parserBefore = [
-  '{ "name": "widgets", "dependencies": { "parser": "1.2.0" } }',
-  '',
-].join('\n');
-
 export const localeBefore = [
   'export const resolveLocale = (requested: string | undefined): string =>',
   '  requested ?? "en-US";',
@@ -75,12 +63,6 @@ export const headerAfter = [
   '',
 ].join('\n');
 
-export const tokenizerBefore = [
-  'export const tokenize = (source: string): string[] =>',
-  '  source.split(/\s+/v).filter(Boolean);',
-  '',
-].join('\n');
-
 export const schedulerAfter = [
   'export const retryDelay = (attempt: number): number => {',
   '  return 250 * 2 ** attempt;',
@@ -93,14 +75,5 @@ export const cacheBefore = 'export const key = (url: string): string => url;\n';
 export const cacheAfter = [
   'export const key = (method: string, url: string): string =>',
   '  `${method} ${url}`;',
-  '',
-].join('\n');
-
-export const limiterAfter = [
-  'export const allow = (count: number, cap: number): boolean => {',
-  '  return count < cap;',
-  '};',
-  '',
-  'export const rejected = (window: number): number => window;',
   '',
 ].join('\n');

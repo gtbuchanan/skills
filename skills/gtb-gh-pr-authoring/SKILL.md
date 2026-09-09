@@ -3,20 +3,21 @@ name: gtb-gh-pr-authoring
 description: >-
   Author-side conventions for GitHub pull requests — opening one as a draft,
   using the repository's template, what belongs in the title and description,
-  watching checks after every push, acting on review feedback once it is
-  brought to you, and squash-merging with atomic branch cleanup. Use whenever
-  work is headed for a GitHub PR or one is already open: creating a PR, pushing
-  to a branch that has one, marking it ready for review, reading CI results,
-  answering or acting on review comments, or merging and deleting the branch.
+  watching checks after every push, and acting on review feedback once it is
+  brought to you. Use whenever work is headed for a GitHub PR or one is already
+  open: creating a PR, pushing to a branch that has one, marking it ready for
+  review, reading CI results, or answering and acting on review comments.
+  Landing one is gtb-gh-pr-merging.
 ---
 
 # Authoring a GitHub pull request
 
-You are acting **as the author**, from the first push through the merge.
+You are acting **as the author**, from the first push to the point where the
+request is somebody's to land.
 
-A PR produces three texts: the title, the description, and the squash message.
-Hand each to the command as a literal multi-line string — never assembled
-inline, never staged in a file.
+A PR produces two texts here: the title and the description. Hand each to the
+command as a literal multi-line string — never assembled inline, never staged
+in a file.
 
 ```sh
 # POSIX shells — quoted heredoc delimiter, onto standard input
@@ -35,10 +36,9 @@ The backoff reset on every poll, so a wedged job retried forever.
 ## Commit conventions in a GitHub pull request
 
 Most of what this skill produces ends up in `git log`: the title becomes the
-squash subject, the squash body becomes that commit's body, and the branch
-carries its own commits, review fixes included. Load
-`gtb-git-commit-conventions` before writing any of them — it governs all of it,
-and none of its rules are repeated here.
+squash subject, and the branch carries its own commits, review fixes included.
+Load `gtb-git-commit-conventions` before writing any of them — it governs all
+of it, and none of its rules are repeated here.
 
 The description is the exception. It stays in GitHub's UI, so those rules
 govern what it says but not how it is formatted.
@@ -64,7 +64,8 @@ A PR moves through six stages, and the last three transitions are the human's:
    when they are brought to you.
 1. **Ready** — the human promotes, which invites human reviewers and starts
    anything that was skipping the draft.
-1. **Human peer review** — and then the merge.
+1. **Human peer review** — and then the merge, which `gtb-gh-pr-merging`
+   governs and whoever holds the merge button runs.
 
 ## Pushing to a GitHub branch
 
@@ -197,11 +198,29 @@ part of a description that cannot be checked against the diff.
 
 A unit branched from another unit's branch rather than from the trunk arrives
 here as a stack. That topology is settled before the work is written, by
-`gtb-gh-pr-boundaries` — including what a stack costs, which is that skill's argument
-for not having one. What is left here is driving the stack you have.
+`gtb-gh-pr-boundaries` — including what a stack costs, which is that skill's
+argument for not having one. What is left here is opening the pull requests for
+the stack you have; landing one is `gtb-gh-pr-merging`, and differs from an
+ordinary merge throughout.
 
-Read `references/stacked-pull-requests.md` before creating or merging one:
-both differ from what follows here.
+**`gh stack link` is the command worth driving.** It takes branch names, PR
+numbers or URLs, bottom to top, and needs no local tracking state — so it works
+from a worktree, where `gh stack init` does not. Branches without a PR get one,
+opened as a draft.
+
+```sh
+gh extension install github/gh-stack   # once, if `gh stack` is not installed
+gh stack link auth-layer api-routes ui-components
+```
+
+**`gh stack` is an extension rather than part of `gh`.** Absent it, the command
+fails as an unknown one — which reads like a typo rather than a missing
+install, so name the install instead of retrying the command.
+
+Two of its behaviours belong to the human rather than to you: it pushes branch
+arguments to the remote before looking them up, and `--open` marks PRs ready
+for review — new and existing alike, so it can promote a draft that was
+deliberately left as one.
 
 ## Watching checks after a push to an open GitHub pull request
 
@@ -325,112 +344,7 @@ Applied in 2f8665e.
 
 ## Merging a GitHub pull request
 
-**Never rebase-merge.** `--rebase` replays each commit onto the base as a new
-object, and the original signature does not come with it. For an author running
-vigilant mode — GitHub's "flag unsigned commits as unverified" — every replayed
-commit then lands publicly marked **Unverified** against their name, and
-nothing puts the signature back. It also lands a run of commits carrying no PR
-reference. Squash unless told otherwise.
-
-**Do not reach for `--admin` unless asked.** It merges past requirements the
-repository put there deliberately. Say the PR is blocked and let the human
-decide.
-
-**Check when the checks last ran.** A run says the branch was compatible with
-the base at that moment; nothing re-runs it when something else lands on the
-base. Two PRs green on the same commit can still break it once both land. If
-the last run predates a merge touching the same files, say so rather than
-merging on it.
-
-**Write your own squash message.** What GitHub generates instead depends on a
-repository setting and on how many commits the branch has, and one of those
-defaults is every commit on the branch, fixups included, in a body nobody will
-read and history keeps. Do not leave it to chance.
-Summarize the change as a single commit, then add the PR
-reference suffix — `--subject` replaces the subject GitHub would have
-generated, and nothing re-adds the number.
-
-```sh
-gh pr merge --squash --delete-branch \
-  --subject 'Fix scheduler retry backoff (#1234)' \
-  --body-file -
-```
-
-**Carry the branch's trailers into the squash body.** A squash keeps only the
-message you supply, so trailers on the individual commits are dropped —
-`Co-authored-by:` most damagingly, since nothing restores credit afterwards.
-Collect them across the range, drop duplicates, and re-emit them as the body's
-final paragraph:
-
-```sh
-git log <base>..<head> --format='%(trailers:only,unfold)'
-```
-
-**Credit the branch's other authors, whom no trailer names.** A teammate's
-commit carries them on the commit object rather than in its message, so a body
-assembled from the trailers alone drops them. GitHub puts them in the message
-it would have generated; supplying your own turns that off. Read the range's
-authors beside its trailers, and give everyone but the author the squash lands
-under a `Co-authored-by:` line:
-
-```sh
-git log <base>..<head> --format='%aN <%aE>'
-```
-
-Dedupe across both sources, not within each: a teammate with several commits,
-or one a trailer already names, otherwise lands twice.
-
-**Ask before crediting what you would not call authorship.** A typo fix, a
-formatting pass and a bot's lockfile bump all leave an author behind, and
-`Co-authored-by:` is a public claim that follows them into their contribution
-history — so a marginal one is the human's call. Where somebody wrote part of
-the change there is nothing to decide: add them and say so.
-
-**The branch has to go, and nothing may still be pointing at it when it does.**
-Those are the two things that matter; the order that gets you there is a
-detail. Deleting a branch some other PR is still based on closes that PR rather
-than moving it, and leaving the branch behind means it outlives the PR it
-belonged to.
-
-**Check for dependents before you merge**, because the answer decides which
-order to use:
-
-```sh
-gh pr list --base <branch> --state open --json number,title,headRefName
-```
-
-**With none, delete in the same command.** `--delete-branch` on the merge is
-one step that cannot be forgotten, and a follow-up step is exactly what gets
-skipped when the merge output is misread.
-
-**With any, move them before the branch goes.** Deleting a branch another PR is
-based on closes that PR rather than retargeting it, and merging on its own
-moves nothing — only the repository's own post-merge cleanup does, where it is
-set to delete the branch for you. So which order is safe depends on who deletes
-the branch, and the dependent still needs replaying afterwards. Read
-`references/stacked-pull-requests.md` before you merge.
-
-**If `gh pr merge` fails with "must be merged using the asynchronous merge REST
-API", the PR is in a stack.** Little of what follows applies unchanged — read
-`references/stacked-pull-requests.md` before going further.
-
-**Never enable auto-merge unless asked.** `--auto` is a bet that no more
-feedback is coming, and that is the human's bet to place. It also stretches the
-staleness window to an unknown length, since the merge lands at some later
-moment with nobody watching. When it is asked for, read
-`references/auto-merge.md` — the message it will land, and whether the branch
-survives, are both settled at enable time and cannot be fixed afterwards.
-
-**One expected failure is not a failure.** If `gh pr merge --delete-branch`
-succeeds but prints `fatal: 'main' is already used by worktree at ...`, the PR
-merged and the remote branch was deleted; only the local deletion failed,
-because the base branch is checked out in another worktree. Do not re-run the
-merge.
-
-**Fast-forwarding marks the request merged only if its head commit reaches the
-base** — GitHub infers that once and never revisits it, and a branch rewritten
-since its last push no longer carries it. Confirm before merging:
-
-```sh
-git merge-base --is-ancestor "$(gh pr view <number> --json headRefOid --jq .headRefOid)" HEAD
-```
+**Not here, and not necessarily yours.** A reviewer lands what they approved as
+often as the author does, so the merge method, the squash message, the branch
+deletion and auto-merge are `gtb-gh-pr-merging` rather than an author-side
+concern. Load it at the point a request is actually being landed.

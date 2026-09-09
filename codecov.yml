@@ -22,6 +22,11 @@ component_management:
       paths:
         - evals/gtb-gh-reviewer-followup-apply/bin/**
         - evals/gtb-gh-reviewer-followup-apply/src/**
+    - component_id: eval-gtb-gh-pr-merging
+      name: eval-gtb-gh-pr-merging
+      paths:
+        - evals/gtb-gh-pr-merging/bin/**
+        - evals/gtb-gh-pr-merging/src/**
     - component_id: eval-gtb-gh-pr-authoring
       name: eval-gtb-gh-pr-authoring
       paths:
@@ -69,6 +74,10 @@ flags:
     carryforward: true
     paths:
       - evals/gtb-gh-pr-authoring/
+  eval-gtb-gh-pr-merging:
+    carryforward: true
+    paths:
+      - evals/gtb-gh-pr-merging/
   eval-gtb-gh-reviewer-followup-apply:
     carryforward: true
     paths:

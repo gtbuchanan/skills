@@ -7,14 +7,15 @@ description.
 
 ## Skills
 
-| Skill                                                                                    | Purpose                                                                                                                                                                                                                                                |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [gtb-change-decomposition](skills/gtb-change-decomposition/SKILL.md)                     | Plan a change into small, independently shippable units before writing code — where to cut, how to order the pieces so each stands alone, and when a change is better left whole.                                                                      |
-| [gtb-gh-pr-authoring](skills/gtb-gh-pr-authoring/SKILL.md)                               | Author-side GitHub pull request conventions — opening one as a draft, what belongs in the title and description, watching checks after every push, acting on review feedback once it is brought to you, and squash-merging with atomic branch cleanup. |
-| [gtb-gh-pr-boundaries](skills/gtb-gh-pr-boundaries/SKILL.md)                             | How planned units become GitHub pull requests — how many there are, where each branch starts, and when each one opens. Loaded before the first edit, because a branch already carrying the answer cannot be re-cut without redoing the work.           |
-| [gtb-gh-reviewer-followup](skills/gtb-gh-reviewer-followup/SKILL.md)                     | Follow up on your GitHub PR review after the author pushes changes — re-review only what changed since your last pass, then resolve the threads that were fixed and reply to the ones that weren't (propose-then-confirm).                             |
-| [gtb-git-commit-conventions](skills/gtb-git-commit-conventions/SKILL.md)                 | Git commit conventions — when to commit and how to write the message, including trailers, reverts, and untangling work already piled up in the working tree.                                                                                           |
-| [gtb-resolve-azp-deployment-backlog](skills/gtb-resolve-azp-deployment-backlog/SKILL.md) | Clear a backlog of pending Azure Pipelines manual-approval deployments — reject every superseded approval and optionally approve only the newest.                                                                                                      |
+| Skill                                                                                    | Purpose                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [gtb-change-decomposition](skills/gtb-change-decomposition/SKILL.md)                     | Plan a change into small, independently shippable units before writing code — where to cut, how to order the pieces so each stands alone, and when a change is better left whole.                                                            |
+| [gtb-gh-pr-authoring](skills/gtb-gh-pr-authoring/SKILL.md)                               | Author-side GitHub pull request conventions — opening one as a draft, what belongs in the title and description, watching checks after every push, and acting on review feedback once it is brought to you.                                  |
+| [gtb-gh-pr-boundaries](skills/gtb-gh-pr-boundaries/SKILL.md)                             | How planned units become GitHub pull requests — how many there are, where each branch starts, and when each one opens. Loaded before the first edit, because a branch already carrying the answer cannot be re-cut without redoing the work. |
+| [gtb-gh-pr-merging](skills/gtb-gh-pr-merging/SKILL.md)                                   | Landing a GitHub pull request, whether you wrote it or reviewed it — the merge method, the squash message and the credit it has to carry, deleting the head branch without closing what is stacked on it, and auto-merge.                    |
+| [gtb-gh-reviewer-followup](skills/gtb-gh-reviewer-followup/SKILL.md)                     | Follow up on your GitHub PR review after the author pushes changes — re-review only what changed since your last pass, then resolve the threads that were fixed and reply to the ones that weren't (propose-then-confirm).                   |
+| [gtb-git-commit-conventions](skills/gtb-git-commit-conventions/SKILL.md)                 | Git commit conventions — when to commit and how to write the message, including trailers, reverts, and untangling work already piled up in the working tree.                                                                                 |
+| [gtb-resolve-azp-deployment-backlog](skills/gtb-resolve-azp-deployment-backlog/SKILL.md) | Clear a backlog of pending Azure Pipelines manual-approval deployments — reject every superseded approval and optionally approve only the newest.                                                                                            |
 
 `gtb-gh-reviewer-followup` composes three internal building-block skills —
 [gtb-gh-reviewer-followup-plan](skills/gtb-gh-reviewer-followup-plan/SKILL.md),
@@ -69,10 +70,10 @@ arrives after the decisions it governs.
 Which is why it is a separate skill from
 [gtb-gh-pr-authoring](skills/gtb-gh-pr-authoring/SKILL.md) rather than a section
 inside it. The split is by deadline, not by subject: boundaries are always-loaded,
-mechanics are triggered. Loading four hundred lines of template, check-watch and
-merge guidance before every edit would charge each task for machinery it does
-not need — the boundaries skill is a few dozen lines, and it is the half that was
-arriving late.
+mechanics are triggered. Loading the whole of the template, check-watch and
+review-feedback guidance before every edit would charge each task for machinery
+it does not need — the boundaries skill is a few dozen lines, and it is the half
+that was arriving late.
 
 ## Contributing
 

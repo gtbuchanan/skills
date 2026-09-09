@@ -1,25 +1,9 @@
 # Stacked GitHub pull requests
 
-Everything that changes when a pull request has another one sitting on top of
-it — whether a stacking tool put it there or the branches were pointed at each
-other by hand. The ordinary PR rules still hold; these replace the ones they
-contradict.
-
-## Creating a stack with gh stack link
-
-**`gh stack link` is the command worth driving.** It takes branch names, PR
-numbers or URLs, bottom to top, and needs no local tracking state — so it works
-from a worktree, where `gh stack init` does not. Branches without a PR get one,
-opened as a draft.
-
-```sh
-gh stack link auth-layer api-routes ui-components
-```
-
-Two of its behaviours belong to the human rather than to you: it pushes branch
-arguments to the remote before looking them up, and `--open` marks PRs ready
-for review — new and existing alike, so it can promote a draft that was
-deliberately left as one.
+Everything that changes at merge time when a pull request has another one
+sitting on top of it — whether a stacking tool put it there or the branches
+were pointed at each other by hand. The ordinary merge rules still hold; these
+replace the ones they contradict. Creating a stack is `gtb-gh-pr-authoring`.
 
 ## Merging a stacked pull request
 

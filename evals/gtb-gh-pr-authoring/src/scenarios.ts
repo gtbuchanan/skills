@@ -23,16 +23,12 @@ import {
   cacheBefore,
   headerAfter,
   headerBefore,
-  limiterAfter,
-  limiterBefore,
   localeBefore,
-  parserBefore,
   poolBefore,
   schedulerAfter,
   schedulerBefore,
   template,
   tokenBefore,
-  tokenizerBefore,
 } from './trees.ts';
 
 /**
@@ -204,127 +200,6 @@ export const scenarios: readonly Scenario[] = [
         author: { login: 'qa-bot' },
         body: 'Two blocking issues, both inline.',
         state: 'COMMENTED',
-      },
-    ],
-  },
-  {
-    branch: 'add-rate-limiter',
-    comments: [],
-    commits: [
-      {
-        date: '2026-05-05T09:00:00-05:00',
-        key: 'base',
-        subject: 'Add the rate limiter',
-        tree: { 'src/limiter.ts': limiterBefore },
-      },
-    ],
-    deleteBranchOnMerge: false,
-    dependents: [
-      {
-        headRefName: 'add-limiter-metrics',
-        number: 9,
-        title: 'Report rate limiter rejections to the metrics sink',
-      },
-    ],
-    extra: {
-      /* A teammate's commit, carrying no trailer that names them. The credit
-       * is on the commit object alone, so a squash message assembled from the
-       * trailers keeps Dana and drops Sam — which is the whole difference
-       * between reading the range's trailers and reading its authors. */
-      author: { email: 'sam@example.com', name: 'Sam Okafor' },
-      push: true,
-      subject: 'Count a rejection against the window it was rejected in',
-      trailers: ['Co-authored-by: Dana Reyes <dana@example.com>'],
-      tree: { 'src/limiter.ts': limiterAfter },
-    },
-    key: 'merge-stacked',
-    pr: {
-      baseRefName: baseBranch,
-      body: 'Adds the rate limiter and counts rejections per window.',
-      headRefName: 'add-rate-limiter',
-      isDraft: false,
-      number: 7,
-      title: 'Add the rate limiter',
-    },
-    reviewComments: [],
-    reviews: [
-      {
-        author: { login: 'dana' },
-        body: 'Looks right to me.',
-        state: 'APPROVED',
-      },
-    ],
-  },
-  {
-    branch: 'split-the-parser',
-    comments: [],
-    commits: [
-      {
-        date: '2026-05-09T09:00:00-05:00',
-        key: 'base',
-        subject: 'Split the parser into a tokenizer and a reader',
-        tree: { 'src/tokenize.ts': tokenizerBefore },
-      },
-    ],
-    deleteBranchOnMerge: true,
-    dependents: [],
-    isStackMember: true,
-    key: 'stack-member',
-    pr: {
-      baseRefName: baseBranch,
-      body: 'First of the parser split. Tokenizer only.',
-      headRefName: 'split-the-parser',
-      isDraft: false,
-      number: 14,
-      title: 'Split the parser into a tokenizer and a reader',
-    },
-    reviewComments: [],
-    reviews: [
-      {
-        author: { login: 'dana' },
-        body: 'Reads well.',
-        state: 'APPROVED',
-      },
-    ],
-  },
-  {
-    branch: 'bump-parser',
-    checksPending: true,
-    comments: [],
-    commits: [
-      {
-        date: '2026-05-06T09:00:00-05:00',
-        key: 'base',
-        subject: 'Pin the parser dependency',
-        tree: { 'package.json': parserBefore },
-      },
-      {
-        date: '2026-05-07T09:00:00-05:00',
-        key: 'bump',
-        subject: 'Update the parser to 1.3.0',
-        tree: {
-          'package.json':
-            '{ "name": "widgets", "dependencies": { "parser": "1.3.0" } }\n',
-        },
-      },
-    ],
-    deleteBranchOnMerge: true,
-    dependents: [],
-    key: 'auto-merge',
-    pr: {
-      baseRefName: baseBranch,
-      body: 'Routine dependency bump.',
-      headRefName: 'bump-parser',
-      isDraft: false,
-      number: 31,
-      title: 'Update the parser to 1.3.0',
-    },
-    reviewComments: [],
-    reviews: [
-      {
-        author: { login: 'dana' },
-        body: 'Fine by me.',
-        state: 'APPROVED',
       },
     ],
   },

@@ -1,0 +1,169 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+#
+# Eval for this skill. Runs the REAL skill via claude-agent-sdk against
+# genuine repositories seeded by setup.ts, with `gh` shadowed by a fake that
+# serves each scenario's GitHub world (bin/gh-stub.ts) and `git` shadowed by a
+# passthrough that only records (bin/git-stub.ts). merging-check.ts reads the
+# resulting call log.
+#
+# git is real because a squash message is built from the branch: the trailers
+# on its commits and the people who authored them are true by construction, so
+# a body that carries them can be told from one that invented them. `gh` cannot
+# be real — the runner shadows it repo-wide precisely so a scenario cannot reach
+# a live forge — so its answers are canned, and an un-canned call fails loudly
+# rather than returning the empty success an agent would believe.
+#
+# Each test states its rule as expectations rather than prose: which calls must
+# appear, which must not, which must precede which, and what body was piped in.
+
+---
+defaultTest:
+  assert:
+    - type: skill-used
+      value: gtb-gh-pr-merging
+    - type: javascript
+      value: file://src/merging-check.ts
+
+  # Keep array vars (requireCalls, forbidCalls, …) intact instead of expanding
+  # each into separate test cases.
+  options:
+    disableVarExpansion: true
+description: gtb-gh-pr-merging — landing a pull request against seeded repositories with a fake gh
+
+# Distinct tests are independent all the way down: each owns a workspace, and
+# the stubs key one call log per scenario, so nothing is shared for them to race
+# over.
+#
+# `--repeat` is the exception and still needs `--max-concurrency 1` on the
+# command line: repeats of one test share that test's workspace, and would seed
+# it under each other.
+evaluateOptions:
+  maxConcurrency: 3
+
+extensions:
+  - file://src/setup.ts:extensionHook
+
+prompts:
+  - |
+    You are working in the git repository at ./{{ repo }}, relative to your
+    working directory. Everything relevant is inside that repository — do not
+    look outside it, and leave every other directory alone.
+
+    {{ task }}
+
+    When you are finished, briefly report what you did.
+
+providers:
+  - config:
+      apiKeyRequired: false
+      append_allowed_tools:
+        - 'Bash(gh:*)'
+        - 'Bash(git:*)'
+        - 'Edit(scenarios/**)'
+        - 'Read(scenarios/**)'
+        - 'Write(scenarios/**)'
+      ask_user_question:
+        behavior: first_option
+
+      path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
+      setting_sources: ['project']
+      skills: ['gtb-gh-pr-merging', 'gtb-git-commit-conventions']
+      working_dir: '{{ env.EVAL_WORKSPACE }}'
+    id: anthropic:claude-agent-sdk
+    label: gtb-gh-pr-merging
+tests:
+  - description: >-
+      the branch never deleted out from under the dependent, and a squash
+      carrying the reference, the branch's trailers and the teammate who
+      authored part of it
+    vars:
+      forbidCalls:
+        - ['pr merge', '--rebase']
+        - ['pr merge', '--auto']
+        - ['pr merge', '--admin']
+
+      # The rule is an invariant, not a sequence: the branch ends up gone, and
+      # nothing is still pointing at it when that happens. Retargeting #9 and
+      # then merging with --delete-branch satisfies it; so does merging, letting
+      # GitHub move #9, and deleting afterwards. Only the unsafe order is
+      # forbidden — a --delete-branch merge before #9 has been retargeted.
+      forbidOrder:
+        - after: ['pr edit', '9', '--base']
+          before: ['pr merge', '--delete-branch']
+
+      repo: scenarios/merge-stacked
+      # `pr list` without the flag: listing every open pull request and reading
+      # baseRefName finds the dependent just as `--base` does, and the rule is
+      # that it looked before merging, not which spelling it used.
+      requireCalls:
+        - ['pr list']
+        - ['pr merge', '--squash']
+        - ['pr merge', '(#7)']
+
+      # However it got there, the branch does not outlive the pull request.
+      requireOneOf:
+        - ['pr merge', '--delete-branch']
+        - ['push', '--delete']
+        - ['push', ':add-rate-limiter']
+
+      requireOrder:
+        - after: ['pr merge']
+          before: ['pr list']
+
+      # Both halves of the collection in one body. Dana is only ever named by a
+      # trailer on a branch commit; Sam is only ever named by having authored
+      # one, with no trailer anywhere to copy — so a run that read the range's
+      # trailers and stopped carries the first and loses the second.
+      # The address, not just the name: it is what makes the trailer resolve to
+      # a person, and a body naming Sam without one credits nobody.
+      requireStdin:
+        - command: ['pr merge']
+          includes:
+            - 'Co-authored-by: Dana Reyes <dana@example.com>'
+            - 'Co-authored-by: Sam Okafor <sam@example.com>'
+
+      scenario: merge-stacked
+      task: >-
+        Pull request 7 is approved and green. Merge it.
+  - description: >-
+      a stack member — gh pr merge is refused, so the merge goes through the
+      async endpoint with a message of its own
+    vars:
+      # --admin does not work on a stack member anyway, but reaching for it is
+      # the failure being guarded against; gh stack merge would land the
+      # default message.
+      forbidCalls:
+        - ['pr merge', '--admin']
+        - ['stack merge']
+
+      repo: scenarios/stack-member
+      requireCalls:
+        - ['merge-async']
+        - ['merge_method=squash']
+        - ['sha=']
+        - ['(#14)']
+        - ['commit_message']
+
+      scenario: stack-member
+      task: >-
+        Pull request 14 is approved and green. Merge it.
+  - description: auto-merge — enabled only when asked, and never without the message it will land
+    vars:
+      forbidCalls:
+        - ['pr merge', '--rebase']
+        - ['pr merge', '--admin']
+
+      repo: scenarios/auto-merge
+      # `--body` also matches `--body-file`: what matters is that the message
+      # was supplied rather than left to default, and a subject that says the
+      # whole change may legitimately carry an empty body.
+      requireCalls:
+        - ['pr merge', '--auto']
+        - ['pr merge', '--squash']
+        - ['pr merge', '--body']
+        - ['pr merge', '(#31)']
+
+      scenario: auto-merge
+      task: >-
+        Pull request 31 is approved but the checks are still running, and I do
+        not want to sit here waiting. Set it up to merge itself once they pass.

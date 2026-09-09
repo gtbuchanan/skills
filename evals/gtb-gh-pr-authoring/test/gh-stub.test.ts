@@ -104,35 +104,6 @@ const createPr = (dir: string): Run =>
     'Filled-in template.\n',
   );
 
-test('an absent field arrives as an explicit null, not as nothing', ({ expect }) => {
-  /*
-   * JSON.stringify drops a key whose value is undefined, so modelling "no
-   * auto-merge is set" as undefined answers `{}` — and an agent reading the
-   * field back cannot tell "there is none" from "you did not ask for it".
-   *
-   * The raw text, not the parsed object: parsing `{}` and reading
-   * `.autoMergeRequest` yields undefined either way, so a case that parses
-   * first passes on the broken stub too.
-   *
-   * A seeded PR named by number, rather than one this case opens and reads back
-   * unnamed — that would fold in the branch-resolution rule below and fail here
-   * for a reason that has nothing to do with serialisation.
-   */
-  expect(
-    gh(worldFor('merge-stacked'), ['pr', 'view', '7', '--json', 'autoMergeRequest']).stdout,
-  ).toBe('{"autoMergeRequest":null}');
-});
-
-test('a check still running reports a null conclusion, not a missing one', ({ expect }) => {
-  /*
-   * Same failure one level down, inside the rollup entries, where the skill's
-   * pending-checks scenario is read from.
-   */
-  expect(
-    gh(worldFor('auto-merge'), ['pr', 'view', '--json', 'statusCheckRollup']).stdout,
-  ).toContain('"conclusion":null');
-});
-
 test('an unnamed pr view answers for the branch the run just opened', ({ expect }) => {
   /*
    * Naming no number is not naming nothing: gh resolves the PR belonging to the
@@ -170,10 +141,10 @@ test('--json hands back the fields asked for and no others', ({ expect }) => {
    * passes for an agent that never looked.
    */
   expect(
-    ghJson(worldFor('merge-stacked'), ['pr', 'view', '7', '--json', 'number,title']),
+    ghJson(worldFor('push-watch'), ['pr', 'view', '12', '--json', 'number,title']),
   ).toStrictEqual({
-    number: 7,
-    title: 'Add the rate limiter',
+    number: 12,
+    title: 'Key the response cache by method as well as url',
   });
 });
 
@@ -182,7 +153,7 @@ test('a field the stub does not model refuses instead of answering', ({ expect }
    * Exit 0 with a field missing reads as "there is no such value", and an agent
    * will act on that. A gap in the double has to look like a gap.
    */
-  const result = gh(worldFor('merge-stacked'), ['pr', 'view', '7', '--json', 'mergedAt']);
+  const result = gh(worldFor('push-watch'), ['pr', 'view', '12', '--json', 'mergedAt']);
 
   expect(result.status).toBe(1);
   expect(result.stderr).toContain('mergedAt');
@@ -195,49 +166,10 @@ test('a --json naming no fields is refused, as gh refuses it', ({ expect }) => {
    * everything — indistinguishable from a call that never asked to narrow, and
    * the over-serving this double exists to avoid.
    */
-  const result = gh(worldFor('merge-stacked'), ['pr', 'view', '7', '--json']);
+  const result = gh(worldFor('push-watch'), ['pr', 'view', '12', '--json']);
 
   expect(result.status).toBe(1);
   expect(result.stderr).toContain('--json');
-});
-
-test('pr view serves the PR named, not the scenario\'s own', ({ expect }) => {
-  /*
-   * Answering every question with the scenario's own PR makes a dependent look
-   * like the one being merged — exactly the confusion the merge rules exist to
-   * prevent, so the fixture must be able to tell them apart.
-   */
-  const fields = 'number,headRefName,baseRefName';
-
-  expect(
-    ghJson(worldFor('merge-stacked'), ['pr', 'view', '9', '--json', fields]),
-  ).toStrictEqual({
-    baseRefName: 'add-rate-limiter',
-    headRefName: 'add-limiter-metrics',
-    number: 9,
-  });
-});
-
-test('pr list --base reports only what is stacked on that branch', ({ expect }) => {
-  expect(
-    ghJson(worldFor('merge-stacked'), [
-      'pr', 'list', '--base', 'add-rate-limiter', '--state', 'open', '--json', 'number',
-    ]),
-  ).toStrictEqual([{ number: 9 }]);
-});
-
-test('a merged PR leaves the open list and reads as merged', { tags: ['slow'] }, ({ expect }) => {
-  /*
-   * Each invocation is its own process, so a merge that is not persisted lets
-   * the next `pr list` report the PR still open — and an agent checking for
-   * dependents before deleting a branch reads a world that never happened.
-   */
-  const dir = worldFor('merge-stacked');
-
-  expect(gh(dir, ['pr', 'merge', '7', '--squash']).status).toBe(0);
-
-  expect(ghJson(dir, ['pr', 'view', '7', '--json', 'state'])).toStrictEqual({ state: 'MERGED' });
-  expect(ghJson(dir, ['pr', 'list', '--json', 'number'])).toStrictEqual([{ number: 9 }]);
 });
 
 test('a draft marked ready stops reporting itself as a draft', { tags: ['slow'] }, ({ expect }) => {

@@ -12,7 +12,7 @@
  * it resolves the real binary explicitly rather than by name.
  */
 import { hermeticGitEnv, resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
-import { locateScenario } from '@gtbuchanan/git-fixtures/scenario';
+import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
 import { argv, logCallToDir } from '@gtbuchanan/stub-runtime/stub';
 import spawn from 'cross-spawn';
 import { scenarios } from '#src/scenarios.ts';

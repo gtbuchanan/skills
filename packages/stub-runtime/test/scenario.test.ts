@@ -19,7 +19,7 @@ import {
   markerFile,
   scenarioByKey,
   scenarioPath,
-} from '@gtbuchanan/git-fixtures/scenario';
+} from '@gtbuchanan/stub-runtime/scenario';
 
 const scenarios = [{ key: 'open-draft' }, { key: 'merge-stacked' }];
 
@@ -48,29 +48,29 @@ test('an unknown key stops rather than resolving to a default world', ({ expect 
   expect(() => scenarioByKey(scenarios, 'no-such-world')).toThrow('no-such-world');
 });
 
-test('the world is found from a subdirectory, not only from the checkout root', ({ expect }) => {
+test('the world is found from a subdirectory, not only from the workspace root', ({ expect }) => {
   /*
    * The whole reason for walking up to a marker rather than reading an
    * environment variable is that the code under test moves around inside its
-   * checkout. Resolving only at the root would answer from nowhere the moment
+   * workspace. Resolving only at the root would answer from nowhere the moment
    * it did.
    */
   const { nested, root } = seeded('open-draft');
   const located = locateScenario(scenarios, nested);
 
   expect(located.scenario.key).toBe('open-draft');
-  /* The checkout, not the directory the call was made from — a double keeps
+  /* The workspace, not the directory the call was made from — a double keeps
      its state file beside the marker. */
   expect(located.dir).toBe(root);
 });
 
-test('a call outside every checkout is refused rather than defaulted', ({ expect }) => {
+test('a call outside every workspace is refused rather than defaulted', ({ expect }) => {
   const outside = mkdtempSync(path.join(tmpdir(), 'unseeded-'));
 
   expect(() => locateScenario(scenarios, outside)).toThrow(markerFile);
 });
 
-test('a checkout lives under the scenarios directory, keyed by name', ({ expect }) => {
+test('a workspace lives under the scenarios directory, keyed by name', ({ expect }) => {
   /* The seed writes here and the checker reads here; they agree only because
      both ask this. */
   expect(scenarioPath('merge-stacked')).toBe('scenarios/merge-stacked');

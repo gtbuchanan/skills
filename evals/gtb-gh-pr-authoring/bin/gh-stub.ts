@@ -27,7 +27,6 @@
  */
 import path from 'node:path';
 import { branchAt } from '@gtbuchanan/git-fixtures/checkout';
-import { locateScenario } from '@gtbuchanan/git-fixtures/scenario';
 import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
 import { checkRecord } from '@gtbuchanan/github-cli-stub/checks';
 import { dispatch } from '@gtbuchanan/github-cli-stub/dispatch';
@@ -41,6 +40,7 @@ import {
 import { checksFor } from '@gtbuchanan/github-cli-stub/scenario-world';
 import { pick, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { readState, writeState } from '@gtbuchanan/github-cli-stub/state';
+import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
 import { appendJsonl, argv, joined } from '@gtbuchanan/stub-runtime/stub';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
 import { scenarios } from '#src/scenarios.ts';

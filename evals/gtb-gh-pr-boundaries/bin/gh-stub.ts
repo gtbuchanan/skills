@@ -18,11 +18,11 @@
  */
 import path from 'node:path';
 import { branchAt } from '@gtbuchanan/git-fixtures/checkout';
-import { locateScenario } from '@gtbuchanan/git-fixtures/scenario';
 import { dispatch } from '@gtbuchanan/github-cli-stub/dispatch';
 import { currentHead, nextPrNumber } from '@gtbuchanan/github-cli-stub/pulls';
 import { pick, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { readState, writeState } from '@gtbuchanan/github-cli-stub/state';
+import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
 import { appendJsonl, argv, joined } from '@gtbuchanan/stub-runtime/stub';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
 import { scenarios } from '#src/scenarios.ts';

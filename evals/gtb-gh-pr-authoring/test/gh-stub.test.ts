@@ -28,7 +28,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { markerFile } from '@gtbuchanan/git-fixtures/scenario';
+import { markerFile } from '@gtbuchanan/stub-runtime/scenario';
 import { test } from 'vitest';
 
 const stub = path.join(import.meta.dirname, '..', 'bin', 'gh-stub.ts');

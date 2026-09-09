@@ -24,7 +24,6 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
-import { markerFile, scenarioByKey, scenarioPath } from '@gtbuchanan/git-fixtures/scenario';
 import {
   type GitRunner,
   type SeedCommit,
@@ -34,6 +33,7 @@ import {
   seedHistory,
 } from '@gtbuchanan/git-fixtures/seed-repo';
 import { parseJson } from '@gtbuchanan/stub-runtime/calls';
+import { markerFile, scenarioByKey, scenarioPath } from '@gtbuchanan/stub-runtime/scenario';
 import * as v from 'valibot';
 import { artifactPath, skillsRoot, suiteName, suiteRunDir } from './paths.ts';
 import { requireHarness, resetRunDir } from './setup.ts';

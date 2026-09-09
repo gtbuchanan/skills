@@ -23,22 +23,21 @@
  *                    been handed a body containing `includes`
  *   forbidStdin    — the same shape, for wording no such body may contain, where
  *                    what the rule states is an absence
- *   minCommits     — commits the agent added over the seeded baseline tip, for
- *                    a rule about work not arriving as one commit
  *
  * Matching is substring-based over the joined argv, and every check is
  * presence, absence or relative order rather than a count — so a shared log
  * stays safe across repeats, which the suite truncates per test anyway.
+ *
+ * All of it reads the call log and nothing else. An expectation about the
+ * world the run left behind — the commits it added, say — is a `checks` entry
+ * a suite supplies, which is what keeps this usable by a suite whose scenarios
+ * are not repositories.
  */
-import fs from 'node:fs';
 import path from 'node:path';
-import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
-import { scenarioPath } from '@gtbuchanan/git-fixtures/scenario';
-import { probeGit } from '@gtbuchanan/git-fixtures/seed-repo';
-import { parseJson, readJsonl } from '@gtbuchanan/stub-runtime/calls';
+import { readJsonl } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 import { type AssertionResult, fromProblems } from './assert.ts';
-import { skillsRoot, suiteRunDir } from './paths.ts';
+import { suiteRunDir } from './paths.ts';
 
 const StringListSchema = v.array(v.string());
 const ClauseListSchema = v.array(StringListSchema);
@@ -63,7 +62,6 @@ export const VarsSchema = v.object({
   forbidCalls: v.optional(ClauseListSchema, []),
   forbidOrder: v.optional(v.array(OrderSchema), []),
   forbidStdin: v.optional(v.array(StdinSchema), []),
-  minCommits: v.optional(v.number(), 0),
   requireCalls: v.optional(ClauseListSchema, []),
   requireOneOf: v.optional(ClauseListSchema, []),
   requireOrder: v.optional(v.array(OrderSchema), []),
@@ -79,8 +77,6 @@ const EntrySchema = v.object({
   cmd: v.optional(v.string(), ''),
   stdin: v.optional(v.string(), ''),
 });
-
-const TipsSchema = v.record(v.string(), v.string());
 
 interface Call {
   readonly command: string;
@@ -224,54 +220,23 @@ export const checkForbiddenStdin = (
   );
 
 /**
- * Commits the agent added on top of the seeded tip.
+ * An expectation a suite adds to the ones every call log supports, given the
+ * raw promptfoo vars and returning what went wrong.
  *
- * A count rather than an inspection: what the messages say belongs to whichever
- * skill governs commit messages, and to that skill's own suite. What a call log
- * can answer is whether the work arrived as one commit or as several.
+ * Raw rather than parsed, because a check that reads a var this engine has
+ * never heard of is the whole reason for the seam — `commit-count.ts` is one,
+ * and it is the only thing in this package that needs a repository.
  */
-const checkCommits = (
-  vars: v.InferOutput<typeof VarsSchema>,
-  baselinesPath: string,
-): string[] => {
-  if (vars.minCommits === 0) return [];
-
-  const recorded = parseJson(fs.readFileSync(baselinesPath, 'utf8')) ?? {};
-  const baselines = v.parse(TipsSchema, recorded);
-  const tip = baselines[vars.scenario];
-  if (tip === undefined) return [`no recorded baseline for ${vars.scenario}`];
-
-  const cwd = path.join(
-    skillsRoot(),
-    ...scenarioPath(vars.scenario).split('/'),
-  );
-  const result = probeGit({ cwd, git: resolveRealGit() }, [
-    'rev-list',
-    '--count',
-    `${tip}..HEAD`,
-  ]);
-  if (result.status !== 0)
-    return [`could not count commits in ${vars.scenario}: ${result.stderr.trim()}`];
-
-  const added = Number(result.stdout.trim());
-  return added >= vars.minCommits
-    ? []
-    : [
-        `added ${String(added)} commit(s) over the baseline, expected at least ` +
-        `${String(vars.minCommits)} — one per finding, not one for all of them`,
-      ];
-};
+export type ExpectationCheck = (rawVars: unknown) => string[];
 
 /**
  * What a suite supplies so the assertion can find its own artifacts.
  */
 export interface ExpectationOptions {
   /**
-   * Where the seed recorded each scenario's baseline tip — only read by a test
-   * declaring `minCommits`, so a suite that counts no commits may point it
-   * anywhere.
+   * Expectations beyond the call log itself.
    */
-  readonly baselinesPath: () => string;
+  readonly checks?: readonly ExpectationCheck[] | undefined;
   /**
    * `import.meta.url` of the suite module calling this, which is what names
    * the suite and therefore its call logs.
@@ -293,7 +258,7 @@ export const expectationAssertion = (
   (_output, context) => {
     const vars = v.parse(VarsSchema, context.vars ?? {});
     /* This scenario's own log, not a shared one: the doubles key a file per
-       checkout, so a concurrent test's calls are never in here to be
+       workspace, so a concurrent test's calls are never in here to be
        matched. */
     const logFile = path.join(
       suiteRunDir(options.metaUrl),
@@ -310,6 +275,6 @@ export const expectationAssertion = (
       ...checkForbiddenOrder(calls, vars),
       ...checkStdin(calls, vars),
       ...checkForbiddenStdin(calls, vars),
-      ...checkCommits(vars, options.baselinesPath()),
+      ...(options.checks ?? []).flatMap(check => check(context.vars)),
     ]);
   };

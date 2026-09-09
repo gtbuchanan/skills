@@ -21,8 +21,8 @@ import {
 } from '@gtbuchanan/agent-skills-harness/paths';
 import { requireHarness, resetRunDir } from '@gtbuchanan/agent-skills-harness/setup';
 import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
-import { markerFile, scenarioByKey, scenarioPath } from '@gtbuchanan/git-fixtures/scenario';
 import { seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
+import { markerFile, scenarioByKey, scenarioPath } from '@gtbuchanan/stub-runtime/scenario';
 import * as v from 'valibot';
 import { author } from './repository.ts';
 import type { Scenario } from './scenarios.ts';
@@ -111,4 +111,4 @@ export const extensionHook = (hookName: string, context: unknown): void => {
 /* Re-exported so the checker resolves a scenario's checkout through the same
    call the seed wrote it with, rather than spelling the layout a second time
    and agreeing with the seed only by coincidence. */
-export { scenarioPath } from '@gtbuchanan/git-fixtures/scenario';
+export { scenarioPath } from '@gtbuchanan/stub-runtime/scenario';

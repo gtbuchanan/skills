@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     "./assert": "./src/assert.ts",
+    "./commit-count": "./src/commit-count.ts",
     "./expectations": "./src/expectations.ts",
     "./json-scan": "./src/json-scan.ts",
     "./paths": "./src/paths.ts",

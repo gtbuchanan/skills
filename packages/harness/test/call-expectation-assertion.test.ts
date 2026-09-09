@@ -196,6 +196,34 @@ test('commits are counted from the recorded baseline, not from the branch point'
   });
 });
 
+test('a baselines manifest that was never written fails the scenario, not the run', ({
+  expect,
+}) => {
+  /*
+   * The check returns problems rather than throwing, so an unreadable manifest
+   * has to become one. Letting the read throw puts an ENOENT through a
+   * promptfoo assertion, where it surfaces as the harness falling over rather
+   * than as a scenario that failed and said why — and a suite pairing this
+   * check with a seeder that records no tips would hit exactly that.
+   */
+  const suite = fakeSuite();
+  writeLog(suite.metaUrl, 'review-feedback', [{ argv: ['pr', 'view', '23'] }]);
+  const absentDir = mkdtempSync(path.join(tmpdir(), 'absent-'));
+  const missing = path.join(absentDir, 'nothing.json');
+
+  const assertion = callExpectationAssertion({
+    metaUrl: suite.metaUrl,
+    outcomeChecks: [commitCountCheck({ baselinesPath: () => missing })],
+  });
+
+  const result = assertion(undefined, {
+    vars: { minCommits: 2, scenario: 'review-feedback' },
+  });
+
+  expect(result.pass).toBe(false);
+  expect(result.reason).toContain('no baselines recorded');
+});
+
 test('a scenario with no recorded baseline says so rather than reporting none added', {
   tags: ['slow'],
 }, ({ expect }) => {

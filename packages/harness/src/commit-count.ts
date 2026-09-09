@@ -52,8 +52,21 @@ export const commitCountCheck = (
     const vars = v.parse(VarsSchema, rawVars ?? {});
     if (vars.minCommits === 0) return [];
 
-    const recorded = parseJson(fs.readFileSync(options.baselinesPath(), 'utf8')) ?? {};
-    const baselines = v.parse(TipsSchema, recorded);
+    /* A manifest that is not there at all is the same class of failure as one
+       missing this scenario's key — the seed never recorded a tip — and has to
+       be reported as one. Letting the read throw would put an ENOENT through a
+       contract that returns problems, so it would reach the runner as an error
+       rather than as a scenario that failed and said why. Caught rather than
+       probed with `existsSync`, which is what `recordTip` does for the same
+       read and which also covers a file that exists and cannot be read. */
+    let contents = '';
+    try {
+      contents = fs.readFileSync(options.baselinesPath(), 'utf8');
+    } catch {
+      return [`no baselines recorded at ${options.baselinesPath()}`];
+    }
+
+    const baselines = v.parse(TipsSchema, parseJson(contents) ?? {});
     const tip = baselines[vars.scenario];
     /* No baseline is a harness failure and no commits is a skill failure, so
        reporting the second for the first would blame the run for something the

@@ -12,9 +12,10 @@
  * it resolves the real binary explicitly rather than by name.
  */
 import { hermeticGitEnv, resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
+import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
 import { argv, logCallToDir } from '@gtbuchanan/stub-runtime/stub';
 import spawn from 'cross-spawn';
-import { locateScenario } from '#src/world.ts';
+import { scenarios } from '#src/scenarios.ts';
 
 /* One log per scenario, keyed by the checkout the call was made in, so tests
    can run concurrently without writing over each other's record.
@@ -24,7 +25,7 @@ import { locateScenario } from '#src/world.ts';
    locateScenario throws there. A call nothing can attribute is not worth
    failing over — it is logged nowhere and passed through as normal. */
 try {
-  logCallToDir('git', `${locateScenario(process.cwd()).scenario.key}.jsonl`);
+  logCallToDir('git', `${locateScenario(scenarios, process.cwd()).scenario.key}.jsonl`);
 } catch {
   // outside a seeded checkout: nothing to attribute the call to
 }

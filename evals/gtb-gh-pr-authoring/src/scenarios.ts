@@ -16,8 +16,8 @@
  * Loaded by the stubs under plain `node`, whose type stripping only erases
  * annotations, so everything here stays erasable syntax.
  */
+import type { Scenario } from '@gtbuchanan/github-cli-stub/scenario-world';
 import { baseBranch, viewer } from './repository.ts';
-import type { Scenario } from './shapes.ts';
 import {
   cacheAfter,
   cacheBefore,

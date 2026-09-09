@@ -4,8 +4,12 @@
   "type": "module",
   "exports": {
     "./assert": "./src/assert.ts",
+    "./call-expectations": "./src/call-expectations.ts",
+    "./commit-count": "./src/commit-count.ts",
     "./json-scan": "./src/json-scan.ts",
     "./paths": "./src/paths.ts",
+    "./repo-scenario": "./src/repo-scenario.ts",
+    "./scenario-setup": "./src/scenario-setup.ts",
     "./setup": "./src/setup.ts",
     "./skills-cli": "./src/skills-cli.ts"
   },
@@ -18,6 +22,8 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
+    "@gtbuchanan/git-fixtures": "workspace:*",
+    "@gtbuchanan/stub-runtime": "workspace:*",
     "find-up-simple": "catalog:",
     "valibot": "catalog:"
   },

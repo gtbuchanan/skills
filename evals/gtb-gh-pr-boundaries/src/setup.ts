@@ -1,55 +1,31 @@
 /*
  * promptfoo beforeAll/beforeEach extension for this suite.
  *
- * The scenario under test is seeded fresh before EACH test, because the agent
- * commits, branches and pushes for real: a checkout carrying a previous test's
- * work — or a previous `--repeat`'s — would make that work look like this run's,
- * and this suite counts what the run produced.
- *
- * Only the scenario the test names is seeded, which is what the beforeEach
- * context is read for. The checkouts are disjoint, so tests do not collide; a
- * test and its own repeats share one, which is why `--repeat` wants
- * `--max-concurrency 1`.
+ * `scenarioSetup` owns the parts every suite has — which scenario is under
+ * test, emptying its workspace, dropping the marker the doubles read. What is
+ * seeded into that workspace is this suite's own, and deliberately not what
+ * `repoScenarioSeeding` does: a scenario here is a committed baseline plus the
+ * work the agent is asked to ship, left uncommitted in the tree. What it
+ * decides to do with that work is the whole measurement, so the history stops
+ * at the baseline and nothing records a tip to count from.
  */
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import {
-  artifactPath,
-  skillsRoot,
-  suiteName,
-  suiteRunDir,
-} from '@gtbuchanan/agent-skills-harness/paths';
-import { requireHarness, resetRunDir } from '@gtbuchanan/agent-skills-harness/setup';
+import { artifactPath, suiteName } from '@gtbuchanan/agent-skills-harness/paths';
+import { scenarioSetup } from '@gtbuchanan/agent-skills-harness/scenario-setup';
 import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
-import * as v from 'valibot';
+import { markerFile } from '@gtbuchanan/stub-runtime/scenario';
 import { author } from './repository.ts';
-import { type Scenario, scenarioByKey } from './scenarios.ts';
-import { markerFile } from './world.ts';
+import type { Scenario } from './scenarios.ts';
+import { scenarios } from './scenarios.ts';
 
 const suite = suiteName(import.meta.url);
-const logDir = suiteRunDir(import.meta.url);
 
 const seedDate = '2026-05-08T09:00:00-05:00';
 
 /**
- * The scenario a beforeEach is firing for. Parsed rather than trusted: an
- * unnamed scenario would seed nothing, and every later failure would be about
- * a checkout that was never written.
- */
-const HookVarsSchema = v.object({ scenario: v.string() });
-const HookTestSchema = v.object({ vars: HookVarsSchema });
-const HookContextSchema = v.object({ test: HookTestSchema });
-
-/**
- * Where a scenario's checkout lives, relative to the agent's workspace. Named
- * so the prompt can point at it without the suite and the prompt agreeing by
- * coincidence.
- */
-export const scenarioPath = (key: string): string => `scenarios/${key}`;
-
-/**
- * Writes a tree into the checkout, creating directories as it goes.
+ * Writes a tree into the workspace, creating directories as it goes.
  */
 const writeTree = (workspace: string, tree: Readonly<Record<string, string>>): void => {
   for (const [relative, contents] of Object.entries(tree)) {
@@ -59,17 +35,7 @@ const writeTree = (workspace: string, tree: Readonly<Record<string, string>>): v
   }
 };
 
-/**
- * Seeds one scenario: a committed baseline pushed to a local bare origin, then
- * the uncommitted work the agent is asked to ship left in the tree.
- */
-const seedOne = (scenario: Scenario, git: string, root: string): void => {
-  const workspace = path.join(root, ...scenarioPath(scenario.key).split('/'));
-  /* A scenario owns its directory outright, so it is removed rather than reset
-     — a leftover file from a previous run is indistinguishable from work the
-     agent was meant to find. */
-  rmSync(workspace, { force: true, recursive: true });
-
+const seed = (scenario: Scenario, workspace: string): void => {
   seedHistory({
     author,
     branch: scenario.branch,
@@ -81,31 +47,27 @@ const seedOne = (scenario: Scenario, git: string, root: string): void => {
         tree: scenario.committed,
       },
     ],
-    git,
+    git: resolveRealGit(),
     localIdentity: author,
     origin: artifactPath(`${suite}.${scenario.key}.origin.git`),
     workspace,
   });
 
-  /* The work under test: present in the tree, absent from history. What the
-     agent decides to do with it is the whole measurement. */
+  /*
+  The work under test: present in the tree, absent from history.
+  */
   writeTree(workspace, scenario.uncommitted);
 
-  /* Untracked and never committed: it identifies the world to the stubs, and
-     committing it would put eval scaffolding into the diff under review. */
+  /* The marker the hook writes next would otherwise show up as work the agent
+     left behind, and this suite is counting exactly that. */
   writeFileSync(path.join(workspace, '.git', 'info', 'exclude'), `/${markerFile}\n`);
-  writeFileSync(path.join(workspace, markerFile), `${scenario.key}\n`);
 };
 
-export const extensionHook = (hookName: string, context: unknown): void => {
-  if (hookName === 'beforeEach') {
-    const { test } = v.parse(HookContextSchema, context);
-    seedOne(scenarioByKey(test.vars.scenario), resolveRealGit(), skillsRoot());
-    return;
-  }
+const setup = scenarioSetup({ metaUrl: import.meta.url, scenarios, seed });
 
-  if (hookName !== 'beforeAll') return;
+export const extensionHook = setup.extensionHook;
 
-  requireHarness(suite);
-  resetRunDir(logDir);
-};
+/* Re-exported so the checker resolves a scenario's workspace through the same
+   call the seed wrote it with, rather than spelling the layout a second time
+   and agreeing with the seed only by coincidence. */
+export { scenarioPath } from '@gtbuchanan/stub-runtime/scenario';

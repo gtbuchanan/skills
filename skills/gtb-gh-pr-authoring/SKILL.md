@@ -209,8 +209,13 @@ from a worktree, where `gh stack init` does not. Branches without a PR get one,
 opened as a draft.
 
 ```sh
+gh extension install github/gh-stack   # once, if `gh stack` is not installed
 gh stack link auth-layer api-routes ui-components
 ```
+
+**`gh stack` is an extension rather than part of `gh`.** Absent it, the command
+fails as an unknown one — which reads like a typo rather than a missing
+install, so name the install instead of retrying the command.
 
 Two of its behaviours belong to the human rather than to you: it pushes branch
 arguments to the remote before looking them up, and `--open` marks PRs ready

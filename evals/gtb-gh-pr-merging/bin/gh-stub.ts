@@ -193,9 +193,16 @@ const outcome = dispatch({ argv, stdin }, [
       /* --auto only defers the merge while something is outstanding. This
          world's checks decide which of those happened. */
       const number = namedNumber() ?? impliedNumber(state, scenario, head());
-      writeState(statePath, { ...state, merged: [...state.merged, number] });
+      const isDeferred = argv.includes('--auto') && scenario.checksPending === true;
 
-      return argv.includes('--auto') && scenario.checksPending === true
+      /* Recorded only when the merge actually happened. Writing it while the
+         answer says the merge is deferred leaves the next process reading a
+         pull request that is merged and absent from `pr list`, which is the
+         opposite of what this scenario states and what its task asked for. */
+      if (!isDeferred)
+        writeState(statePath, { ...state, merged: [...state.merged, number] });
+
+      return isDeferred
         ? {
             stdout:
               `✓ Pull request ${repoSlug}#${String(number)} will be ` +

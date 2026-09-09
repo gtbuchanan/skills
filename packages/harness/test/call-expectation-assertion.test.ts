@@ -18,11 +18,11 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { captureGit, runGit, seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
 import { scenarioPath } from '@gtbuchanan/stub-runtime/scenario';
 import { test } from 'vitest';
+import { fakeSuite } from './fake-suite.ts';
 import { callExpectationAssertion } from '@gtbuchanan/agent-skills-harness/call-expectations';
 import { commitCountCheck } from '@gtbuchanan/agent-skills-harness/commit-count';
 import { suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
@@ -30,21 +30,6 @@ import { suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
 const git = resolveRealGit();
 
 const identity = { email: 'taylor@example.com', name: 'Taylor Buchanan' };
-
-/**
- * A stand-in suite: `suiteName` walks up for a promptfoo config and takes the
- * directory's name, so a suite is one by having that file. The module inside it
- * never has to exist — only its URL is read.
- */
-const fakeSuite = (): { readonly metaUrl: string; readonly name: string } => {
-  const root = mkdtempSync(path.join(tmpdir(), 'suite-'));
-  writeFileSync(path.join(root, 'promptfooconfig.yaml'), 'tests: []\n');
-
-  return {
-    metaUrl: pathToFileURL(path.join(root, 'src', 'check.ts')).href,
-    name: path.basename(root),
-  };
-};
 
 /**
  * Writes one scenario's call log where the assertion will look for it.

@@ -67,7 +67,11 @@ test('a tree key that escapes the workspace is refused', ({ expect }) => {
   expect(readFileSync(victim, 'utf8')).toBe('ORIGINAL\n');
 });
 
-test('a nested key inside the workspace still seeds', ({ expect }) => {
+/* Writing one commit spends a run of git processes, and on a loaded machine
+   that carries the test past the default per-test budget. It sat in the fast
+   bucket and passed there on luck rather than on costing little; the split is
+   by cost, so it belongs here. */
+test('a nested key inside the workspace still seeds', { tags: ['slow'] }, ({ expect }) => {
   const { workspace } = scratch();
   const runner = { cwd: workspace, git };
   runGit(runner, ['init', '-q', '-b', 'main']);

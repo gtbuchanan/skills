@@ -89,8 +89,8 @@ const TipsSchema = v.record(v.string(), v.string());
  * Writes the extra commit a scenario asks for.
  *
  * The shared seeder commits with `-m <subject>`, attributes everything to one
- * identity and pushes it all, which leaves all three of those unexpressible —
- * and each is the point of the scenario that asks for one.
+ * identity and pushes it all, which leaves each of those unexpressible — and
+ * each is the point of the scenario that asks for one.
  */
 const writeExtra = (
   runner: GitRunner,

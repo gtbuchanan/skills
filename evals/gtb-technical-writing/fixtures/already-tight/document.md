@@ -4,7 +4,7 @@ Each API key gets one bucket, keyed `ratelimit:{key_id}` in Redis. Capacity is 1
 
 Refill is lazy. The bucket stores `tokens` and `updated_at` (epoch milliseconds); on each request the limiter computes `min(capacity, tokens + elapsed_ms * 0.01)` before deducting. Nothing runs on a timer, so idle keys cost no work.
 
-Read, compute and write happen in one Lua script, `scripts/take.lua`, loaded via `EVALSHA`. This makes the check-and-deduct atomic across the four API pods, which would otherwise race.
+Read, compute and write happen in one Lua script, `scripts/take.lua`, loaded via `EVALSHA`. This makes the check-and-deduct atomic across the API pods, which would otherwise race.
 
 Rejected requests return `429` with `RATE_LIMIT_EXCEEDED` and a `Retry-After` header holding the seconds until the bucket holds enough tokens for the request. `X-RateLimit-Remaining` carries the post-deduction count on every response, success or not.
 

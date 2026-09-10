@@ -29,7 +29,8 @@ defaultTest:
   # string where it expects the list.
   options:
     disableVarExpansion: true
-description: gtb-technical-writing — real skill via claude-agent-sdk against document fixtures
+description: gtb-technical-writing — real skill via claude-agent-sdk against
+  document fixtures
 
 # The prompt must not mention preserving facts, cutting length, or what good
 # prose looks like. One such clause carries several tests on its own, leaving
@@ -165,9 +166,11 @@ tests:
         - leakDetectionThreshold
       # `there` only opens an expletive at the start of a clause. Matching it
       # anywhere fails a correct revision on prose like "the margin there is
-      # narrow", where the subject is real and `there` is an adverb.
+      # narrow", where the subject is real and `there` is an adverb. A clause
+      # can also open behind a list, quote or heading marker, which is where a
+      # revision most often parks one.
       mustNotContain:
-        - (^|\n|[.;:,]\s+|\b(and|but|or|so|because)\s+)there\s+(is|are)\b
+        - ((?:^|\n)\s*(?:[\-\*\+]\s+|>\s*|#{1,6}\s+|\d+\.\s+)?|[.;:,]\s+|\b(and|but|or|so|because)\s+)there\s+(is|are)\b
         - what happens is
         - what that works out to
         - it is [`a-zA-Z]+ that
@@ -237,8 +240,10 @@ tests:
       maxWords: 75
       mustContain:
         - asOf
-        - void
         - RangeError
+      # A bare `void` also matches "avoid".
+      mustMatch:
+        - \bvoid\b
       mustNotContain:
         - there (is|are)
         - it is [`a-zA-Z]+ that
@@ -335,8 +340,11 @@ tests:
         - rollout restart
         - '10000'
         - '#platform'
-        - '6'
         - offsets
+      # A bare `6` also matches 60, 16 and 0.6, so neither digits nor a
+      # decimal point may sit against it.
+      mustMatch:
+        - (?<![\d.])6(?![\d.])
       mustNotContain:
         - there (is|are)
         - it is [`a-zA-Z]+ that

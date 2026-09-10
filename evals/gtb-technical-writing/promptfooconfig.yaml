@@ -1,0 +1,353 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+#
+# Tests the REAL skill (no duplicated rules) via promptfoo's claude-agent-sdk
+# provider. The provider discovers the skill from .claude/skills/ under
+# working_dir and `skill-used` confirms it actually fired.
+#
+# Every assertion is deterministic — prose-check.ts matches phrases and word
+# counts. No llm-rubric: a rubric grader disagrees with itself between runs.
+#
+# Neither degenerate strategy passes. Shortening indiscriminately fails
+# `already-tight` and `volatile-figures`; changing nothing fails the length
+# bounds.
+#
+# Run from the repo root:
+#   pnpm eval gtb-technical-writing
+#   pnpm eval gtb-technical-writing --filter-pattern periphrasis --repeat 10
+---
+defaultTest:
+  assert:
+    # The skill must actually fire, not prose the model would have written anyway.
+    - type: skill-used
+      value: gtb-technical-writing
+    - type: javascript
+      value: file://src/prose-check.ts
+
+  # Keep array vars (mustContain, mustNotContain) intact instead of expanding
+  # each element into its own test case. Without this these tests become the
+  # cartesian product of their two lists, and the checker is handed a bare
+  # string where it expects the list.
+  options:
+    disableVarExpansion: true
+description: gtb-technical-writing — real skill via claude-agent-sdk against document fixtures
+
+# The prompt must not mention preserving facts, cutting length, or what good
+# prose looks like. One such clause carries several tests on its own, leaving
+# the suite grading the prompt rather than the skill.
+#
+# `task` varies per test because the suite covers revision and generation.
+# The revision tests hand over bad prose and ask for better prose, which the
+# model does competently on its own; they guard against the skill making
+# revision worse. The `gen-*` tests hand over raw facts and ask for prose,
+# with no instruction to be brief.
+prompts:
+  - |
+    {{task}}
+
+    The material is in
+    evals/gtb-technical-writing/fixtures/{{fixture}}/document.md.
+
+    Return only the finished text — no commentary, no diff, no explanation of
+    what you wrote or changed.
+
+providers:
+  - config:
+      # Authenticate via the local Claude Code session instead of an API key.
+      apiKeyRequired: false
+      append_allowed_tools:
+        - 'Read(evals/gtb-technical-writing/fixtures/**)'
+
+      path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
+      setting_sources: ['project']
+      skills: ['gtb-technical-writing']
+      working_dir: '{{ env.EVAL_WORKSPACE }}'
+    id: anthropic:claude-agent-sdk
+    label: gtb-technical-writing
+tests:
+  # One point circled two or three times before the doc moves on. The
+  # restatement markers are the crisp signal; the ratio is corroboration, kept
+  # loose so a single word cannot decide the test.
+  - description: amplification — each point circled two or three times
+    vars:
+      fixture: amplification
+      maxWordRatio: 0.85
+      mustContain:
+        - http.retry.max_attempts
+        - http.retry.max_backoff_ms
+        - RETRY_CEILING_EXCEEDED
+        - internal/http/breaker.go
+        - '504'
+        - POST
+      mustNotContain:
+        - to restate
+        - in other words
+        - from another angle
+        - what this means in practice
+        - that is three attempts, not
+
+      task: Revise this technical document so it is ready to publish.
+  # Long roundabout phrases where a plain word exists. Every pattern here has
+  # a one- or two-word replacement.
+  - description: periphrasis — roundabout phrases where a plain word exists
+    vars:
+      fixture: periphrasis
+      maxWordRatio: 0.8
+      mustContain:
+        - cache/loader.py
+        - cache.default_ttl_seconds
+        - '3600'
+        - after_commit
+        - CACHE_LOCK_TIMEOUT
+        - cache.fail_open
+      mustNotContain:
+        - on account of the fact
+        - at a later point in time
+        - in the event that
+        - by way of
+        - which is to say
+        - on the occasion of
+        - at the point in time at which
+        - performs a deletion
+        - make a return of
+        - so as to
+
+      task: Revise this technical document so it is ready to publish.
+  # Verbs buried in noun phrases. Each forbidden pattern has a plain verb form.
+  #
+  # `mustContain` names the config KEY, never its current value: the skill
+  # replaces a drifting value with the key that owns it, so asserting on the
+  # value fails a correct revision.
+  - description: nominalization — verbs buried in noun phrases
+    vars:
+      fixture: nominalization
+      maxWordRatio: 0.85
+      mustContain:
+        - src/middleware/validate.ts
+        - UNSUPPORTED_MEDIA_TYPE
+        - validation.max_body_bytes
+        - PAYLOAD_TOO_LARGE
+        - VALIDATION_FAILED
+        - '415'
+        - '413'
+        - '400'
+      mustNotContain:
+        - performance of a validation
+        - given invocation
+        - makes an execution
+        - results in the termination
+        - gives rise to
+        - carries out an enforcement
+        - is productive of
+        - performs a parse
+        - makes a collection
+        - does the removal
+        - made a determination
+        - bring about breakage
+        - \b(performs?|makes?|carries out|does|undergoes) (a|an|the)
+          \w+(ion|ment|ance)\b
+
+      task: Revise this technical document so it is ready to publish.
+  # Placeholder subjects that keep the real subject arriving late.
+  - description: expletive — placeholder subjects hiding the real one
+    vars:
+      fixture: expletive
+      maxWordRatio: 0.85
+      mustContain:
+        - HikariCP
+        - datasource.pool
+        - maximumPoolSize
+        - connectionTimeout
+        - SQLTransientConnectionException
+        - alerts/db.yaml
+        - idleTimeout
+        - maxLifetime
+        - idle_in_transaction_session_timeout
+        - leakDetectionThreshold
+      # `there` only opens an expletive at the start of a clause. Matching it
+      # anywhere fails a correct revision on prose like "the margin there is
+      # narrow", where the subject is real and `there` is an adverb.
+      mustNotContain:
+        - (^|\n|[.;:,]\s+|\b(and|but|or|so|because)\s+)there\s+(is|are)\b
+        - what happens is
+        - what that works out to
+        - it is [`a-zA-Z]+ that
+        - it is important that
+
+      task: Revise this technical document so it is ready to publish.
+  # The discriminating case. Both kinds of number sit side by side: counts that
+  # rot as the code moves, and records of what happened or what is pinned. A
+  # rule that strips every figure fails this exactly as hard as one that keeps
+  # them all — including the 11-second duration, which reads like a benchmark
+  # and is actually a log entry.
+  - description: volatile figures — perishable counts go, dated records and pins stay
+    vars:
+      fixture: volatile-figures
+      mustContain:
+        - '1.5.4'
+        - '1.5.5'
+        - '2026-08-21'
+        - '2026-08-22'
+        - '02:15'
+        - 11 seconds
+        - 20260714_add_customer_id.rb
+        - 20260821_drop_user_id.rb
+        - PG::UndefinedColumn
+        - legacy_column.rb
+      mustNotContain:
+        - 47 call sites
+        - 91\.4
+        - 9 minutes 40
+        - roughly 8 minutes
+        - 312 tests
+
+      task: Revise this technical document so it is ready to publish.
+  # Negative control. Every sentence already carries a distinct fact in plain
+  # words, so the correct action is very nearly nothing. Without this test a
+  # skill that simply deletes prose scores perfectly on the five above.
+  - description: already tight — no defect present, so little should change
+    vars:
+      fixture: already-tight
+      minWordRatio: 0.85
+      mustContain:
+        - ratelimit:{key_id}
+        - scripts/take.lua
+        - EVALSHA
+        - RATE_LIMIT_EXCEEDED
+        - X-RateLimit-Remaining
+        - '3600'
+        - config/ratelimit.yaml
+        - ratelimit.redis_unavailable
+        - fails open
+      task: Revise this technical document so it is ready to publish.
+  # ---- generation: raw facts in, prose out ------------------------------
+  #
+  # Nothing in these prompts asks for brevity, and there is no bad prose on
+  # screen to react to. Whatever the model writes here is what it writes by
+  # default, which is the behaviour the skill actually has to change.
+  #
+  # Budgets are absolute rather than ratios: the input is a fact list, so
+  # there is no original length to compare against. Each budget is set at
+  # roughly what a tight version of that document needs, so hitting it
+  # requires writing to a bar nobody stated.
+
+  # A doc comment for five facts. The comment markers count toward the budget.
+  - description: gen — doc comment for a function, five facts
+    vars:
+      fixture: gen-code-comment
+      maxWords: 75
+      mustContain:
+        - asOf
+        - void
+        - RangeError
+      mustNotContain:
+        - there (is|are)
+        - it is [`a-zA-Z]+ that
+        - in order to
+        - is responsible for
+        - it('s| is) worth noting
+        - this function (is|will)
+        - please note
+        - as mentioned
+
+      task: Write a doc comment for the function described here.
+  # One fact, one line of code. The correct answer is a single sentence, and
+  # this is the control for ceremony — the failure being caught is a
+  # three-sentence explanation of a one-sentence thing.
+  - description: gen — comment for one trivial line, one fact
+    vars:
+      fixture: gen-trivial-comment
+      maxWords: 30
+      mustContain:
+        - microtask
+      mustNotContain:
+        - there (is|are)
+        - it is [`a-zA-Z]+ that
+        - in order to
+        - is responsible for
+        - it('s| is) worth noting
+        - this line (is|will)
+        - essentially
+        - basically
+
+      task: Write a code comment explaining why this line is here.
+  # Six config keys and two cross-cutting facts.
+  - description: gen — configuration reference from a key table
+    vars:
+      fixture: gen-config-reference
+      maxWords: 200
+      mustContain:
+        - batch_size
+        - flush_interval_ms
+        - max_retries
+        - dlq_topic
+        - parallelism
+        - schema_check
+        - ingest.dead
+        - restart
+      mustNotContain:
+        - there (is|are)
+        - it is [`a-zA-Z]+ that
+        - in order to
+        - is responsible for
+        - it('s| is) worth noting
+        - please note
+        - as mentioned
+        - performs a [a-z]+ of
+        - \b(two|three|four|five|six|seven|eight|nine|ten)
+          (settings|keys|options|values|entries)\b
+        - \b(approach|framework|perspective|strategy|tendency|paradigm)\b
+
+      task: Write the reference documentation for these settings.
+  # A bug report. Symptom, scope, cause, trigger, fix — all supplied.
+  - description: gen — bug report from a fact list
+    vars:
+      fixture: gen-bug-writeup
+      maxWords: 140
+      mustContain:
+        - annual_2025
+        - billing/cycle.ts
+        - lastChargedAt
+        - 00:00:00
+        - account_id
+      mustMatch:
+        - (38|thirty-eight)
+      mustNotContain:
+        - there (is|are)
+        - it is [`a-zA-Z]+ that
+        - in order to
+        - is responsible for
+        - it('s| is) worth noting
+        - please note
+        - as mentioned
+        - makes a determination
+        - \b(apparently|comparatively|fairly|nearly|partially|predominantly|presumably|relatively|seemingly|somewhat|sort
+          of|to some extent|I would argue)\b
+        - \b(approach|framework|perspective|strategy|tendency|paradigm)\b
+
+      task: Write the issue body reporting this bug.
+  # A runbook. Procedures invite ceremony — preamble, restated warnings, a
+  # summary at the end that repeats the steps.
+  - description: gen — runbook procedure from a fact list
+    vars:
+      fixture: gen-runbook
+      maxWords: 150
+      mustContain:
+        - rollout restart
+        - '10000'
+        - '#platform'
+        - '6'
+        - offsets
+      mustNotContain:
+        - there (is|are)
+        - it is [`a-zA-Z]+ that
+        - in order to
+        - is responsible for
+        - it('s| is) worth noting
+        - please note
+        - as mentioned
+        - in summary
+        - \b(two|three|four|five|six|seven|eight|nine|ten)
+          (steps|stages|things|checks)\b
+        - \b(apparently|comparatively|fairly|nearly|partially|predominantly|presumably|relatively|seemingly|somewhat|sort
+          of|to some extent|I would argue)\b
+      task: Write the runbook procedure for this alert.

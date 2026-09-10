@@ -3,6 +3,10 @@ codecov:
   require_ci_to_pass: false
 component_management:
   individual_components:
+    - component_id: eval-gtb-technical-writing
+      name: eval-gtb-technical-writing
+      paths:
+        - evals/gtb-technical-writing/src/**
     - component_id: eval-gtb-reviewer-followup-verdict
       name: eval-gtb-reviewer-followup-verdict
       paths:
@@ -103,6 +107,10 @@ flags:
     carryforward: true
     paths:
       - evals/gtb-reviewer-followup-verdict/
+  eval-gtb-technical-writing:
+    carryforward: true
+    paths:
+      - evals/gtb-technical-writing/
   git-fixtures:
     carryforward: true
     paths:

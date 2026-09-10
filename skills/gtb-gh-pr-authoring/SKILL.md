@@ -60,6 +60,14 @@ the human's:
 1. **Ready**: the human promotes, which invites human reviewers.
 1. **Human peer review**, then the merge, which `gtb-gh-pr-merging` governs.
 
+**Where the automated reviewer skips drafts, its pass runs after the promotion
+rather than before it.** Reviewing ahead of the promotion keeps a peer
+reviewer's attention off findings a bot would have caught, so that order stays
+the default; a repository with no peer review has nobody to spend it on, and
+configures the reviewer to start at the promotion instead. Every finding then
+arrives after the author review, by arrangement rather than because the author
+jumped the gun.
+
 ## Pushing to a GitHub branch
 
 **Never push unless explicitly told to.** Committing is local and reversible;

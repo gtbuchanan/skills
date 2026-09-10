@@ -1,12 +1,12 @@
 ---
 name: gtb-gh-reviewer-followup-plan
 description: >-
-  Internal building block of the gtb-gh-reviewer-followup workflow — invoked by
+  Internal building block of the gtb-gh-reviewer-followup workflow, invoked by
   that orchestrator, not meant to be used directly. Read-only analysis for
   following up on a GitHub PR review as the reviewer: computes the diff since
   the current reviewer's last submitted review and maps each OPEN review thread
   to a verdict (exact-fix / partial / unaddressed) with evidence, producing a
-  proposal table of resolve/reply actions. Does NOT write to the PR — it
+  proposal table of resolve/reply actions. Does NOT write to the PR: it
   produces the action list that gtb-gh-reviewer-followup-apply executes.
 user-invocable: false
 ---
@@ -19,11 +19,8 @@ When you review a PR, leave threads, and the author pushes fixes, the tedious
 part is re-reading the whole PR to figure out _which_ of your threads each new
 commit addressed. This skill does that comparison mechanically: it scopes the
 review to only what changed since your last pass, pulls your open threads, and
-judges each one against the new diff — so the follow-up is grounded in evidence
+judges each one against the new diff, so the follow-up is grounded in evidence
 instead of a from-scratch re-read.
-
-It is strictly read-only. Its output is a proposal that a human approves before
-`gtb-gh-reviewer-followup-apply` writes anything back to GitHub.
 
 ## Inputs
 
@@ -36,9 +33,9 @@ It is strictly read-only. Its output is a proposal that a human approves before
 ## Procedure
 
 Run these in order. The goal at each step is to gather enough to justify a
-verdict per thread — not to re-review the entire PR.
+verdict per thread, not to re-review the entire PR.
 
-1. Resolve identity and repo context — the "reviewer" is the authenticated
+1. Resolve identity and repo context. The "reviewer" is the authenticated
    user, since we are following up on our own review:
 
    ```bash
@@ -47,7 +44,7 @@ verdict per thread — not to re-review the entire PR.
    OWNER=${REPO%/*}; NAME=${REPO#*/}
    ```
 
-1. Find the review baseline — the commit your last review was submitted
+1. Find the review baseline, the commit your last review was submitted
    against. REST reviews carry `commit_id`; `gh pr view --json reviews` does
    not, so use the API:
 
@@ -61,7 +58,7 @@ verdict per thread — not to re-review the entire PR.
    `BASELINE..HEAD`.
 
    If the viewer has no submitted review (e.g. you only left loose comments),
-   there is no reliable baseline. Do not guess silently — report this and fall
+   there is no reliable baseline. Do not guess silently: report this and fall
    back to diffing against the PR base branch (`git merge-base` of base..head),
    noting in the output that the scope is the whole PR, not an incremental
    slice.
@@ -75,11 +72,11 @@ verdict per thread — not to re-review the entire PR.
    ```
 
    Read the patch for the files that your open threads touch. You do not need
-   to read unrelated changes — the verdicts only concern files/lines under
+   to read unrelated changes: the verdicts only concern files/lines under
    existing feedback.
 
 1. Pull review threads via GraphQL. REST can't tell you whether a thread is
-   resolved or _who_ resolved it — only GraphQL exposes `isResolved` and
+   resolved or _who_ resolved it; only GraphQL exposes `isResolved` and
    `resolvedBy`. Capture the thread node `id` (for `resolveReviewThread` /
    `unresolveReviewThread`), each comment's `databaseId` (the REST id for both
    replies and reactions), and the root comment's existing reactions:
@@ -108,7 +105,7 @@ verdict per thread — not to re-review the entire PR.
 
    Then decide which threads to judge by _who_ closed them, not merely whether
    they're closed. Filtering on `isResolved == false` alone has a silent hole:
-   anyone with write access — usually the PR author — can resolve a thread, so a
+   anyone with write access, usually the PR author, can resolve a thread, so a
    premature or self-serving resolve would drop your concern out of the
    follow-up entirely and you'd never see that it wasn't actually handled. The
    only resolve you can trust sight-unseen is your own. So judge a thread when
@@ -116,50 +113,42 @@ verdict per thread — not to re-review the entire PR.
 
    - `isResolved == false` (still open), or
    - `isResolved == true` **and** `resolvedBy.login != VIEWER` **and** you have
-     not already vouched for it — the root comment's `reactionGroups` carries no
-     `ROCKET` whose `viewerHasReacted` is `true`.
+     not already vouched for it: the root comment's `reactionGroups` carries no
+     `ROCKET` whose `viewerHasReacted` is `true`. That 🚀 is what the `ack`
+     action leaves.
 
-   Skip a thread only when you resolved it yourself, or when a resolved-by-other
-   thread already carries your 🚀 `ROCKET` (you verified it on an earlier pass —
-   see `ack` in the Output section; that mark is what keeps re-runs from
-   re-judging the same closed thread every time). Record, per thread, whether it
-   was **resolved-by-other**: the verdict uses the same rubric regardless, but
-   the action it maps to differs. The thread's concern is the root comment
-   (first in `comments.nodes`); later comments are the discussion.
+   Record, per thread, whether it was **resolved-by-other**: the verdict uses
+   the same rubric regardless, but the action it maps to differs. The thread's
+   concern is the root comment (first in `comments.nodes`); later comments are
+   the discussion.
 
 1. Classify each in-scope thread against the new diff by delegating to the
-   `gtb-reviewer-followup-verdict` skill — do not re-derive the rubric here. Pass it the
-   diff from step 3 and the in-scope threads from step 4 (path, line, concern,
-   and the thread node `id` so verdicts map back), including the resolved-by-
-   other ones — judging them is the whole point of not silently trusting a
-   resolve you didn't make. It returns, per thread, a verdict
-   (`exact-fix` / `partial` / `unaddressed`) with cited evidence and a drafted
-   reply for the non-exact ones. Keeping that judgment in one pure, side-effect-
-   free skill is what lets it be tested against fixtures instead of a live PR;
-   this skill's job is only to feed it real GitHub data and act on the result.
+   `gtb-reviewer-followup-verdict` skill; do not re-derive the rubric here. Pass
+   it the since-baseline diff and the in-scope threads (path, line, concern,
+   and the thread node `id` so verdicts map back), resolved-by-other ones
+   included. It returns, per thread, a verdict (`exact-fix` / `partial` /
+   `unaddressed`) with cited evidence and a drafted reply for the non-exact
+   ones.
 
    `isOutdated: true` on a thread is useful corroboration to include in what you
    pass along (the flagged line changed), but the verdict skill still confirms
    the change does what the thread asked, not just that the line moved.
 
-   `gtb-reviewer-followup-verdict`'s return is an intermediate result, **not** the
-   deliverable. It gives you a verdict, evidence, and a reply per thread — but it
-   does not know the `rootCommentId` (needed to post a reply) or the `action`. You
-   must join each verdict back with the ids captured in step 4 to build the action
-   list in the Output section. Do not return verdict's raw array; every action
-   object must carry the `rootCommentId` and an `action`.
+   Join each verdict back with the ids the GraphQL query captured to build the
+   action list in the Output section. Do not return verdict's raw array; every
+   action object must carry the `rootCommentId` and an `action`.
 
 ## Output
 
 Real reviews can have dozens of open threads, so do NOT dump a full row-per-
-thread table into the conversation — that buries the signal and makes a single
+thread table into the conversation: that buries the signal and makes a single
 "approve?" prompt meaningless. Lead with a compact summary; the per-thread
-detail belongs in `gtb-gh-reviewer-followup-apply`'s walk-through, where the human decides one
-group at a time.
+detail belongs in `gtb-gh-reviewer-followup-apply`'s walk-through, where the
+human decides one group at a time.
 
-Emit two things:
+Emit both of these:
 
-1. A short summary the human can absorb at a glance — counts by verdict plus a
+1. A short summary the human can absorb at a glance: counts by verdict plus a
    one-line-per-thread index, exact-fix first (quick wins), then partial, then
    unaddressed, and finally the resolved-by-other threads you re-checked so the
    human sees which closed threads you reopened or vouched for:
@@ -180,18 +169,17 @@ Emit two things:
      [14] api/order.py:44   validate amount  → @author resolved, but still unvalidated → reply + reopen
    ```
 
-   Scope is strictly existing threads — never a brand-new conversation. The
+   Scope is strictly existing threads, never a brand-new conversation. The
    actions are **resolve** (open + exact fix), **reply** (open + partial /
-   unaddressed), **ack** (resolved-by-other + exact fix — a 🚀 that records you
+   unaddressed), **ack** (resolved-by-other + exact fix, a 🚀 that records you
    verified it), and **reply + reopen** (resolved-by-other + partial /
-   unaddressed — reply and unresolve so the buried concern resurfaces). Full
-   concern text, diff evidence, and draft reply wording are surfaced per-thread
-   during the walk-through, not here.
+   unaddressed, replying and unresolving so the buried concern resurfaces).
 
-1. A machine-usable action list that `gtb-gh-reviewer-followup-apply` consumes — one object per
-   thread, joining each `gtb-reviewer-followup-verdict` result with the ids gathered in
-   step 4 (`threadId` for resolve/reopen, `rootCommentId` for replies and acks).
-   Map the verdict to an action using whether the thread was resolved-by-other:
+1. A machine-usable action list that `gtb-gh-reviewer-followup-apply` consumes:
+   one object per thread, joining each `gtb-reviewer-followup-verdict` result
+   with the ids the GraphQL query gathered (`threadId` for resolve/reopen,
+   `rootCommentId` for replies and acks). Map the verdict to an action using
+   whether the thread was resolved-by-other:
 
    | thread state      | verdict             | action             |
    | ----------------- | ------------------- | ------------------ |
@@ -252,6 +240,6 @@ any line during `gtb-gh-reviewer-followup-apply`'s walk-through before it is pos
 ## Guardrails
 
 - Never call a mutating endpoint from this skill (no resolve, no unresolve, no
-  reply, no reaction, no comment). Its contract is analysis only; every write —
-  including the `ack` reaction and the `reopen` unresolve — is
+  reply, no reaction, no comment). Its contract is analysis only; every write,
+  including the `ack` reaction and the `reopen` unresolve, is
   `gtb-gh-reviewer-followup-apply`'s job behind a confirmation gate.

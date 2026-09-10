@@ -69,14 +69,14 @@ assembled inline, never staged in a file.
 gh pr merge --squash --delete-branch \
   --subject 'Fix scheduler retry backoff (#1234)' \
   --body-file - <<'BODY'
-The backoff reset on every poll, so a wedged job retried forever.
+The poller's backoff reset on every poll, so a wedged job retried forever.
 BODY
 ```
 
 ```powershell
 # PowerShell — here-string straight into --body; no pipe, no stdin
 gh pr merge --squash --delete-branch --subject 'Fix scheduler retry backoff (#1234)' --body @'
-The backoff reset on every poll, so a wedged job retried forever.
+The poller's backoff reset on every poll, so a wedged job retried forever.
 '@
 ```
 

@@ -74,7 +74,7 @@ inline, never staged in a file, never left to an editor git opens.
 git commit -F - <<'MSG'
 Fix scheduler retry backoff
 
-The backoff interval reset on every poll, so a wedged job retried
+The poller's backoff interval reset on every poll, so a wedged job retried
 forever at the floor delay instead of backing off.
 MSG
 ```
@@ -84,7 +84,7 @@ MSG
 git commit -m @'
 Fix scheduler retry backoff
 
-The backoff interval reset on every poll, so a wedged job retried
+The poller's backoff interval reset on every poll, so a wedged job retried
 forever at the floor delay instead of backing off.
 '@
 ```
@@ -102,6 +102,10 @@ committing.
 Quote the heredoc delimiter. Unquoted, the shell reaches into the body first,
 and a message is exactly where backticks and `$` show up — an identifier in
 prose becomes a command substitution.
+
+**Both forms are literal — write the body exactly as it should land.** `''`
+escapes a quote inside a single-quoted string and means nothing in either, so a
+doubled apostrophe lands as two characters in permanent history.
 
 A subject with no body still goes in `-m`: one line has no structure to lose.
 
@@ -178,7 +182,7 @@ the body by a blank line, one `Key: value` per line, no blank lines inside.
 ```text
 Fix scheduler retry backoff
 
-The backoff interval reset on every poll, so a wedged job retried
+The poller's backoff interval reset on every poll, so a wedged job retried
 forever at the floor delay instead of backing off.
 
 Resolves: #482
@@ -215,7 +219,7 @@ git commit -F - \
   --trailer 'Co-authored-by: Dana Reyes <dana@example.com>' <<'MSG'
 Fix scheduler retry backoff
 
-The backoff interval reset on every poll, so a wedged job retried
+The poller's backoff interval reset on every poll, so a wedged job retried
 forever at the floor delay instead of backing off.
 MSG
 ```

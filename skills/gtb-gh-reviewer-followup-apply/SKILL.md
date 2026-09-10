@@ -107,7 +107,8 @@ Act on each approved item by its `action`:
    input. In PowerShell the here-string is piped rather than passed, because
    `-F body=@'…'@` never reaches PowerShell's parser at all — gh reads the `@`
    as its own read-from-file syntax and dies opening a file named after the
-   first line of the reply:
+   first line of the reply. Either body is literal, so `''` is not an escape
+   and lands as two characters:
 
    ```powershell
    @'

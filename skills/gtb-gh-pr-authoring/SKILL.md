@@ -22,14 +22,14 @@ in a file.
 ```sh
 # POSIX shells — quoted heredoc delimiter, onto standard input
 gh pr create --draft --title 'Fix scheduler retry backoff' --body-file - <<'BODY'
-The backoff reset on every poll, so a wedged job retried forever.
+The poller's backoff reset on every poll, so a wedged job retried forever.
 BODY
 ```
 
 ```powershell
 # PowerShell — here-string straight into --body; no pipe, no stdin
 gh pr create --draft --title 'Fix scheduler retry backoff' --body @'
-The backoff reset on every poll, so a wedged job retried forever.
+The poller's backoff reset on every poll, so a wedged job retried forever.
 '@
 ```
 
@@ -41,7 +41,9 @@ Load `gtb-git-commit-conventions` before writing any of them — it governs all
 of it, and none of its rules are repeated here.
 
 The description is the exception. It stays in GitHub's UI, so those rules
-govern what it says but not how it is formatted.
+govern what it says but not how it is formatted — except the literal body,
+which is how it reaches the command: `''` is not an escape, and lands as two
+characters.
 
 ## Shape decisions made before a GitHub pull request
 
@@ -155,8 +157,8 @@ is one to three sentences saying what the change does and why, then the closing
 reference:
 
 ```text
-The backoff reset on every poll, so a wedged job retried forever at the floor
-delay. Compute it from the attempt count instead.
+The poller's backoff reset on every poll, so a wedged job retried forever at
+the floor delay. Compute it from the attempt count instead.
 
 Resolves: #482
 ```

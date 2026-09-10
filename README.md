@@ -16,6 +16,7 @@ description.
 | [gtb-gh-reviewer-followup](skills/gtb-gh-reviewer-followup/SKILL.md)                     | Follow up on your GitHub PR review after the author pushes changes — re-review only what changed since your last pass, then resolve the threads that were fixed and reply to the ones that weren't (propose-then-confirm).                   |
 | [gtb-git-commit-conventions](skills/gtb-git-commit-conventions/SKILL.md)                 | Git commit conventions — when to commit and how to write the message, including trailers, reverts, and untangling work already piled up in the working tree.                                                                                 |
 | [gtb-resolve-azp-deployment-backlog](skills/gtb-resolve-azp-deployment-backlog/SKILL.md) | Clear a backlog of pending Azure Pipelines manual-approval deployments — reject every superseded approval and optionally approve only the newest.                                                                                            |
+| [gtb-technical-writing](skills/gtb-technical-writing/SKILL.md)                           | How to write prose an engineer reads: documentation, code comments, design notes, issue and pull request bodies. Sentence-level craft drawn from Orwell, Strunk and Pinker, each rule attached to the figure it names.                       |
 
 `gtb-gh-reviewer-followup` composes three internal building-block skills —
 [gtb-gh-reviewer-followup-plan](skills/gtb-gh-reviewer-followup-plan/SKILL.md),

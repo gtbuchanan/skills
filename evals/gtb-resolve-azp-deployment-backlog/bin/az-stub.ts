@@ -18,7 +18,7 @@
  * `az pipelines list` — no cross-test az-call correlation needed, which is what
  * lets the suite run in parallel. The log is kept only for debugging.
  */
-import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
+import { dispatch, unmodelled } from '@gtbuchanan/stub-runtime/dispatch';
 import { argv, emit, joined, logCallToDir } from '@gtbuchanan/stub-runtime/stub';
 
 /**
@@ -26,16 +26,28 @@ import { argv, emit, joined, logCallToDir } from '@gtbuchanan/stub-runtime/stub'
  */
 const cancellingRunId = 900_999;
 
+/**
+ * The only repository world this catalog stands in — Azure Repos, which is what
+ * `--repository-type` names in the skill's own resolution step.
+ */
+const azureRepos = 'tfsgit';
+
 logCallToDir('az', 'az.jsonl');
 
 /*
  * Canned pipeline catalog: fictional names the eval prompts reference → their
  * build definition ids. These ids are baked into the eval assertions, so keep
  * them in sync with promptfooconfig.yaml.
+ *
+ * `repository` is what each is built from, and is deliberately not the pipeline
+ * name — the two resolution paths have to be distinguishable, or a lookup by
+ * repository is indistinguishable from one by name. It is filtered on and never
+ * answered with, as in the real listing, whose records are definition
+ * references and carry no repository.
  */
 const pipelines = [
-  { folder: '\\', id: 900_001, name: 'web-frontend' },
-  { folder: '\\', id: 900_002, name: 'api-service' },
+  { folder: '\\', id: 900_001, name: 'web-frontend', repository: 'storefront' },
+  { folder: '\\', id: 900_002, name: 'api-service', repository: 'platform-api' },
 ];
 
 /**
@@ -45,11 +57,55 @@ const json = (body: unknown): { stdout: string } => ({
   stdout: `${JSON.stringify(body)}\n`,
 });
 
+/**
+ * The value `flag` was given, or `undefined` when the call did not pass it.
+ */
+const flagValue = (flag: string): string | undefined => {
+  const at = argv.indexOf(flag);
+  return at === -1 ? undefined : argv[at + 1];
+};
+
+/**
+ * The catalog narrowed to what the call selected.
+ *
+ * A filter that is ignored is a filter that cannot fail: answering every
+ * `--name` with the whole catalog leaves a name that should resolve to nothing
+ * unsayable, and hides which of the skill's two resolution paths a run took.
+ *
+ * `--name` matches on prefix because the real one does, and the skill's first
+ * step leans on it for partial names. `--repository` selects on a fact the
+ * answer never carries, so it reads from the catalog alone. Only Azure Repos
+ * are modelled: a GitHub-hosted lookup is refused rather than answered out of a
+ * world it is not asking about, where the pipelines it found would not exist.
+ */
+const listing = (): readonly unknown[] => {
+  const repositoryType = flagValue('--repository-type');
+  if (repositoryType !== undefined && repositoryType !== azureRepos)
+    throw unmodelled(`no repositories of type "${repositoryType}"`);
+
+  const name = flagValue('--name')?.toLowerCase();
+  const repository = flagValue('--repository')?.toLowerCase();
+
+  return pipelines
+    .filter(
+      pipeline => name === undefined || pipeline.name.toLowerCase().startsWith(name),
+    )
+    .filter(
+      pipeline =>
+        repository === undefined || pipeline.repository.toLowerCase() === repository,
+    )
+    .map(pipeline => ({
+      folder: pipeline.folder,
+      id: pipeline.id,
+      name: pipeline.name,
+    }));
+};
+
 const outcome = dispatch({ argv, cmd: 'az', stdin: '' }, [
   {
     matches: () => /\bpipelines\s+list\b/v.test(joined),
     name: 'pipelines list',
-    respond: () => json(pipelines),
+    respond: () => json(listing()),
   },
   {
     matches: () => /\bpipelines\s+runs\s+update\b/v.test(joined),

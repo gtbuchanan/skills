@@ -242,13 +242,20 @@ watching.
 
 ## Acting on review feedback on a GitHub pull request
 
-**Do not summon an automated reviewer, and do not wait for one.** Firing it is
-the human's move, and it comes after their own pass over the code. A review
-aimed at code the author has not read yet burns tokens and rate-limit budget on
-findings that reading would have made moot.
+**Leave summoning an automated reviewer to the author**, and let one already
+running finish in its own time rather than blocking on it. Firing it is their
+move, and it comes after their own review of the code: a review aimed at code
+the author has not read burns tokens and rate-limit budget on findings that
+reading would have made moot.
 
-**Your work ends at green checks.** Report and stop. The findings come back to
-you when the human brings them, often in a later session.
+**Read a review whose check has already reported.** Reading one costs none of
+what firing one costs, and what it found belongs in the same report as the
+check result. Acting on the findings is a separate question that reading does
+not settle.
+
+**Your work ends at green checks.** Say what the checks and any completed
+review reported, then stop; those findings come back when the author brings
+them, often in a later session.
 
 Read the pass yourself rather than working from whatever was quoted at you: a
 summary of a review is not the review. Feedback lands on separate surfaces: the

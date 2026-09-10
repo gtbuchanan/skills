@@ -1,7 +1,7 @@
 ---
 name: gtb-gh-pr-boundaries
 description: >-
-  How planned units of work become GitHub pull requests — how many there are,
+  How planned units of work become GitHub pull requests: how many there are,
   where each branch starts, and when each one opens. Load before the first edit
   of work headed for GitHub, alongside whatever plans the units: all three are
   settled while the code is written, and a branch already carrying four units
@@ -14,21 +14,20 @@ description: >-
 
 # Where a change's boundaries fall on GitHub
 
-Planning a change produces **units** — each one complete, each passing its own
+Planning a change produces **units**, each one complete, each passing its own
 checks, each revertable alone. Whatever governs that planning owns where the
-seams fall. This skill owns what becomes of those seams on GitHub: how many pull
-requests carry them, where each branch starts, and when each one opens.
+seams fall; this skill owns what becomes of those seams on GitHub.
 
-All three are settled while the work is written, which is the only reason this
+How many pull requests carry them, where each branch starts, and when each one
+opens are all settled while the work is written, which is the only reason this
 is separate from `gtb-gh-pr-authoring`. That skill governs what a pull request
-needs from the moment it exists, and it is reached when one is being opened — by
-which point a branch carrying four units already exists, and none of what
-follows can be applied to it without redoing the work.
+needs from the moment it exists, and it is reached when one is being opened, by
+which point the branch already carries the answer.
 
 ## How many GitHub pull requests
 
 **One unit, one pull request, by default.** Bundling is the exception and needs
-a reason — units too small to be worth a pass of their own, or that cannot be
+a reason: units too small to be worth a pass of their own, or that cannot be
 verified apart. A reviewer approves a pull request rather than a unit, so a
 request carrying two decisions gets one judgment covering both.
 
@@ -36,7 +35,7 @@ request carrying two decisions gets one judgment covering both.
 history.** The branch's commits are replaced by the single one the merge writes,
 so units bundled into one request arrive as one commit, and the revert, the
 bisect and the blame they were shaped for go with them. That makes the count a
-decision about history rather than about review convenience — and squash is what
+decision about history rather than about review convenience, and squash is what
 `gtb-gh-pr-merging` merges with unless told otherwise.
 
 Where the repository lands a branch intact instead, its commits survive the
@@ -57,7 +56,7 @@ as a stack. An independent unit branches from the trunk, costs nothing at merge
 time, and lands in any order.
 
 A stack assembled afterwards, out of units written onto one branch, means
-re-cutting every branch around code that already exists — which is the work the
+re-cutting every branch around code that already exists, which is the work the
 plan was supposed to save.
 
 **Prefer the trunk wherever the dependency is not real.** A stack is expensive
@@ -76,11 +75,9 @@ together whatever the plan said.
 
 Nothing fails when this is skipped, which is why it is the step that quietly
 does not happen. Writing every unit first and deciding afterwards how to divide
-them is how a four-unit plan lands as one pull request.
+them is how a whole plan lands as one pull request.
 
 ## Then the mechanics
 
 Once a pull request is actually being opened, `gtb-gh-pr-authoring` governs the
-rest — the draft, the repository's template, the title and description, the
-check watch and review feedback — and `gtb-gh-pr-merging` governs landing it.
-None of it is repeated here.
+rest, and `gtb-gh-pr-merging` governs landing it.

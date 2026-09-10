@@ -14,15 +14,12 @@ description: >-
 
 # GitHub reviewer follow-up
 
-Follow up on your review of a GitHub pull request after the author has pushed
-changes. You are acting **as the reviewer**: re-review only what changed since
-your last review, then resolve the threads that were fixed and reply to the ones
-that weren't. This skill orchestrates the other PR-review skills — it does not
-reimplement their logic.
+You are acting **as the reviewer**, following up on your own review after the
+author has pushed changes.
 
-Target PR: the number passed when this skill is invoked (e.g. `/gtb-gh-reviewer-followup 123`).
-If none is given, infer it from the current branch (`gh pr view`); if that
-fails, ask which PR.
+Target PR: the number passed when this skill is invoked (e.g.
+`/gtb-gh-reviewer-followup 123`). If none is given, infer it from the current
+branch (`gh pr view`); if that fails, ask which PR.
 
 Run these steps in order, pausing where noted.
 
@@ -32,38 +29,36 @@ Run these steps in order, pausing where noted.
    - In Claude Code with worktrunk: `wt switch pr:<number>`, then enter that
      worktree. In another environment, use that agent's equivalent PR-checkout
      into an isolated workspace.
-   - **Fast-forward it to the latest PR head** (`git pull --ff-only`) — a
+   - **Fast-forward it to the latest PR head** (`git pull --ff-only`): a
      reused worktree can be stale, and a plain `git fetch` won't advance the
      checked-out branch. It's review-only with no local commits, so if the
      fast-forward can't apply, stop and report rather than merging.
 
-1. **Analyze — use the `gtb-gh-reviewer-followup-plan` skill.** It computes the diff since your
-   last submitted review, pulls your review threads, and returns a compact
-   per-verdict summary plus a machine-usable action list. It judges not only your
-   open threads but also ones _someone else_ resolved — since a thread can be
-   resolved by anyone, trusting every resolve silently would let an unaddressed
-   concern slip through — vouching for the ones genuinely fixed and reopening the
-   ones that weren't. This step is read-only.
+1. **Analyze, using the `gtb-gh-reviewer-followup-plan` skill.** It computes the
+   diff since your last submitted review, pulls your review threads, and
+   returns a compact per-verdict summary plus a machine-usable action list.
+   It judges threads _someone else_ resolved as well as your open ones, since
+   anyone can resolve a thread and trusting every resolve would let an
+   unaddressed concern slip through. This step is read-only.
 
-1. **Walk through and confirm — use the `gtb-gh-reviewer-followup-apply` skill.** It takes the
-   action list and gates every write on your approval: it batches the low-risk
-   `resolve`/`ack` items into one confirmation and walks the `reply`s (and any
-   `reopen`s) one at a time so you can tune the wording. Nothing is written to the
-   PR until you approve it. Scope stays on existing threads — resolve, reply, ack,
-   or reopen, never a brand-new conversation.
+1. **Walk through and confirm, using the `gtb-gh-reviewer-followup-apply`
+   skill.** It takes the action list and gates every write on your approval: it
+   batches the low-risk `resolve`/`ack` items into one confirmation and walks
+   the `reply`s (and any `reopen`s) one at a time so you can tune the wording.
+   Scope stays on existing threads: resolve, reply, ack, or reopen, never a
+   brand-new conversation.
 
-1. **Happy path — offer to approve and merge.** If every thread was an exact fix
+1. **Happy path: offer to approve and merge.** If every thread was an exact fix
    and got resolved (nothing left partial or unaddressed), the review is fully
    addressed: ask whether to approve and squash-merge, and do so only on an
    explicit yes. If anything stayed unresolved, skip this and leave the PR open.
 
-1. **Clean up.** The follow-up used a review-only checkout with no local commits,
-   so there is nothing to preserve — tear it back down; it can be re-created any
-   time.
+1. **Clean up.** The follow-up used a review-only checkout with no local
+   commits, so nothing needs preserving. Tear it back down.
    - In Claude Code with worktrunk: exit the session's worktree context
      (`ExitWorktree`), then `git fetch` and `wt remove <branch>` to delete the
-     worktree and its local branch. Elsewhere, discard the throwaway checkout the
-     equivalent way.
+     worktree and its local branch. Elsewhere, discard the throwaway checkout
+     the equivalent way.
 
    Finally, print a short summary: how many threads were resolved, how many
    replied to, and anything skipped.

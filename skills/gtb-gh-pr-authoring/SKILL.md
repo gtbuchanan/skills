@@ -139,6 +139,10 @@ what makes the description the reliable place for it.
 reviewers. Green checks are not the signal for it, and neither is a clean bot
 pass.
 
+**Being asked to promote reports the author's own review complete.** They have
+read the code and are inviting others to, so the branch is past its author
+review and stays past it.
+
 ## The default GitHub pull request description
 
 **With no template to fill in, write prose and stop.** The default description

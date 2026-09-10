@@ -1,8 +1,8 @@
 # Auto-merging a GitHub pull request
 
 What `gh pr merge --auto` settles at enable time and cannot be asked again
-later. The merge lands unattended, so everything here is a decision made once,
-in the dark, against code nobody is watching.
+later. The merge lands unattended, so everything here is decided once and never
+revisited.
 
 ## The auto-merge message lands as supplied
 
@@ -26,7 +26,7 @@ re-enable with the message rewritten against the code as it now stands.
 treats `--auto` as auto-merge only when the PR cannot merge yet; when nothing is
 outstanding it merges directly instead, and the flag behaves as it always does.
 So the same command deletes the branch or silently does not, depending on
-whether a requirement happened to be pending — and when it is pending, `gh` has
+whether a requirement happened to be pending, and when it is pending, `gh` has
 returned long before the merge, so both the local and the remote branch stay.
 
 Whether that costs anything is a repository setting:
@@ -35,17 +35,16 @@ Whether that costs anything is a repository setting:
 gh repo view --json deleteBranchOnMerge
 ```
 
-That setting states an intention rather than an outcome: a branch protection
-rule or a repository ruleset restricting deletion stops the cleanup, and
-`deleteBranchOnMerge` still reads `true` afterwards. Where a rule might cover
-the head branch, the answer is what the branch did, not what the setting said.
+That setting states an intention rather than an outcome: a rule restricting
+deletion stops the cleanup while `deleteBranchOnMerge` still reads `true`, as
+`stacked-pull-requests.md` covers. Check what the branch did, not what the
+setting said.
 
 Where the repository does delete head branches itself, `--auto` gives up
 nothing. Where it does not, the branch outlives the session that could have
-removed it,
-so settle it before enabling: take the wait and merge synchronously, or say in
-the handoff that the branch is left to sweep up. The local branch is left either
-way.
+removed it, so settle it before enabling: take the wait and merge
+synchronously, or say in the handoff that the branch is left to sweep up. The
+local branch is left either way.
 
 **The dependent-PR check still applies, and lands unattended.** Everything in
 `stacked-pull-requests.md` about deleting a branch another PR still points at

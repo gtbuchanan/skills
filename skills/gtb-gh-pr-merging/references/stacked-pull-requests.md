@@ -1,7 +1,7 @@
 # Stacked GitHub pull requests
 
 Everything that changes at merge time when a pull request has another one
-sitting on top of it — whether a stacking tool put it there or the branches
+sitting on top of it, whether a stacking tool put it there or the branches
 were pointed at each other by hand. The ordinary merge rules still hold; these
 replace the ones they contradict. Creating a stack is `gtb-gh-pr-authoring`.
 
@@ -33,18 +33,18 @@ gh api --method PUT 'repos/{owner}/{repo}/pulls/<number>/merge-async' \
 ```
 
 That returns `status: pending`, so poll until the PR reads `MERGED`. It can
-also return `status: failed` with an HTTP 400 — a draft PR does that — so check
+also return `status: failed` with an HTTP 400 (a draft PR does that), so check
 the response before you start polling. Pin `sha` so a push landing between the
 read and the merge cannot be the thing that merges. The endpoint takes no
 branch-deletion flag, so a branch that disappears anyway went to the
 repository's `deleteBranchOnMerge`.
 
 **A member above the one that merged is moved for you.** GitHub retargets it
-onto the new base either way — that much is not what the stack buys you. What a
-real stack adds is the rebase: the member's commits are replayed onto the new
+onto the new base either way, so that much is not what the stack buys you. What
+a real stack adds is the rebase: the member's commits are replayed onto the new
 base, so it arrives ready rather than carrying work the base already has. A
-plain stack — only a base pointer, with no `gh stack` behind it — gets the
-pointer moved and nothing else, so it still wants restacking by hand.
+plain stack, only a base pointer with no `gh stack` behind it, gets the pointer
+moved and nothing else, so it still wants restacking by hand.
 
 **That move is a rebase, so the member's commits lose their signatures.** They
 are replayed as new objects the original signatures do not cover, and an author
@@ -55,23 +55,22 @@ It stops at the branch, though, provided you squash. A squash merge replaces
 those commits outright: GitHub builds the one that lands on the trunk, commits
 it as itself and signs it, so what history keeps is verified whatever the
 branch looked like. Fast-forwarding a member instead preserves exactly what is
-on the branch, which after the stack's rebase is the unsigned version — so it
-is squashing that saves you here, not merging in general.
+on the branch, which after the stack's rebase is the unsigned version, so it is
+squashing that saves you here, not merging in general.
 
 **No CLI route bypasses a requirement here.** `merge-async` takes the request
 and answers `status: pending` exactly as it would for a mergeable PR, then
-leaves it blocked and never merges it — so the refusal arrives looking like
+leaves it blocked and never merges it, so the refusal arrives looking like
 success, and a poll waiting for `MERGED` waits forever. `--admin` gets further
-and still
-fails: the base-branch complaint does disappear, so the bypass itself worked,
+and still fails: the base-branch complaint does disappear, so the bypass worked,
 and the merge then falls over on stack membership instead. The merge box on the
 PR page is not so limited: with the rights to use it, a "merge without waiting
 for requirements to be met" checkbox appears there for a blocked stack member,
 including one with unmerged PRs still above it. That is their call to make, so
 say the PR is blocked and leave it to them.
 
-Unstacking is the other way round it — leave the stack, merge as an ordinary
-PR, restack — and it costs more than it looks. The PRs above were not stack
+Unstacking is the other way round it (leave the stack, merge as an ordinary PR,
+restack), and it costs more than it looks. The PRs above were not stack
 members when the merge happened, so none of them was rebased and each needs
 restacking by hand. And an ordinary PR merges through `gh pr merge`, which puts
 `--delete-branch` back in play with those PRs pointing at the branch it is
@@ -88,7 +87,7 @@ it as a PR number.
 
 ## Deleting the branch under a dependent pull request
 
-**Deleting a branch closes every pull request based on it.** Not retargets —
+**Deleting a branch closes every pull request based on it.** Not retargets:
 closes. Merging the parent does nothing to a dependent on its own: its base
 still names the parent branch, and it sits there open until that branch goes,
 at which point it closes.
@@ -96,11 +95,10 @@ at which point it closes.
 **GitHub only moves a dependent when GitHub is the one deleting the branch.**
 The retarget belongs to the repository's own post-merge cleanup, not to the
 merge, so it fires where `deleteBranchOnMerge` is set and the merge leaves the
-branch to it. Delete the branch yourself — `--delete-branch`, or a push
-deletion afterwards — and no retarget happens at any point; the dependent
-simply closes.
+branch to it. Delete the branch yourself (`--delete-branch`, or a push deletion
+afterwards), and no retarget happens at any point; the dependent simply closes.
 
-That leaves two orders that work, and one that reads plausible and destroys the
+That leaves the orders that work, and one that reads plausible and destroys the
 dependent:
 
 ```sh
@@ -116,8 +114,8 @@ git push origin --delete <branch>
 ```
 
 **That retarget is for dependents GitHub does not consider a stack.** A member
-of a real one refuses it — `Cannot change the base branch because the pull
-request is part of a stack` — so the move-them-first order is simply not
+of a real one refuses it with `Cannot change the base branch because the pull
+request is part of a stack`, so the move-them-first order is simply not
 available there, and the same PR cannot be merged with `gh pr merge` either.
 What a stack offers instead is that it maintains the chain itself, which is the
 thing being paid for. Check before assuming which kind you have, since the two
@@ -130,12 +128,12 @@ gh api graphql -f query='query { repository(owner: "OWNER", name: "REPO") {
 
 A null `stackEntry` is a hand-rolled chain, and everything above applies. A
 position in a stack means the deletion hazard is GitHub's problem rather than
-yours — and that you cannot take it back by hand if it goes wrong.
+yours, and that you cannot take it back by hand if it goes wrong.
 
 Merging without `--delete-branch`, waiting for GitHub to move the dependents,
 and deleting the branch afterwards is the one to avoid. Nothing moves in the
 meantime, so the deletion arrives with the dependent still pointing at the
-branch and closes it — the same outcome as deleting immediately, reached slowly
+branch and closes it: the same outcome as deleting immediately, reached slowly
 enough to look deliberate.
 
 **`deleteBranchOnMerge` states an intention, not an outcome.** A branch
@@ -163,25 +161,19 @@ git push --force-with-lease origin <dependent-branch>
 from the dependent and not from `<head-sha>`, which is the dependent's own work
 only while the parent's history is the one the dependent forked from. Amend or
 force-push the parent after that, and the dependent still holds the pre-rewrite
-copies of the parent's commits — different shas, so unreachable from
+copies of the parent's commits: different shas, so unreachable from
 `<head-sha>`, so replayed too. What you get is the parent's work committed
 twice, once in each form, and conflicts where the rewrite touched anything.
 
-The range says which case you are in without your having to reconstruct the
-branch's history: if it lists only commits you recognise as the dependent's,
-the boundary is right. Anything else in there means the parent moved under it,
-and the sha to replay from is wherever the two histories actually diverge —
-`git merge-base <head-sha> <dependent-branch>` — with the duplicated commits
+If the range lists only commits you recognise as the dependent's, the boundary
+is right. Anything else in there means the parent moved under it,
+and the sha to replay from is wherever the two histories actually diverge, from
+`git merge-base <head-sha> <dependent-branch>`, with the duplicated commits
 dropped by hand.
-
-A stacking tool and a hand-rolled stack are the same hazard for the deletion,
-because only the base pointer matters there. They part company over the restack:
-a real stack replays the dependent for you, at the cost in signatures
-[the merge section](#merging-a-stacked-pull-request) covers.
 
 **If one has already been closed this way, reopen it rather than replacing
 it.** Reopening is refused outright while the base branch is missing, and
-`--delete-branch` took your local copy of it too — but the merged PR still
+`--delete-branch` took your local copy of it too. But the merged PR still
 reports the sha it was deleted at, so nothing is actually lost:
 
 ```sh
@@ -191,19 +183,19 @@ gh pr reopen <closed-number>
 gh pr edit <closed-number> --base <base>
 ```
 
-**Those four steps are an order, not a list.** Restoring the branch first is
-what makes the rest possible: while the ref is missing, reopening fails with
-`state cannot be changed. The <branch> branch has been deleted.` The obvious
-way round it — retarget the closed PR onto a branch that does exist, then
-reopen — is refused too, with `Cannot change the base branch of a closed pull
-request`. So there is no path that avoids putting the deleted ref back, and
-retargeting has to wait until the PR is open again.
+**Those steps are an order, not a list.** Restoring the branch first is what
+makes the rest possible: while the ref is missing, reopening fails with `state
+cannot be changed. The <branch> branch has been deleted.` The obvious way round
+it, retargeting the closed PR onto a branch that does exist and then reopening,
+is refused too, with `Cannot change the base branch of a closed pull request`.
+So no path avoids putting the deleted ref back, and retargeting has to wait
+until the PR is open again.
 
 Restore the ref the closed PR's base actually names. In a deeper stack that is
 its immediate parent rather than whatever merged, and a split that took several
 branches at once needs each of them back before the PR at the bottom of the gap
 will reopen.
 
-That restores the same pull request — its number, its threads, its review
-history — which is the reason to do it rather than open a replacement and lose
+That restores the same pull request, its number, its threads and its review
+history, which is the reason to do it rather than open a replacement and lose
 all of it. Delete the branch again once the reopened PR points elsewhere.

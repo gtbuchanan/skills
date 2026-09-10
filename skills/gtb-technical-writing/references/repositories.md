@@ -28,6 +28,11 @@ constraint that ruled out the obvious one, the failure mode nothing announces,
 the boundary a reader would otherwise discover in production. In code that is
 most of the job, since the signature already carries the types and the name.
 
+A reference document is the exception, because being the copy is its job. A
+configuration reference exists so nobody has to open the config, so it carries
+each key with its default and its bounds. The rule governs prose that mentions
+a value in passing, not the table a reader consults instead of the source.
+
 **Write the state, not the path to it.** How this came to be is in the commit
 log and the pull request. A sentence recounting what an earlier version did,
 what was tried and abandoned, or which bug prompted the change is history the

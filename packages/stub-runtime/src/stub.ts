@@ -20,6 +20,7 @@
  */
 import { appendFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
+import type { StubOutcome } from './dispatch.ts';
 import { locateScenario } from './scenario.ts';
 import type { Keyed } from './scenario.ts';
 
@@ -123,4 +124,23 @@ export const writeLine = (text: string): void => {
  */
 export const writeJson = (body: unknown): void => {
   process.stdout.write(JSON.stringify(body));
+};
+
+/**
+ * Hands back an outcome: both streams, then the status to leave with.
+ *
+ * The status is assigned rather than forced. Writing to a pipe is asynchronous
+ * on some platforms, and `process.exit` ends the process with a queued write
+ * still unflushed — taking the answer that was hardest to earn, since a
+ * refusal exists to be read by whoever has to model the command and a `--json`
+ * body exists to be parsed by the code under test. Losing either turns a
+ * double that was answering honestly back into one that answers with nothing.
+ *
+ * Nothing a stub opens holds the event loop, so the process still ends as soon
+ * as the writes land, with the status set here.
+ */
+export const emit = (outcome: StubOutcome): void => {
+  process.stdout.write(outcome.stdout);
+  process.stderr.write(outcome.stderr);
+  process.exitCode = outcome.code;
 };

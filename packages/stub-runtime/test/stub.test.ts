@@ -1,5 +1,6 @@
 /*
- * Tests for what a stub records about the call it stood in for.
+ * Tests for what a stub records about the call it stood in for, and for how it
+ * hands back the answer.
  *
  * A stub that read standard input and found nothing records an empty body; one
  * that never looked records no body at all. Collapse the two and a checker gets
@@ -9,9 +10,18 @@
  * concurrently give each world its own log, so a call written to the wrong file
  * — or to a shared one — is evidence against a scenario that never made it.
  *
+ * Answering is pinned in a child process, since in-process there is nothing to
+ * observe: the writes land on the runner's own streams and the exit never
+ * happens. What those cases watch for is a process that ended inside the call.
+ * An exit forced there takes any queued write with it, and what it takes first
+ * is the answer hardest to earn — a refusal nobody gets to read, a `--json`
+ * body the code under test has to parse — so a double that was answering
+ * honestly goes back to answering with nothing.
+ *
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
  */
+import { spawnSync } from 'node:child_process';
 import {
   existsSync,
   mkdirSync,
@@ -141,4 +151,60 @@ test('a call nothing can attribute is passed over, not failed', ({ expect }) => 
   logCallToScenario('git', scenarios, outside);
 
   expect(existsSync(workspace.logDir)).toBe(false);
+});
+
+/**
+ * The module the child imports `emit` from, by URL rather than by package
+ * specifier: a bare specifier in an eval'd script resolves against whatever
+ * directory the runner happens to be in.
+ */
+const stubModule = new URL('../src/stub.ts', import.meta.url).href;
+
+/**
+ * What the child writes once `emit` has returned.
+ *
+ * A process forced to exit inside the call never reaches it, which is the
+ * evidence of a forced exit that holds on every platform. The truncation such
+ * an exit causes is not: Node writes to a pipe synchronously on Windows and
+ * Linux and asynchronously on macOS, so a lost body would only ever show up on
+ * some of the machines this runs on.
+ */
+const trailer = '<still here>';
+
+/**
+ * Emits `outcome` from a child process and reports what reached the pipes.
+ */
+const emitted = (outcome: {
+  code: number;
+  stderr: string;
+  stdout: string;
+}): { status: number | null; stderr: string; stdout: string } =>
+  spawnSync(
+    process.execPath,
+    [
+      '--input-type=module',
+      '-e',
+      `import { emit } from ${JSON.stringify(stubModule)};` +
+      `emit(${JSON.stringify(outcome)});` +
+      `process.stdout.write(${JSON.stringify(trailer)});`,
+    ],
+    { encoding: 'utf8' },
+  );
+
+test('both streams and the status reach whoever called the double', {
+  tags: ['slow'],
+}, ({ expect }) => {
+  const result = emitted({ code: 2, stderr: 'refused\n', stdout: '{"ok":true}' });
+
+  expect(result.stdout.startsWith('{"ok":true}')).toBe(true);
+  expect(result.stderr).toBe('refused\n');
+  expect(result.status).toBe(2);
+});
+
+test('answering does not end the process that answered', { tags: ['slow'] }, ({
+  expect,
+}) => {
+  const result = emitted({ code: 1, stderr: 'refused\n', stdout: '' });
+
+  expect(result.stdout).toBe(trailer);
 });

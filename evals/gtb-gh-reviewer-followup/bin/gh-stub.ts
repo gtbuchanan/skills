@@ -16,7 +16,7 @@
  * from a suite.
  */
 import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
-import { argv, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
+import { argv, emit, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
 
 /**
  * The fixture PR every canned response refers to.
@@ -54,6 +54,4 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin: '' }, [
   },
 ]);
 
-process.stdout.write(outcome.stdout);
-process.stderr.write(outcome.stderr);
-process.exit(outcome.code);
+emit(outcome);

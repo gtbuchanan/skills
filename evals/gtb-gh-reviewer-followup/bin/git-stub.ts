@@ -21,7 +21,7 @@
  *
  * Installed as `git` at the front of the eval PATH by the runner.
  */
-import { joined, logCall } from '@gtbuchanan/stub-runtime/stub';
+import { emit, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
 
 /**
  * Exit status for a call the double cannot answer. Any non-zero would do; 1 is
@@ -31,10 +31,11 @@ const refusedExit = 1;
 
 logCall('git');
 
-process.stderr.write(
-  `git-stub: no canned response for "git ${joined}". This suite models no ` +
-  'repository, and the run was told the checkout is already in place. Model ' +
-  'the command rather than letting the call return empty success.\n',
-);
-
-process.exit(refusedExit);
+emit({
+  code: refusedExit,
+  stderr:
+    `git-stub: no canned response for "git ${joined}". This suite models no ` +
+    'repository, and the run was told the checkout is already in place. Model ' +
+    'the command rather than letting the call return empty success.\n',
+  stdout: '',
+});

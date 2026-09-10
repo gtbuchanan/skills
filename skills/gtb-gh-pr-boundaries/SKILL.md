@@ -69,13 +69,8 @@ lands may need retargeting by hand.
 ## When a GitHub pull request opens
 
 **Open a unit's pull request when that unit goes green, before the next one
-begins.** A unit whose checks pass is finished as code and not yet finished as a
-unit: left sitting on the branch while the next is written, the two arrive
-together whatever the plan said.
-
-Nothing fails when this is skipped, which is why it is the step that quietly
-does not happen. Writing every unit first and deciding afterwards how to divide
-them is how a whole plan lands as one pull request.
+begins.** Writing every unit first and deciding afterwards how to divide them
+is how a whole plan lands as one pull request.
 
 ## Then the mechanics
 

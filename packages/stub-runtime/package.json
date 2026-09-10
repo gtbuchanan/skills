@@ -5,6 +5,7 @@
   "exports": {
     "./calls": "./src/calls.ts",
     "./dispatch": "./src/dispatch.ts",
+    "./match": "./src/match.ts",
     "./passthrough": "./src/passthrough.ts",
     "./scenario": "./src/scenario.ts",
     "./stub": "./src/stub.ts"

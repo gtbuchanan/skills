@@ -40,6 +40,7 @@ import { checksFor } from '@gtbuchanan/github-cli-stub/scenario-world';
 import { pick, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { readState, writeState } from '@gtbuchanan/github-cli-stub/state';
 import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
+import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
 import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
 import { appendJsonl, argv, emit, joined } from '@gtbuchanan/stub-runtime/stub';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
@@ -149,12 +150,12 @@ const checksResponse = (): { code?: number; stderr?: string; stdout: string } =>
 
 const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
   {
-    matches: () => joined.includes('api user'),
+    matches: allOf(subcommand('api'), argument(/^user$/v)),
     name: 'api user',
     respond: () => ({ stdout: `${viewer}\n` }),
   },
   {
-    matches: () => joined.includes('repo view'),
+    matches: subcommand('repo', 'view'),
     name: 'repo view',
     respond: () => {
       /* One record, then `pick` narrows it. Answering each field from its own
@@ -170,7 +171,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     },
   },
   {
-    matches: () => joined.includes('pr list'),
+    matches: subcommand('pr', 'list'),
     name: 'pr list',
     respond: () => ({
       stdout: `${JSON.stringify(
@@ -179,12 +180,12 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     }),
   },
   {
-    matches: () => joined.includes('pr checks'),
+    matches: subcommand('pr', 'checks'),
     name: 'pr checks',
     respond: checksResponse,
   },
   {
-    matches: () => joined.includes('pr view'),
+    matches: subcommand('pr', 'view'),
     name: 'pr view',
     respond: () => {
       const viewed = pick(records.named(namedNumber()), requestedFields(argv));
@@ -192,19 +193,21 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     },
   },
   {
-    matches: () => joined.includes('/replies'),
+    matches: allOf(subcommand('api'), argument(/\/replies/v)),
     name: 'review comment reply',
     respond: () => ({ stdout: `${JSON.stringify({ id: 9001 })}\n` }),
   },
   {
-    matches: () => /\/pulls\/\d+\/comments/v.test(joined),
+    /* Checked after the reply endpoint, which extends this one — a reply path
+       ends `/comments/<id>/replies`, so the shorter pattern claims it too. */
+    matches: allOf(subcommand('api'), argument(/\/pulls\/\d+\/comments/v)),
     name: 'review comments',
     respond: () => ({
       stdout: `${JSON.stringify(scenario.reviewComments.map(toWireComment))}\n`,
     }),
   },
   {
-    matches: () => joined.includes('pr create'),
+    matches: subcommand('pr', 'create'),
     name: 'pr create',
     respond: () => {
       const branch = head();
@@ -236,7 +239,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     },
   },
   {
-    matches: () => joined.includes('pr ready'),
+    matches: subcommand('pr', 'ready'),
     name: 'pr ready',
     respond: () => {
       const number = namedNumber() ?? impliedNumber(state, scenario, head());
@@ -247,7 +250,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     },
   },
   {
-    matches: () => joined.includes('pr edit'),
+    matches: subcommand('pr', 'edit'),
     name: 'pr edit',
     respond: () => {
       const base = flagValue('--base');
@@ -263,14 +266,14 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     },
   },
   {
-    matches: () => joined.includes('pr comment'),
+    matches: subcommand('pr', 'comment'),
     name: 'pr comment',
     respond: () => ({
       stdout: `${records.url(namedNumber() ?? 0)}#issuecomment-1\n`,
     }),
   },
   {
-    matches: () => joined.includes('merge-async'),
+    matches: allOf(subcommand('api'), argument(/\/merge-async/v)),
     name: 'asynchronous merge',
     respond: () => {
       writeState(statePath, {
@@ -281,7 +284,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     },
   },
   {
-    matches: () => joined.includes('pr merge'),
+    matches: subcommand('pr', 'merge'),
     name: 'pr merge',
     respond: () => {
       if (scenario.isStackMember === true) {

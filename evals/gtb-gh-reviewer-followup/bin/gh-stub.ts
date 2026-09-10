@@ -16,7 +16,8 @@
  * from a suite.
  */
 import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
-import { argv, emit, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
+import { subcommand } from '@gtbuchanan/stub-runtime/match';
+import { argv, emit, logCall } from '@gtbuchanan/stub-runtime/stub';
 
 /**
  * The fixture PR every canned response refers to.
@@ -27,21 +28,21 @@ logCall('gh');
 
 const outcome = dispatch({ argv, cmd: 'gh', stdin: '' }, [
   {
-    matches: () => /\bpr\s+merge\b/v.test(joined),
+    matches: subcommand('pr', 'merge'),
     name: 'pr merge',
     respond: () => ({
       stdout: `✓ Squash-merged pull request #${String(pullNumber)} (test double)\n`,
     }),
   },
   {
-    matches: () => /\bpr\s+review\b/v.test(joined),
+    matches: subcommand('pr', 'review'),
     name: 'pr review',
     respond: () => ({
       stdout: `✓ Approved pull request #${String(pullNumber)} (test double)\n`,
     }),
   },
   {
-    matches: () => /\bpr\s+view\b/v.test(joined),
+    matches: subcommand('pr', 'view'),
     name: 'pr view',
     respond: () => ({
       stdout: `${JSON.stringify({

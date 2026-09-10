@@ -22,8 +22,9 @@ import { currentHead, nextPrNumber } from '@gtbuchanan/github-cli-stub/pulls';
 import { pick, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { readState, writeState } from '@gtbuchanan/github-cli-stub/state';
 import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
+import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
 import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
-import { appendJsonl, argv, emit, joined } from '@gtbuchanan/stub-runtime/stub';
+import { appendJsonl, argv, emit } from '@gtbuchanan/stub-runtime/stub';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
 import { scenarios } from '#src/scenarios.ts';
 
@@ -76,19 +77,19 @@ const repoRecord: Record<string, unknown> = {
 
 const outcome = dispatch({ argv, cmd: 'gh', stdin: '' }, [
   {
-    matches: () => joined.includes('api user'),
+    matches: allOf(subcommand('api'), argument(/^user$/v)),
     name: 'api user',
     respond: () => ({ stdout: `${viewer}\n` }),
   },
   {
-    matches: () => joined.includes('repo view'),
+    matches: subcommand('repo', 'view'),
     name: 'repo view',
     respond: () => ({
       stdout: `${JSON.stringify(pick(repoRecord, requestedFields(argv)))}\n`,
     }),
   },
   {
-    matches: () => joined.includes('pr create'),
+    matches: subcommand('pr', 'create'),
     name: 'pr create',
     respond: () => {
       const number = nextPrNumber(state, world);

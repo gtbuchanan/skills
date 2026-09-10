@@ -26,6 +26,7 @@
  */
 import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
 import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
+import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
 import { argv, emit, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
 
 const stdin = stdinBody(argv);
@@ -49,7 +50,7 @@ const repliesPath = /comments\/(?<id>\d+)\/replies/v;
 
 const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
   {
-    matches: () => joined.includes('FAIL'),
+    matches: argument(/FAIL/v),
     name: 'injected failure',
     respond: () => ({
       code: 1,
@@ -59,7 +60,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
   {
     /* Checked before `resolveReviewThread`, which is a substring of it — a
        plain match on the shorter name would swallow every unresolve call. */
-    matches: () => joined.includes('unresolveReviewThread'),
+    matches: allOf(subcommand('api'), argument(/unresolveReviewThread/v)),
     name: 'unresolveReviewThread',
     respond: () => ({
       stdout: JSON.stringify({
@@ -70,7 +71,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     }),
   },
   {
-    matches: () => joined.includes('resolveReviewThread'),
+    matches: allOf(subcommand('api'), argument(/resolveReviewThread/v)),
     name: 'resolveReviewThread',
     respond: () => ({
       stdout: JSON.stringify({
@@ -81,7 +82,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     }),
   },
   {
-    matches: () => reactionsPath.test(joined),
+    matches: allOf(subcommand('api'), argument(reactionsPath)),
     name: 'comment reactions',
     respond: () => ({
       stdout: JSON.stringify({
@@ -91,7 +92,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     }),
   },
   {
-    matches: () => repliesPath.test(joined),
+    matches: allOf(subcommand('api'), argument(repliesPath)),
     name: 'comment replies',
     respond: () => {
       const id = commentId(repliesPath);
@@ -105,12 +106,12 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     },
   },
   {
-    matches: () => joined.includes('api user'),
+    matches: allOf(subcommand('api'), argument(/^user$/v)),
     name: 'api user',
     respond: () => ({ stdout: JSON.stringify({ login: 'reviewer' }) }),
   },
   {
-    matches: () => joined.includes('repo view'),
+    matches: subcommand('repo', 'view'),
     name: 'repo view',
     respond: () => ({ stdout: JSON.stringify({ nameWithOwner: 'acme/widgets' }) }),
   },

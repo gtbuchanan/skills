@@ -76,6 +76,20 @@ const unwrapFence = (text: string): string => {
   return wrapped?.groups?.['body'] ?? text;
 };
 
+/**
+ * Renders a provider's output as text.
+ *
+ * A provider that returned nothing arrives here as undefined, and
+ * `JSON.stringify` hands back undefined for it, which throws in `unwrapFence`.
+ * The empty string carries it to the empty-revision failure instead, which is
+ * what a missing output is.
+ */
+const serialize = (output: unknown): string => {
+  if (typeof output === 'string') return output;
+  if (output === undefined) return '';
+  return JSON.stringify(output);
+};
+
 const countWords = (text: string): number =>
   text.split(/\s+/v).filter(word => word.length > 0).length;
 
@@ -157,7 +171,7 @@ export default function assertProse(
   output: unknown,
   context: { vars?: unknown },
 ): AssertionResult {
-  const raw = typeof output === 'string' ? output : JSON.stringify(output);
+  const raw = serialize(output);
   const revised = unwrapFence(raw);
   const vars = v.parse(VarsSchema, context.vars ?? {});
 

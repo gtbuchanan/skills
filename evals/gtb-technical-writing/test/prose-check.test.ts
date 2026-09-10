@@ -149,6 +149,15 @@ test('keeps facts either side of an embedded code block', ({ expect }) => {
   expect(result.pass).toBe(true);
 });
 
+test('fails a missing revision rather than throwing', ({ expect }) => {
+  const result = assertProse(undefined, {
+    vars: { fixture: tightFixture, mustContain: ['429'] },
+  });
+
+  expect(result.pass).toBe(false);
+  expect(result.reason).toContain('empty');
+});
+
 test('fails an empty revision outright', ({ expect }) => {
   const result = check(' '.repeat(3), { mustContain: ['429'] });
 

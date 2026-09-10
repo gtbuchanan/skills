@@ -20,8 +20,12 @@ beside something the reader can read and that changes without it.
 states, the config already names, or another document already owns is a copy.
 It costs load, and it drifts from the original, which changes without it. Name
 the source instead: the config key rather than its current value, the function
-rather than a paraphrase of its signature. Where nothing names it, the value
-stays, because a figure with no source to point at is not a copy.
+rather than a paraphrase of its signature.
+
+**Where nothing names it, the value stays.** A figure with no source to point
+at is not a copy, and cutting it leaves the reader nothing to look up. Both
+kinds sit together often: a default whose key the prose gives, beside an
+override it attributes to nothing. Replace the first, keep the second.
 
 **What earns its place exists nowhere else:** why this approach, the
 constraint that ruled out the obvious one, the failure mode nothing announces,

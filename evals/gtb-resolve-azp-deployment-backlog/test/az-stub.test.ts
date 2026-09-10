@@ -78,6 +78,81 @@ test('the pipeline catalog is what a listing answers with', ({ expect }) => {
   );
 });
 
+test('a name selects the pipeline it names, rather than the catalog', ({ expect }) => {
+  const result = az('pipelines', 'list', '--name', 'api-service');
+
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.stdout)).toStrictEqual([
+    expect.objectContaining({ id: 900_002, name: 'api-service' }),
+  ]);
+});
+
+test('a name the catalog does not hold answers with an empty list', ({ expect }) => {
+  /* The case the skill's own "still ambiguous or empty" branch exists for, and
+     one no scenario could state while every call saw every pipeline. */
+  const result = az('pipelines', 'list', '--name', 'billing-worker');
+
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.stdout)).toStrictEqual([]);
+});
+
+test('a partial name lands, as it does against the real prefix match', ({ expect }) => {
+  const result = az('pipelines', 'list', '--name', 'web-');
+
+  expect(JSON.parse(result.stdout)).toStrictEqual([
+    expect.objectContaining({ name: 'web-frontend' }),
+  ]);
+});
+
+test('a repository selects the pipelines built from it', ({ expect }) => {
+  /* The repository names differ from the pipeline names on purpose: a double
+     that read `--repository` as a name filter would pass this otherwise. */
+  const result = az(
+    'pipelines',
+    'list',
+    '--repository',
+    'platform-api',
+    '--repository-type',
+    'tfsgit',
+  );
+
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.stdout)).toStrictEqual([
+    expect.objectContaining({ id: 900_002, name: 'api-service' }),
+  ]);
+});
+
+test('a repository nothing is built from answers with an empty list', ({ expect }) => {
+  const result = az(
+    'pipelines',
+    'list',
+    '--repository',
+    'billing',
+    '--repository-type',
+    'tfsgit',
+  );
+
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.stdout)).toStrictEqual([]);
+});
+
+test('a repository type the catalog cannot speak for is refused', ({ expect }) => {
+  /* Every repository here is an Azure Repos one. Answering a GitHub-hosted
+     lookup out of them would resolve a pipeline that does not exist in that
+     world — the over-serving an ignored filter produces. */
+  const result = az(
+    'pipelines',
+    'list',
+    '--repository',
+    'acme/web-frontend',
+    '--repository-type',
+    'github',
+  );
+
+  expect(result.status).not.toBe(0);
+  expect(result.stdout).toBe('');
+});
+
 test('a token request still answers, so the auth path is reachable', ({ expect }) => {
   const result = az('account', 'get-access-token');
 

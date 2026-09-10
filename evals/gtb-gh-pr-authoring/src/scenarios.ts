@@ -153,8 +153,7 @@ export const scenarios: readonly Scenario[] = [
    * A reviewer that skips drafts, so its pass lands only once the PR is ready:
    * promoting is what produces the completed review sitting in the checks. The
    * agent was told to promote and nothing else, so the review is there to be
-   * read and reported — and the fix it names is not there to be pushed, which
-   * is the half a promotion does not authorize.
+   * read and reported, and the fix it names is not there to be pushed.
    */
   {
     branch: 'fix-slug-collapse',

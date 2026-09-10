@@ -60,13 +60,8 @@ the human's:
 1. **Ready**: the human promotes, which invites human reviewers.
 1. **Human peer review**, then the merge, which `gtb-gh-pr-merging` governs.
 
-**Where the automated reviewer skips drafts, its pass runs after the promotion
-rather than before it.** Reviewing ahead of the promotion keeps a peer
-reviewer's attention off findings a bot would have caught, so that order stays
-the default; a repository with no peer review has nobody to spend it on, and
-configures the reviewer to start at the promotion instead. Every finding then
-arrives after the author review, by arrangement rather than because the author
-jumped the gun.
+**A reviewer that skips drafts runs its pass after the promotion**, so its
+findings arrive after the author review by design.
 
 ## Pushing to a GitHub branch
 
@@ -147,9 +142,8 @@ what makes the description the reliable place for it.
 reviewers. Green checks are not the signal for it, and neither is a clean bot
 pass.
 
-**Being asked to promote reports the author's own review complete.** They have
-read the code and are inviting others to, so the branch is past its author
-review and stays past it.
+**Being asked to promote reports the author's own review complete.** Treat the
+branch as read from then on.
 
 ## The default GitHub pull request description
 
@@ -242,20 +236,16 @@ watching.
 
 ## Acting on review feedback on a GitHub pull request
 
-**Leave summoning an automated reviewer to the author**, and let one already
-running finish in its own time rather than blocking on it. Firing it is their
-move, and it comes after their own review of the code: a review aimed at code
-the author has not read burns tokens and rate-limit budget on findings that
-reading would have made moot.
+**Leave summoning an automated reviewer to the author**, and let a running one
+finish on its own. A review aimed at code the author has not read burns tokens
+and rate-limit budget on findings that reading would have made moot.
 
-**Read a review whose check has already reported.** Reading one costs none of
-what firing one costs, and what it found belongs in the same report as the
-check result. Acting on the findings is a separate question that reading does
-not settle.
+**Read a review whose check has already reported.** Reading one costs nothing,
+and what it found belongs in the same report as the check result.
 
-**Your work ends at green checks.** Say what the checks and any completed
-review reported, then stop; those findings come back when the author brings
-them, often in a later session.
+**Your work ends at green checks.** Report them and any completed review, then
+stop. The findings come back to you when the author brings them, often in a
+later session.
 
 Read the pass yourself rather than working from whatever was quoted at you: a
 summary of a review is not the review. Feedback lands on separate surfaces: the

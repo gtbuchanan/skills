@@ -4,8 +4,8 @@
  *
  * Kept beside the scenarios rather than inside them so the world reads as a
  * list of situations rather than a wall of source text. Each `*Before` is the
- * state the agent finds, and the ones a scenario has review feedback about
- * carry the defect that feedback names.
+ * state the agent finds; some carry the defect a scenario's review feedback is
+ * about.
  */
 export const template = [
   '### Description',

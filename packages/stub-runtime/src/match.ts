@@ -50,9 +50,22 @@ export const subcommand = (...tokens: readonly string[]): StubMatcher =>
  *
  * Per argument rather than over the joined argv: a pattern that matched across
  * the space between two of them would be matching a string nobody passed.
+ *
+ * A matcher has to be a question and not a move, so what it tests is a copy of
+ * the pattern with `g` and `y` taken off. Those two make `test` carry
+ * `lastIndex` from one call into the next, which costs twice over: the same
+ * call stops being claimed the same way, and the pattern comes back to its
+ * owner mid-string — and a double holds one `RegExp` for both halves of a
+ * handler, claiming the call with it and then reading an id back out of it.
+ *
+ * Taken off rather than worked around, because neither flag means anything to
+ * the question being asked. "Does some argument match" has no position to
+ * resume from, and the copy is cut once here rather than per argument tested.
  */
-export const argument = (pattern: RegExp): StubMatcher =>
-  call => call.argv.some(arg => pattern.test(arg));
+export const argument = (pattern: RegExp): StubMatcher => {
+  const stateless = new RegExp(pattern.source, pattern.flags.replaceAll(/[gy]/gv, ''));
+  return call => call.argv.some(arg => stateless.test(arg));
+};
 
 /**
  * Matches a call every one of `matchers` claims — an endpoint under the

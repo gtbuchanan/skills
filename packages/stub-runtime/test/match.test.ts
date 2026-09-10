@@ -77,6 +77,31 @@ test('a pattern may not straddle two arguments', ({ expect }) => {
   expect(argument(/create --title/v)(create)).toBe(false);
 });
 
+test('a stateful pattern claims the same call every time', ({ expect }) => {
+  /* `g` and `y` make `RegExp.prototype.test` carry `lastIndex` from one call to
+     the next, so a matcher built on it answers the second identical call from
+     wherever the first one stopped. A handler that quietly stops claiming its
+     command is the failure this whole table exists to prevent. */
+  const matches = argument(/user/gv);
+  const call = { argv: ['user'], cmd: 'gh', stdin: '' };
+
+  expect(matches(call)).toBe(true);
+  expect(matches(call)).toBe(true);
+});
+
+test('matching leaves the pattern as it was handed over', ({ expect }) => {
+  /* A double holds one `RegExp` for both halves of a handler — the apply
+     suite's reaction path claims the call and then reads the comment id back
+     out of it. A matcher that advanced `lastIndex` would leave that read
+     starting past its own match, and the id would arrive as the fallback. */
+  const reactionsPath = /comments\/(?<id>\d+)\/reactions/gv;
+  const endpoint = 'repos/acme/widgets/pulls/comments/7/reactions';
+
+  argument(reactionsPath)({ argv: ['api', endpoint], cmd: 'gh', stdin: '' });
+
+  expect(reactionsPath.exec(endpoint)?.groups?.['id']).toBe('7');
+});
+
 test('all of them have to claim the call', ({ expect }) => {
   const endpoint = allOf(subcommand('api'), argument(/^user$/v));
 

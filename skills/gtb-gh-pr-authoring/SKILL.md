@@ -236,9 +236,9 @@ watching.
 
 ## Acting on review feedback on a GitHub pull request
 
-**Leave summoning an automated reviewer to the author**, and let a running one
-finish on its own. A review aimed at code the author has not read burns tokens
-and rate-limit budget on findings that reading would have made moot.
+**Leave summoning an automated reviewer to the author.** A review aimed at code
+the author has not read burns tokens and rate-limit budget on findings that
+reading would have made moot.
 
 **Read a review whose check has already reported.** Reading one costs nothing,
 and what it found belongs in the same report as the check result.

@@ -11,14 +11,13 @@ are still pending, which a completed `--watch` should not give you.
 ## A check watch that returns before the checks exist
 
 Immediately after a push, before any workflow has registered, `gh pr checks`
-reports that the branch has no checks rather than waiting for some to appear —
+reports that the branch has no checks rather than waiting for some to appear,
 and exits 1 for it, the status a real failure gets. `--watch` does not help:
 the branch is read before the watch loop starts, so it returns rather than
 waiting for checks to appear. Exit 1 on its own therefore does not mean a check
-failed — read what it printed. "no checks reported" is too early rather than
-red, so watch again instead of reporting the push as broken. If it keeps saying
-it, the branch has nothing configured to run, which is worth saying plainly and
-is still not green.
+failed, so read what it printed and watch again rather than reporting the push
+as broken. If it keeps saying it, the branch has nothing configured to run,
+which is worth saying plainly and is still not green.
 
 ## A check watch that returns the draft's run after a promotion
 
@@ -26,8 +25,8 @@ An early watch reads differently after `gh pr ready`. A push has no checks yet
 and says so; a promotion inherits the draft's run, complete and green, so an
 instant result is probably that old run. Watch again.
 
-If the second watch shows the same run — `gh run list --branch <branch>` says
-whether a new one exists — report that and leave it there. Nothing may have
+If the second watch shows the same run (`gh run list --branch <branch>` says
+whether a new one exists) report that and leave it there. Nothing may have
 been gated on the draft, the workflow may not count the promotion among its
 triggers, or a reviewer may be held up by something outside the PR. A third
 watch will not separate them.
@@ -36,8 +35,8 @@ watch will not separate them.
 
 `--watch` waits on the whole list, and an automated reviewer reports as a check
 like any other, so its queue can hold the watch open long after the build has
-answered. Name what is still pending rather than counting it — which check is
-outstanding is the whole question:
+answered. Name what is still pending rather than counting it: which check is
+outstanding is the whole question.
 
 ```sh
 gh pr checks --json name,workflow,bucket,description \
@@ -49,7 +48,7 @@ code and a reviewer's has none. The field means "ran as an Actions workflow"
 rather than "tests the code", so another CI service or a deploy preview has none
 either; where a repository has any, go by the reviewer's name instead.
 
-Nothing outstanding but the reviewer means the fix can go — unless that review
+Nothing outstanding but the reviewer means the fix can go, unless that review
 is running rather than queued, which its description is where to read. A queued
 one may sit behind a backlog or a limit for as long as that takes; one under way
 reports shortly, and waiting lets a single push carry its findings with the
@@ -63,13 +62,13 @@ rather than treating one as a wait.
 
 What its check means is the reviewer's own convention, so do not read a verdict
 off it. A passing one covers a review that asked for changes, a draft it
-declined to read, and a head it never got to — a spent rate limit passes exactly
+declined to read, and a head it never got to. A spent rate limit passes exactly
 like a clean bill, and that is the dangerous one, where the reviewer meant to
 run and nothing on the board says it did not. Read the description, not the
 colour.
 
-Whether it submits a review — the thing carrying an approval or a request for
-changes — is a setting on its side; with that off, `reviews` stays empty and
+Whether it submits a review, the thing carrying an approval or a request for
+changes, is a setting on its side; with that off, `reviews` stays empty and
 `reviewDecision` still reads `REVIEW_REQUIRED`. Its findings do not move for
 that: they land inline as always, with the summary in a conversation comment. An
 empty `reviews` therefore says nothing about whether anything was found:

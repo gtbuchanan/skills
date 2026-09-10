@@ -58,11 +58,17 @@ export interface StubResponse {
 }
 
 /**
+ * The test by which a handler claims a call. Named so the helpers that build
+ * one — `./match.ts` — have something to be typed against.
+ */
+export type StubMatcher = (call: StubCall) => boolean;
+
+/**
  * One canned command. `name` appears in nothing the agent sees — it is there
  * for the author reading a refusal or a stack trace.
  */
 export interface StubHandler {
-  readonly matches: (call: StubCall) => boolean;
+  readonly matches: StubMatcher;
   readonly name: string;
   readonly respond: (call: StubCall) => StubResponse;
 }

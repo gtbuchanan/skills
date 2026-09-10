@@ -19,7 +19,8 @@
  * lets the suite run in parallel. The log is kept only for debugging.
  */
 import { dispatch, unmodelled } from '@gtbuchanan/stub-runtime/dispatch';
-import { argv, emit, joined, logCallToDir } from '@gtbuchanan/stub-runtime/stub';
+import { subcommand } from '@gtbuchanan/stub-runtime/match';
+import { argv, emit, logCallToDir } from '@gtbuchanan/stub-runtime/stub';
 
 /**
  * The id the fake `pipelines runs update` echoes back.
@@ -103,17 +104,17 @@ const listing = (): readonly unknown[] => {
 
 const outcome = dispatch({ argv, cmd: 'az', stdin: '' }, [
   {
-    matches: () => /\bpipelines\s+list\b/v.test(joined),
+    matches: subcommand('pipelines', 'list'),
     name: 'pipelines list',
     respond: () => json(listing()),
   },
   {
-    matches: () => /\bpipelines\s+runs\s+update\b/v.test(joined),
+    matches: subcommand('pipelines', 'runs', 'update'),
     name: 'pipelines runs update',
     respond: () => json({ id: cancellingRunId, status: 'cancelling' }),
   },
   {
-    matches: () => /\baccount\s+get-access-token\b/v.test(joined),
+    matches: subcommand('account', 'get-access-token'),
     name: 'account get-access-token',
     respond: () =>
       json({ accessToken: 'stub-token', expiresOn: '2099-01-01 00:00:00' }),

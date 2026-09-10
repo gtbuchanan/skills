@@ -27,7 +27,8 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
-import { argv, emit, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
+import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
+import { argv, emit, logCall } from '@gtbuchanan/stub-runtime/stub';
 import {
   readReviews,
   repo,
@@ -59,24 +60,24 @@ const lastOwnReview = (): string => {
 
 const outcome = dispatch({ argv, cmd: 'gh', stdin: '' }, [
   {
-    matches: () => joined.includes('api user'),
+    matches: allOf(subcommand('api'), argument(/^user$/v)),
     name: 'api user',
     respond: () => ({ stdout: `${viewer}\n` }),
   },
   {
-    matches: () => joined.includes('repo view'),
+    matches: subcommand('repo', 'view'),
     name: 'repo view',
     respond: () => ({ stdout: `${repo}\n` }),
   },
   {
-    matches: () => joined.includes('graphql'),
+    matches: allOf(subcommand('api'), argument(/^graphql$/v)),
     name: 'api graphql',
     respond: () => ({
       stdout: readFileSync(path.join(dir, 'threads.graphql.json'), 'utf8'),
     }),
   },
   {
-    matches: () => /\breviews\b/v.test(joined),
+    matches: allOf(subcommand('api'), argument(/\/reviews/v)),
     name: 'reviews',
     respond: () => ({ stdout: `${lastOwnReview()}\n` }),
   },

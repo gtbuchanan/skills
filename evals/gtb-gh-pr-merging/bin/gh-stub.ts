@@ -34,6 +34,7 @@ import { checksFor } from '@gtbuchanan/github-cli-stub/scenario-world';
 import { pick, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { readState, writeState } from '@gtbuchanan/github-cli-stub/state';
 import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
+import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
 import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
 import { appendJsonl, argv, emit, joined } from '@gtbuchanan/stub-runtime/stub';
 import { repoSlug } from '#src/repository.ts';
@@ -91,7 +92,7 @@ const checks = checksFor(scenario);
 
 const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
   {
-    matches: () => joined.includes('repo view'),
+    matches: subcommand('repo', 'view'),
     name: 'repo view',
     respond: () => {
       /* The merge rules read this one field to decide who deletes the branch,
@@ -104,7 +105,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     },
   },
   {
-    matches: () => joined.includes('pr list'),
+    matches: subcommand('pr', 'list'),
     name: 'pr list',
     respond: () => ({
       stdout: `${JSON.stringify(
@@ -113,7 +114,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     }),
   },
   {
-    matches: () => joined.includes('pr checks'),
+    matches: subcommand('pr', 'checks'),
     name: 'pr checks',
     respond: () => {
       const rows = checks.map(check => checkRecord(check, { repoSlug }));
@@ -139,7 +140,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     },
   },
   {
-    matches: () => joined.includes('pr view'),
+    matches: subcommand('pr', 'view'),
     name: 'pr view',
     respond: () => {
       const viewed = pick(records.named(namedNumber()), requestedFields(argv));
@@ -147,7 +148,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     },
   },
   {
-    matches: () => joined.includes('pr edit'),
+    matches: subcommand('pr', 'edit'),
     name: 'pr edit',
     respond: () => {
       const base = flagValue('--base');
@@ -163,7 +164,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     },
   },
   {
-    matches: () => joined.includes('merge-async'),
+    matches: allOf(subcommand('api'), argument(/\/merge-async/v)),
     name: 'asynchronous merge',
     respond: () => {
       writeState(statePath, {
@@ -176,7 +177,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     },
   },
   {
-    matches: () => joined.includes('pr merge'),
+    matches: subcommand('pr', 'merge'),
     name: 'pr merge',
     respond: () => {
       if (scenario.isStackMember === true) {

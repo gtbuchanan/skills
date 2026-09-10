@@ -134,8 +134,11 @@ restatement or a dead contrast usually arrives.
 
 **Prose chopped into bullets is still prose, and the bullets disguise that it
 has no structure.** The form earns its place when the items are peers the
-reader will scan or compare. Items that only make sense read in order, or a
-pair of them, are a sentence.
+reader will scan or compare. A pair of them is usually a sentence.
+
+Steps someone follows are the other case that earns it. A procedure stays an
+ordered list however short, because the reader is executing it rather than
+reading it, and a numbered step is what they return to after doing one.
 
 ## Claim only what you checked
 

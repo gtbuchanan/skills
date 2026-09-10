@@ -35,6 +35,13 @@ reader can already retrieve, and it accumulates as the file ages. Keep it only
 where it stops someone reintroducing a defect that looks like an improvement,
 and write it as the rule to follow rather than the story of the bug.
 
+A decision record is the exception, because there the history is the subject.
+An ADR exists to hold the alternatives weighed, the constraint that decided
+between them, and what the decision costs, so cutting those leaves a file that
+records a choice without its reasoning. The rule bites on narration that
+wandered into ordinary documentation, not on a document whose job is the
+record.
+
 ## Keep what will still be true
 
 **Figures describing the current state rot. Figures recording an event do

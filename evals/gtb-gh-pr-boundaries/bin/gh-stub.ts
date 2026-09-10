@@ -23,7 +23,7 @@ import { pick, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { readState, writeState } from '@gtbuchanan/github-cli-stub/state';
 import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
 import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
-import { appendJsonl, argv, joined } from '@gtbuchanan/stub-runtime/stub';
+import { appendJsonl, argv, emit, joined } from '@gtbuchanan/stub-runtime/stub';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
 import { scenarios } from '#src/scenarios.ts';
 
@@ -115,6 +115,4 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin: '' }, [
   },
 ]);
 
-process.stdout.write(outcome.stdout);
-process.stderr.write(outcome.stderr);
-process.exit(outcome.code);
+emit(outcome);

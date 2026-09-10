@@ -19,7 +19,7 @@
  * lets the suite run in parallel. The log is kept only for debugging.
  */
 import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
-import { argv, joined, logCallToDir } from '@gtbuchanan/stub-runtime/stub';
+import { argv, emit, joined, logCallToDir } from '@gtbuchanan/stub-runtime/stub';
 
 /**
  * The id the fake `pipelines runs update` echoes back.
@@ -64,11 +64,4 @@ const outcome = dispatch({ argv, cmd: 'az', stdin: '' }, [
   },
 ]);
 
-process.stdout.write(outcome.stdout);
-process.stderr.write(outcome.stderr);
-
-/* Set rather than exit: writing to a pipe is asynchronous, and process.exit
-   would end the process with the refusal still unflushed — truncating the one
-   message whose whole job is to be read. Nothing here holds the event loop
-   open, so the status set here is the status it ends with. */
-process.exitCode = outcome.code;
+emit(outcome);

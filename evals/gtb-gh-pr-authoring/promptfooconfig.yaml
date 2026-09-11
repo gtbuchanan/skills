@@ -32,8 +32,8 @@ description: gtb-gh-pr-authoring — PR lifecycle against seeded repositories wi
 
 # Distinct tests are independent all the way down: each owns a checkout, and
 # the stubs key one call log per scenario, so nothing is shared for them to
-# race over. Seven agent sessions in sequence is most of this suite's runtime,
-# and almost all of that is waiting.
+# race over. Every test is an agent session, and waiting on them is most of
+# this suite's runtime.
 #
 # `--repeat` is the exception and still needs `--max-concurrency 1` on the
 # command line: repeats of one test share that test's checkout, and would seed
@@ -174,6 +174,46 @@ tests:
       scenario: promote-ready
       task: >-
         I have read pull request 44 and it is a draft. Mark it ready for review.
+  - description: >-
+      promoting — a reviewer that skips drafts reports after the promotion, and
+      its finding is read and reported rather than pushed
+    vars:
+      # The task asked for a promotion and nothing else. Committing the fix
+      # locally would be harmless, so it is neither required nor forbidden;
+      # pushing it is the permission a promotion does not carry, summoning a
+      # reviewer is the author's, and merging is work nobody asked for.
+      forbidCalls:
+        - ['push']
+        - ['pr merge']
+        - ['pr edit', '--add-reviewer']
+
+      repo: scenarios/promoted-feedback
+      # All three feedback surfaces, because the scenario seeds all three: a
+      # submitted review, a conversation comment and an inline one.
+      requireCalls:
+        - ['pr ready']
+        - ['pr checks', '--watch']
+        - ['pr view', 'reviews']
+        - ['pr view', 'comments']
+        - ['/pulls/31/comments']
+
+      # The review is what the promotion started, and the check watch is how a
+      # run finds it, so every surface is read after both. Requiring the watch
+      # without ordering it passes a run that went looking for the findings
+      # instead of being shown them.
+      requireOrder:
+        - after: ['pr checks', '--watch']
+          before: ['pr ready']
+        - after: ['pr view', 'reviews']
+          before: ['pr checks', '--watch']
+        - after: ['pr view', 'comments']
+          before: ['pr checks', '--watch']
+        - after: ['/pulls/31/comments']
+          before: ['pr checks', '--watch']
+
+      scenario: promoted-feedback
+      task: >-
+        I have read pull request 31 and it is a draft. Mark it ready for review.
   - description: feedback — all three surfaces read, one commit per finding, the bot answered and the author's own thread left alone
     vars:
       # 5002 is the author's own inline comment, left through the same account

@@ -60,6 +60,9 @@ the human's:
 1. **Ready**: the human promotes, which invites human reviewers.
 1. **Human peer review**, then the merge, which `gtb-gh-pr-merging` governs.
 
+**A reviewer that skips drafts runs its pass after the promotion**, so its
+findings arrive after the author review by design.
+
 ## Pushing to a GitHub branch
 
 **Never push unless explicitly told to.** Committing is local and reversible;
@@ -138,6 +141,9 @@ what makes the description the reliable place for it.
 **Promote to ready only when told to.** `gh pr ready <number>` invites human
 reviewers. Green checks are not the signal for it, and neither is a clean bot
 pass.
+
+**Being asked to promote reports the author's own review complete.** Treat the
+branch as read from then on.
 
 ## The default GitHub pull request description
 
@@ -230,13 +236,16 @@ watching.
 
 ## Acting on review feedback on a GitHub pull request
 
-**Do not summon an automated reviewer, and do not wait for one.** Firing it is
-the human's move, and it comes after their own pass over the code. A review
-aimed at code the author has not read yet burns tokens and rate-limit budget on
-findings that reading would have made moot.
+**Leave summoning an automated reviewer to the author.** A review aimed at code
+the author has not read burns tokens and rate-limit budget on findings that
+reading would have made moot.
 
-**Your work ends at green checks.** Report and stop. The findings come back to
-you when the human brings them, often in a later session.
+**Read a review whose check has already reported.** Reading one costs nothing,
+and what it found belongs in the same report as the check result.
+
+**Your work ends at green checks.** Report them and any completed review, then
+stop. The findings come back to you when the author brings them, often in a
+later session.
 
 Read the pass yourself rather than working from whatever was quoted at you: a
 summary of a review is not the review. Feedback lands on separate surfaces: the

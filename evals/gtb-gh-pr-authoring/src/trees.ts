@@ -4,8 +4,8 @@
  *
  * Kept beside the scenarios rather than inside them so the world reads as a
  * list of situations rather than a wall of source text. Each `*Before` is the
- * state the agent finds; two of them carry the defect a scenario's review
- * feedback is about.
+ * state the agent finds; some carry the defect a scenario's review feedback is
+ * about.
  */
 export const template = [
   '### Description',
@@ -67,6 +67,12 @@ export const schedulerAfter = [
   'export const retryDelay = (attempt: number): number => {',
   '  return 250 * 2 ** attempt;',
   '};',
+  '',
+].join('\n');
+
+export const slugBefore = [
+  'export const slug = (title: string): string =>',
+  '  title.toLowerCase().replaceAll(" ", "-");',
   '',
 ].join('\n');
 

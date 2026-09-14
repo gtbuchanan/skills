@@ -51,8 +51,10 @@ Each of these changes the report before the ratio is applied:
   session hit is a hit. One local suite sees one session, so its misses include
   lines another suite covers.
 - **Carryforward.** A flag with `carryforward: true` that uploaded nothing on
-  this commit contributes its numbers from the last commit that did. The totals
-  then describe code as it was tested earlier.
+  this commit contributes its numbers from the last commit that did, so the
+  totals describe code as it was tested earlier. Codecov cannot tell coverage
+  it carried forward from coverage that never arrived, so an upload that
+  quietly stops keeps reporting its last value indefinitely.
 - **Flag and component filters.** A component percentage covers that component's
   paths alone, so it moves for reasons the project percentage never shows.
 - **`max_report_age`** (default 12h). An expired report is not processed, and a
@@ -61,7 +63,38 @@ Each of these changes the report before the ratio is applied:
   `parsers.v1.include_full_missed_files` and the `branch_detection` map under
   `parsers.gcov` each change what the same file yields.
 
+**Carryforward fills in a flag missing from a report that exists; it does not
+create the report.** A commit whose upload never ran has no report at all, and
+Codecov posts no status and no comment for it. That is what a build cache buys
+when it treats the upload step as already satisfied and skips it, so keep that
+step uncached.
+
 `references/codecov-yml.md` carries these keys with their defaults.
+
+## Where Codecov reads its config from
+
+`codecov.yml` or `.codecov.yml`, in the repository root, in `.github/`, or in
+`dev/` — six locations, and a repository can carry more than one. Reading the
+root alone and concluding there is no config is the common way to answer the
+wrong question.
+
+**Codecov reads the YAML from the branch under test**, so a change takes effect
+on the pull request that makes it rather than once merged — which is also how a
+pull request weakens its own gate. `codecov.strict_yaml_branch` pins the read to
+one branch.
+
+**An unrecognised key is ignored rather than rejected**, so a misspelling
+disables a section silently and nothing says so. The validator is what catches
+it, and it checks the schema rather than the meaning:
+
+```sh
+curl -sS --fail-with-body --data-binary @.github/codecov.yml \
+  https://codecov.io/validate
+```
+
+On success it echoes the whole parsed config, each `paths` glob expanded to the
+regex Codecov matches with — which is where a component matching nothing shows
+itself. It uploads the file, so treat the call as publishing it.
 
 ## Codecov project and patch statuses measure different lines
 
@@ -137,14 +170,6 @@ it reaches a private repository on the credential `gh` already holds.
 `totals/` and `report/` take `path=`, `flag=` and `component_id=`, which
 reproduces what a single component's status saw. `report/` is how you name the
 partial lines rather than only count them.
-
-`https://codecov.io/validate` returns a `codecov.yml` parsed, each `paths` glob
-expanded to the regex Codecov matches with — where a component matching nothing
-usually shows itself. It uploads the file, so treat the call as publishing it.
-
-```sh
-curl --data-binary @codecov.yml https://codecov.io/validate
-```
 
 ## Codecov API tokens for private repositories
 

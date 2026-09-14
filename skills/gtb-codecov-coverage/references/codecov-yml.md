@@ -66,6 +66,38 @@ from that table means it did not upload on this commit rather than that it holds
 no coverage. Carryforward needs one commit where every flag uploaded, or it has
 no baseline to carry.
 
+## flag_management
+
+Where `flags` configures flags by name, `flag_management` configures them by
+rule, so a flag created by a new upload is governed without being listed — and
+cannot be forgotten into having no rule at all.
+
+```yaml
+flag_management:
+  default_rules: # followed by any flag with no individual entry
+    carryforward: true
+    statuses:
+      - flag_coverage_not_uploaded_behavior: include
+        target: auto
+        threshold: 1%
+        type: project
+  individual_flags: # exceptions, by flag name
+    - name: legacy
+      carryforward: false
+```
+
+| Key                                   | Default   | Effect                                                                                                                                                                                               |
+| ------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `flag_coverage_not_uploaded_behavior` | `include` | What a status does when its flag uploaded nothing this commit. `include` sends it on the carried-forward number; `exclude` sends no status at all; `pass` sends green without reference to coverage. |
+
+`flag_coverage_not_uploaded_behavior` governs only statuses that name flags; a
+repository-wide status naming none is processed either way.
+
+**`exclude` makes the set of checks vary per pull request**, which a branch
+protection rule cannot distinguish from a check that has not reported yet.
+**`pass` discards the carried-forward number** that is the reason to enable
+carryforward in the first place.
+
 ## component_management
 
 ```yaml

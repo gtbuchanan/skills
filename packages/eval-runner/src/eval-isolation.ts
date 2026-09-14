@@ -26,8 +26,13 @@ export const evalPolicy: IsolationPolicy = {
    * The skills reach for GitHub and Azure DevOps, and the azp skill's action is
    * a bundled PowerShell script. Those are exactly what a suite must never
    * touch for real, so they are the ones to shadow.
+   *
+   * `curl` is here for the same reason under a different name: the codecov
+   * skill reaches an HTTP API directly, so a suite exercising it would
+   * otherwise query api.codecov.io for real — and the credential handling it
+   * governs is precisely what must never meet a live endpoint.
    */
-  dangerTools: ['az', 'gh', 'powershell', 'pwsh'],
+  dangerTools: ['az', 'curl', 'gh', 'powershell', 'pwsh'],
   /*
    * The agent's shell is Git Bash, which needs the coreutils alongside it;
    * corepack backs pnpm, and the harness drives pnpm and git directly.

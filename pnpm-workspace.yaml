@@ -31,7 +31,7 @@ catalog:
   promptfoo: 0.122.0
   skills: 1.5.22
   skills-npm: 1.2.0
-  turbo: 2.10.9
+  turbo: 2.10.12
   typescript: 6.0.3
   valibot: 1.4.2
   vitest: 4.1.10

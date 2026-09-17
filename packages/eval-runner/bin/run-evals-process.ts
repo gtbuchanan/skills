@@ -43,7 +43,7 @@ import spawn from 'cross-spawn';
 import * as v from 'valibot';
 import { parse as parseYaml } from 'yaml';
 import { beginEphemeralRun } from '#src/ephemeral-run.ts';
-import { evalIsolation } from '#src/eval-isolation.ts';
+import { evalIsolation, evalPolicy } from '#src/eval-isolation.ts';
 import { buildEvalEnv } from '#src/scrubbed-path.ts';
 
 const { assertFailSafe, buildScrubbedPath, poisonDangerTools } = evalIsolation;
@@ -206,7 +206,9 @@ if (failures.length > 0) {
 console.log(
   `${green('✓')} ${dim(
     `Isolation: ${String(preflight.allow.length)} allowlisted dir(s); ` +
-    'gh/az/pwsh unreachable or shadowed.',
+    /* Named from the policy rather than spelled out, so a tool added to the
+       policy cannot leave this line claiming a smaller set than was enforced. */
+    `${evalPolicy.dangerTools.join('/')} unreachable or shadowed.`,
   )}`,
 );
 

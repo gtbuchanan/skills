@@ -78,6 +78,15 @@ tests:
       forbidCalls:
         - ['pr ready']
 
+      # 250 rather than the skill's own 150: a cap set at the rule's number
+      # turns sampling jitter into a failure, and what has to be caught is the
+      # regime this rule exists to prevent. Calibrated against a real one —
+      # a one-line version pin that drew a 279-word body — so a scenario this
+      # small does not pass it by default.
+      maxStdinWords:
+        - command: ['pr create']
+          max: 250
+
       repo: scenarios/open-draft
       requireCalls:
         - ['pr create', '--draft']
@@ -105,6 +114,15 @@ tests:
       forbidStdin:
         - command: ['pr create']
           includes: ['## ', 'N/A']
+
+      # 250 rather than the skill's own 150: a cap set at the rule's number
+      # turns sampling jitter into a failure, and what has to be caught is the
+      # regime this rule exists to prevent. Calibrated against a real one —
+      # a one-line version pin that drew a 279-word body — so a scenario this
+      # small does not pass it by default.
+      maxStdinWords:
+        - command: ['pr create']
+          max: 250
 
       repo: scenarios/open-no-template
       requireCalls:

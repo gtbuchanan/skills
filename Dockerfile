@@ -73,15 +73,22 @@ COPY --from=manifests /src ./
 # eval dies for want of a binary. A tarball the store holds cannot fail that
 # way; the raised retry budget covers the first fetch, which no cache can.
 #
+# pnpm 12 dropped `--fetch-retries` as a flag while keeping `fetchRetries` as a
+# setting, so the budget is set through config instead. `--config.fetchRetries`
+# is not the substitute it looks like: pnpm accepts it, validates nothing, and
+# the value never lands, which would leave this guard reading as present while
+# doing nothing. Setting it writes to the config of the build user, so it stays
+# inside the image rather than reaching the workspace file copied in above.
+#
 # `sharing=locked` keeps two builds off the store at once. Importing by copy
 # because the mount is a different filesystem, so pnpm cannot hardlink out of
 # it — and if it ever could, the links would dangle once the mount went away.
 RUN --mount=type=cache,target=/pnpm-store,sharing=locked \
   pnpm pkg delete scripts.prepare \
+  && pnpm config set fetchRetries 5 \
   && pnpm install --no-frozen-lockfile \
     --store-dir=/pnpm-store \
     --package-import-method=copy \
-    --fetch-retries=5 \
     --fetch-timeout=300000
 
 # The guards above are probabilistic and pnpm reports a dropped optional as

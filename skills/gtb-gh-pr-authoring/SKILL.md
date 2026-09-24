@@ -109,8 +109,9 @@ list continuation, blockquotes and tables, and buy nothing. The same goes for
 issues and comments.
 
 **Write for the reviewer whose time you are asking for.** They are the one
-audience a commit body does not have. Tell them which plausible approach you
-ruled out, and why.
+audience a commit body does not have. Tell them the approach you ruled out,
+where they would otherwise wonder why. Give that a sentence, not the
+deliberation behind it.
 
 **State the change, not its history.** The description covers the code as it
 stands. It is not a log of "addressed feedback" and "fixed CI", which is what
@@ -133,6 +134,59 @@ human reviewers. Green checks are not the signal. Neither is a clean bot pass.
 **A request to promote reports the author's own review complete.** Treat the
 branch as read from then on.
 
+## How long a GitHub pull request description runs
+
+**Write what the reviewer needs before they open the diff, then stop.** Every
+sentence past that is one they read instead of the code.
+
+**Keep the whole description under 150 words, headings and all.** Count them,
+and tell the human the count when you report back. Writing it into the body
+would be noise to the reviewer. A cap nobody states is one nobody counts, and a
+stated number shows you applied the rule rather than remembered it. A change
+you cannot introduce in 150 words is usually one the reviewer would rather have
+had as two requests.
+
+**Name a breaking change, whatever else the cap costs.** The diff shows what
+changed. It does not show that a consumer's build stops, or that every caller
+has to be updated, unless you say so. Say what breaks and what the consumer
+does about it.
+
+**Cut anything the repository already carries.** The reviewer can open the
+diff, the commit list, the code comments, the issue and the checks. Repeating
+any of it costs the reviewer twice, once to read and again when the code moves
+and the copy does not.
+
+**These arrive in long descriptions and belong elsewhere.**
+
+- **The discovery story.** How you found the problem, and what you tried on the
+  way. The reviewer judges the code in front of them.
+- **The commit-by-commit tour.** The request already lists the commits.
+- **The case for how the work was split.** Give it a clause if it changes how
+  the diff should be read. Leave it out if it does not.
+- **Reasoning a code comment already carries.** Point at it instead of writing
+  it twice.
+- **Whatever a check reports.** Name the job that would report a line, and
+  delete the line where one would.
+
+A pass count, a coverage figure and a green build each name a job. So does the
+same claim worn as either half of a contrast, which is how a restatement
+survives a writer who knows the rule.
+
+```text
+The suite passes (312/312) and lint is clean, but neither shows cache
+behaviour. Appending a line to a compiled file no longer moves the pack
+task's hash.
+    ↓
+Appending a line to a compiled file no longer moves the pack task's hash.
+```
+
+**Say what no check can report, in a sentence.** The path you exercised by
+hand, what you watched happen on screen, the edge you left, a suite CI does not
+run.
+
+**Say so if you did not exercise the change at all.** An unearned claim there
+is the one part of a description the diff cannot check.
+
 ## The default GitHub pull request description
 
 **With no template to fill in, write prose and stop.** One to three sentences
@@ -149,9 +203,8 @@ Resolves: #482
 from this set, in this order, and add no others.
 
 - `## Summary`: what changed, once one paragraph no longer holds it.
-- `## Testing`: what you ran and what you saw.
 - `## Notes for reviewers`: where to start, what to read hardest, what you are
-  unsure of.
+  unsure of, in no more than three lines.
 
 **The set is closed, and a section is left out rather than filled.** A shape
 that shifts between requests costs the reader what a convention buys, which is
@@ -159,15 +212,6 @@ knowing where to look without reading. A heading over "N/A", a restated
 summary, or two lines of text teaches them to skip headings, and that hides the
 ones carrying something. A change wanting another heading usually wanted
 splitting.
-
-**`## Testing` is for what the checks cannot show.** Whether the suite passes
-or lints is already on the request, in a form a reviewer trusts more than
-prose, so restating it buries the line that earned the section. What they
-cannot see is the path you exercised by hand, the case you checked, the edge
-you left, and any suite CI does not run.
-
-**Say so if you did not exercise the change.** An unearned claim here is the
-one part of a description the diff cannot check.
 
 ## Stacked GitHub pull requests
 

@@ -89,6 +89,31 @@ test('every failing rule is reported, not only the first', ({ expect }) => {
   expect(result.reason).toContain('called what it must not: pr ready');
 });
 
+test('a body past the scenario’s word cap fails through the assertion', ({ expect }) => {
+  /*
+   * The cap is declared as a var like every other rule, so what this covers is
+   * the wiring: a matcher left out of the assertion's problem list is a rule
+   * that silently never runs, and a suite that sets the var would be none the
+   * wiser.
+   */
+  const suite = fakeSuite();
+  writeLog(suite.metaUrl, 'open-draft', [
+    { argv: ['pr', 'create', '--draft', '--body-file', '-'], stdin: 'word '.repeat(300) },
+  ]);
+
+  const assertion = callExpectationAssertion({ metaUrl: suite.metaUrl });
+
+  const result = assertion(undefined, {
+    vars: {
+      maxStdinWords: [{ command: ['pr create'], max: 250 }],
+      scenario: 'open-draft',
+    },
+  });
+
+  expect(result.pass).toBe(false);
+  expect(result.reason).toContain('300 words');
+});
+
 test('a scenario reads its own log, not another scenario’s', ({ expect }) => {
   /*
    * The doubles key one log per checkout so tests can run at once. Reading a

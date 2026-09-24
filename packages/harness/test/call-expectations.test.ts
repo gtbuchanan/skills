@@ -21,6 +21,7 @@ import {
   checkForbiddenStdin,
   checkOrder,
   checkStdin,
+  checkStdinLength,
 } from '@gtbuchanan/agent-skills-harness/call-expectations';
 
 interface Call {
@@ -204,4 +205,66 @@ test('a section kept but filled with a placeholder fails too', ({ expect }) => {
       varsOf({ forbidStdin: noHeadings }),
     ),
   ).toHaveLength(1);
+});
+
+const shortBody = [{ command: ['pr', 'create'], max: 10 }];
+const elevenWords = 'word '.repeat(11);
+const fortyWords = 'word '.repeat(40);
+
+test('a body inside the word cap passes and one over it names the count', ({ expect }) => {
+  const vars = varsOf({ maxStdinWords: shortBody });
+
+  expect(
+    checkStdinLength([call('pr create --body-file -', 'Compute it from the attempt count.')], vars),
+  ).toStrictEqual([]);
+
+  const problems = checkStdinLength([call('pr create --body-file -', elevenWords)], vars);
+
+  expect(problems).toHaveLength(1);
+  expect(problems[0]).toContain('11');
+  expect(problems[0]).toContain('10');
+});
+
+test('the count is of words, not of lines or characters', ({ expect }) => {
+  /*
+   * The same prose hard-wrapped must count as the same body. Counting lines
+   * would pass an essay written long, and counting characters would fail a
+   * short body that happened to use long identifiers — neither is the rule,
+   * which is about how much there is to read.
+   */
+  const vars = varsOf({ maxStdinWords: shortBody });
+  const words = 'one two three four five six seven eight nine ten eleven';
+  const wrapped = words.replaceAll(' ', '\n');
+
+  expect(checkStdinLength([call('pr create', words)], vars)).toHaveLength(1);
+  expect(checkStdinLength([call('pr create', wrapped)], vars)).toHaveLength(1);
+});
+
+test('one short body does not excuse a second that ran long', ({ expect }) => {
+  /*
+   * Every matching call is judged. Passing on any hit inside the cap would let
+   * a `pr edit` that reinflated the description go unnoticed because the
+   * original `pr create` was terse.
+   */
+  expect(
+    checkStdinLength(
+      [
+        call('pr create --body-file -', 'Compute it from the attempt count.'),
+        call('pr create --body-file -', fortyWords),
+      ],
+      varsOf({ maxStdinWords: shortBody }),
+    ),
+  ).toHaveLength(1);
+});
+
+test('a cap on a call that never happened is not a failure', ({ expect }) => {
+  /*
+   * A length cap states what a body may not exceed, not that the call has to
+   * be made — that is `requireCalls`. Reporting the absence here would make
+   * every scenario carrying a cap also demand the call, and fail runs the rule
+   * says nothing about.
+   */
+  expect(
+    checkStdinLength([call('pr view 7')], varsOf({ maxStdinWords: shortBody })),
+  ).toStrictEqual([]);
 });

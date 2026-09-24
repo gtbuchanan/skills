@@ -78,6 +78,14 @@ tests:
       forbidCalls:
         - ['pr ready']
 
+      # 250, not the skill's own 150: a cap at the rule's number fails on
+      # sampling jitter rather than on the regime worth catching. A one-line
+      # version pin drew a 279-word body, so a small change does not clear 250
+      # by default.
+      maxStdinWords:
+        - command: ['pr create']
+          max: 250
+
       repo: scenarios/open-draft
       requireCalls:
         - ['pr create', '--draft']
@@ -105,6 +113,11 @@ tests:
       forbidStdin:
         - command: ['pr create']
           includes: ['## ', 'N/A']
+
+      # The same cap, for the same reason as open-draft.
+      maxStdinWords:
+        - command: ['pr create']
+          max: 250
 
       repo: scenarios/open-no-template
       requireCalls:

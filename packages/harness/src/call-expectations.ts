@@ -23,6 +23,9 @@
  *                    been handed a body containing `includes`
  *   forbidStdin    — the same shape, for wording no such body may contain, where
  *                    what the rule states is an absence
+ *   maxStdinWords  — { command, max }: no body handed to a matching call may
+ *                    run past `max` words, for a rule about how much there is
+ *                    to read rather than what it says
  *
  * Matching is substring-based over the joined argv, and every check is
  * presence, absence or relative order rather than a count — so a shared log
@@ -52,6 +55,11 @@ const StdinSchema = v.object({
   includes: StringListSchema,
 });
 
+const StdinLimitSchema = v.object({
+  command: StringListSchema,
+  max: v.pipe(v.number(), v.integer(), v.minValue(1)),
+});
+
 /**
  * A scenario's declared expectations, with every optional list defaulted.
  *
@@ -62,6 +70,7 @@ export const CallVarsSchema = v.object({
   forbidCalls: v.optional(ClauseListSchema, []),
   forbidOrder: v.optional(v.array(OrderSchema), []),
   forbidStdin: v.optional(v.array(StdinSchema), []),
+  maxStdinWords: v.optional(v.array(StdinLimitSchema), []),
   requireCalls: v.optional(ClauseListSchema, []),
   requireOneOf: v.optional(ClauseListSchema, []),
   requireOrder: v.optional(v.array(OrderSchema), []),
@@ -219,6 +228,35 @@ export const checkForbiddenStdin = (
       ),
   );
 
+const countWords = (body: string): number =>
+  body.split(/\s+/v).filter(word => word !== '').length;
+
+/*
+ * A cap on how long a piped body may run.
+ *
+ * Words rather than characters or lines, because the rule is about how much a
+ * reader has to get through, which hard wrapping and long identifiers both
+ * leave unchanged. Every matching call is judged, so a `pr edit` that
+ * reinflates a description fails even where the `pr create` before it was
+ * terse. A call that never happened is silent: a cap states what a body may
+ * not exceed, and demanding the call itself is `requireCalls`.
+ */
+export const checkStdinLength = (
+  calls: readonly Call[],
+  vars: v.InferOutput<typeof CallVarsSchema>,
+): string[] =>
+  vars.maxStdinWords.flatMap(({ command, max }) =>
+    calls
+      .filter(call => isMatch(call, command))
+      .map(hit => countWords(hit.stdin))
+      .filter(words => words > max)
+      .map(
+        words =>
+          `a body handed to ${describe(command)} runs ${String(words)} words, ` +
+          `past the ${String(max)} this scenario allows`,
+      ),
+  );
+
 /**
  * An expectation a suite adds to the ones every call log supports, given the
  * raw promptfoo vars and returning what went wrong.
@@ -276,6 +314,7 @@ export const callExpectationAssertion = (
       ...checkForbiddenOrder(calls, vars),
       ...checkStdin(calls, vars),
       ...checkForbiddenStdin(calls, vars),
+      ...checkStdinLength(calls, vars),
       ...(options.outcomeChecks ?? []).flatMap(check => check(context.vars)),
     ]);
   };

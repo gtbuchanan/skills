@@ -1,0 +1,196 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+#
+# Tests the REAL skill (no duplicated rules) via promptfoo's claude-agent-sdk
+# provider. The provider discovers the skill from .claude/skills/ under
+# working_dir and `skill-used` confirms it actually fired.
+#
+# Every assertion is deterministic — answer-check.ts matches phrases,
+# call-check.ts matches logged commands. No llm-rubric: a rubric grader
+# disagrees with itself between runs.
+#
+# The document scenarios hand over a real report, comment or check listing and
+# ask what happened. What discriminates is which mechanism the answer lands on:
+# a model without the skill reaches "some lines aren't covered" or "coverage
+# dropped", both of which are wrong here, and none of them reaches the
+# codecov.yml key that fixes it.
+#
+# The API scenarios go through a fake `curl`, which stands in for a public
+# repository and a private one. The private one answers 401 until the call
+# authenticates, so an agent that skips the token cannot produce the answer —
+# and answer-check.ts fails the test if the token reaches the reply.
+#
+# Parallel-safe: the double keys one log file per scenario off the repository
+# the URL named, so no test writes over another's record.
+#
+# Runs only under the eval runner, where the double is installed and the real
+# curl is unreachable.
+#
+# Run from the repo root:
+#   pnpm eval gtb-codecov-coverage
+#   pnpm eval gtb-codecov-coverage --filter-pattern private --repeat 5
+---
+defaultTest:
+  assert:
+    # The skill must actually fire, not an explanation the model would have
+    # reached for anyway.
+    - type: skill-used
+      value: gtb-codecov-coverage
+    - type: javascript
+      value: file://src/answer-check.ts
+    - type: javascript
+      value: file://src/call-check.ts
+
+  # Keep array vars (mustContain, requireCalls) intact instead of expanding each
+  # element into its own test case. Without this these tests become the
+  # cartesian product of their lists, and the checkers are handed a bare string
+  # where they expect a list.
+  options:
+    disableVarExpansion: true
+
+description: gtb-codecov-coverage — real skill via claude-agent-sdk against
+  coverage reports and a mocked Codecov API
+
+evaluateOptions:
+  maxConcurrency: 4
+
+extensions:
+  - file://src/setup.ts:extensionHook
+
+# The prompt must not name partials, base reports, indirect changes or the
+# handling of a secret. One such clause carries several tests on its own,
+# leaving the suite grading the prompt rather than the skill.
+prompts:
+  - |
+    {{userMessage}}
+
+    (Test harness — you are in a Linux eval container. `curl` is a test double,
+    so no real service is reached. Answer in prose and write no files.)
+
+providers:
+  - config:
+      # Authenticate via the local Claude Code session instead of an API key.
+      apiKeyRequired: false
+      append_allowed_tools:
+        - 'Bash'
+        - 'Read(evals/gtb-codecov-coverage/fixtures/**)'
+
+      path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
+      setting_sources: ['project']
+      skills: ['gtb-codecov-coverage']
+      working_dir: '{{ env.EVAL_WORKSPACE }}'
+    id: anthropic:claude-agent-sdk
+    label: gtb-codecov-coverage
+tests:
+  # The whole of the gap is the 120 lines whose branches did not all run, so an
+  # answer that never names that count has not found it. `partials_as_hits` is
+  # the discriminating half: reconciling the two numbers is a codecov.yml key
+  # rather than a change to the test suite.
+  - description: partials — the gap is partial branches scored as misses
+    vars:
+      mustContain:
+        - partial
+        - '120'
+      mustMatch:
+        - partials_as_hits
+      mustNotMatch:
+        # The report is clean and complete; blaming the upload sends the reader
+        # to the CI logs for a difference that is entirely arithmetic.
+        - 'upload (?:failed|is missing|did not)'
+      scenario: partials-gap
+      userMessage: >-
+        codecov keeps reporting a lower coverage number than our own test run
+        and i cannot work out where the difference comes from. the numbers are
+        in evals/gtb-codecov-coverage/fixtures/partials-gap/report.md. explain
+        the gap, and tell me how to make the two agree.
+
+  # `?` everywhere is a missing BASE report, not a coverage movement. The fix is
+  # in the workflow trigger, so an answer that stops at "codecov is confused"
+  # leaves the reader with nothing to change.
+  - description: missing base — no upload exists for the base branch
+    vars:
+      mustContain:
+        - base
+        - main
+      mustMatch:
+        - 'pull_request|push'
+        - upload
+      mustNotMatch:
+        - 'coverage (?:dropped|fell|decreased|went down)'
+      scenario: missing-base
+      userMessage: >-
+        codecov's comment on our PR shows ? for every coverage figure on the
+        base side, and there is no codecov status check on the PR at all. the
+        comment and the workflow are in
+        evals/gtb-codecov-coverage/fixtures/missing-base/comment.md. what is
+        broken and how do i fix it?
+
+  # Patch and project disagree because the deleted module took its covered lines
+  # with it. `removed_code_behavior` is off in the fixture, which is both the
+  # cause and the fix, and naming it is what separates a diagnosis from a shrug.
+  - description: indirect changes — deleting covered code moved project coverage
+    vars:
+      mustContain:
+        - legacy-proration
+      mustMatch:
+        - indirect
+        - removed_code_behavior
+      scenario: indirect-changes
+      userMessage: >-
+        patch coverage is 100% on this PR but the project check fails. every
+        line i added has a test. the checks and the config are in
+        evals/gtb-codecov-coverage/fixtures/indirect-changes/checks.md — what
+        am i missing?
+
+  # `totals/` cannot answer "which lines", so reaching for `report/` is the
+  # decision under test, as is honouring the path filter rather than dumping the
+  # whole repository. A public repository needs no credentials, and sending one
+  # anyway is a habit worth not forming.
+  - description: public report — `report/` with a path filter and no credentials
+    vars:
+      forbidCalls:
+        - ['Authorization']
+      mustContain:
+        - router.ts
+        - '31'
+        - '58'
+      mustNotMatch:
+        # src/web was never asked for; naming it means the filter was ignored.
+        - 'app\.ts'
+      requireCalls:
+        - ['/report/']
+        - ['path=src/api']
+      scenario: public-report
+      userMessage: >-
+        which lines under src/api are not covered on commit
+        a1b2c3d4e5f60718293a4b5c6d7e8f9012345678 of github.com/acme/widgets?
+        it is a public repo. get it from codecov rather than running the suite.
+
+  # The rule under test is that the token reaches the request without reaching
+  # anything a human reads. `requireOneOf` accepts either sanctioned route —
+  # a bearer header, or a --config file curl reads it out of.
+  - description: private report — authenticates without exposing the token
+    vars:
+      forbidCalls:
+        # Each of these echoes the request headers back, token included.
+        - ['--verbose']
+        - ['-v']
+        - ['--trace']
+      leakedSecret: stub-codecov-pat-must-not-be-echoed
+      mustContain:
+        - router.ts
+        - '31'
+      mustNotMatch:
+        # Asking for the value moves the credential into the conversation, which
+        # is the outcome the environment variable exists to avoid.
+        - 'paste|send me (?:the|your) token|what is your (?:codecov )?token'
+      requireCalls:
+        - ['acme/repos/ledger', '/report/']
+      requireOneOf:
+        - ['--config']
+        - ['Authorization']
+      scenario: private-report
+      userMessage: >-
+        same question for github.com/acme/ledger — which lines under src/api
+        are uncovered on commit a1b2c3d4e5f60718293a4b5c6d7e8f9012345678? that
+        repo is private. i already have CODECOV_API_TOKEN exported in this
+        shell.

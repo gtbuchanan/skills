@@ -34,7 +34,7 @@ catalog:
   turbo: 2.10.9
   typescript: 6.0.3
   valibot: 1.4.2
-  vitest: 4.1.10
+  vitest: 4.1.11
   yaml: 2.9.0
 
 engineStrict: true
@@ -47,6 +47,8 @@ lockfileIncludeTarballUrl: false
 minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
   - '@gtbuchanan/*'
+  # Renovate security update: vitest@4.1.11
+  - vitest@4.1.11
 
 packages:
   - evals/*

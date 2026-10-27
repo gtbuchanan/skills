@@ -6,9 +6,13 @@
  */
 import spawn from 'cross-spawn';
 import { beginEphemeralRun } from '#src/ephemeral-run.ts';
-import { evalIsolation } from '#src/eval-isolation.ts';
+import { evalIsolation, evalPolicy } from '#src/eval-isolation.ts';
 
 const { assertFailSafe, buildScrubbedPath, poisonDangerTools } = evalIsolation;
+
+/* Named from the policy rather than spelled out, so a tool added to the policy
+   cannot leave this line claiming a smaller set than was enforced. */
+const shadowed = evalPolicy.dangerTools.join('/');
 
 const stubDir = beginEphemeralRun().mintDir('skills-eval-check-');
 // Mirror what a real run does, or the check reports a breach the runner doesn't have.
@@ -26,7 +30,7 @@ const failures = assertFailSafe({
   stubDir,
 });
 if (scrubbed.missing.length === 0 && failures.length === 0) {
-  console.log('\nPASS — toolchain present; gh/az/pwsh unreachable or shadowed.');
+  console.log(`\nPASS — toolchain present; ${shadowed} unreachable or shadowed.`);
   process.exit(0);
 }
 console.log('\nFAIL:');

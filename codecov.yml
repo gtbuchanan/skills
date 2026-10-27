@@ -41,6 +41,11 @@ component_management:
       paths:
         - evals/gtb-gh-pr-authoring/bin/**
         - evals/gtb-gh-pr-authoring/src/**
+    - component_id: eval-gtb-codecov-coverage
+      name: eval-gtb-codecov-coverage
+      paths:
+        - evals/gtb-codecov-coverage/bin/**
+        - evals/gtb-codecov-coverage/src/**
     - component_id: eval-gtb-change-decomposition
       name: eval-gtb-change-decomposition
       paths:
@@ -79,6 +84,10 @@ flags:
     carryforward: true
     paths:
       - evals/gtb-change-decomposition/
+  eval-gtb-codecov-coverage:
+    carryforward: true
+    paths:
+      - evals/gtb-codecov-coverage/
   eval-gtb-gh-pr-authoring:
     carryforward: true
     paths:

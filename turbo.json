@@ -18,8 +18,8 @@
     "//#lint:eslint": {
       "inputs": [
         "$TURBO_DEFAULT$",
-        "!evals/**",
-        "!packages/**"
+        "!evals/*/**",
+        "!packages/*/**"
       ],
       "outputs": [
         "dist/.eslintcache"
@@ -27,9 +27,30 @@
     },
     "//#typecheck:ts": {
       "inputs": [
-        "$TURBO_DEFAULT$",
-        "!evals/**",
-        "!packages/**"
+        "tsconfig.base.json",
+        "bin/**",
+        "scripts/**",
+        "src/**",
+        "test/**",
+        "e2e/**",
+        "*.cjs",
+        "*.cts",
+        "*.js",
+        "*.jsx",
+        "*.mjs",
+        "*.mts",
+        "*.ts",
+        "*.tsx",
+        ".*.cjs",
+        ".*.cts",
+        ".*.js",
+        ".*.jsx",
+        ".*.mjs",
+        ".*.mts",
+        ".*.ts",
+        ".*.tsx",
+        "tsconfig.json",
+        "tsconfig.*.json"
       ],
       "outputs": []
     },
@@ -53,15 +74,10 @@
       ]
     },
     "coverage:codecov:upload": {
+      "cache": false,
       "env": [
         "CI",
         "CODECOV_TOKEN"
-      ],
-      "inputs": [
-        "dist/coverage/vitest/**/lcov.info"
-      ],
-      "outputs": [
-        "dist/coverage/codecov/.uploaded"
       ]
     },
     "coverage:merge": {

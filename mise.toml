@@ -43,7 +43,7 @@ node = "24.21.0"
 "npm:renovate" = { trust_policy_excludes = [
   "@yarnpkg/libzip",
 ], version = "44.20.1" }
-pkl = "0.32.1"
+pkl = "0.32.2"
 # Deliberately duplicates `packageManager` in package.json (turbo requires that
 # field); Renovate's shared preset groups both bumps into one PR. Resolving it
 # from package.json instead left mise.lock unbumped, failing every

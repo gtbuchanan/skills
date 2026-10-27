@@ -1,0 +1,25 @@
+---
+jobs:
+  ci:
+    name: CI
+    secrets: inherit
+    # Same inputs as pr.yml, so a commit on main is built, tested and uploaded
+    # exactly as its pull request was.
+    uses: gtbuchanan/tooling/.github/workflows/ci.yml@main
+    with:
+      run-e2e: false
+      run-slow-tests: true
+
+name: Release
+
+# The main-branch pipeline, copied from tooling's release.yml. Its CI job is
+# what uploads coverage for commits on main, which every pull request's
+# Codecov comparison needs as a base; pr.yml alone never builds them. Tooling's
+# CD job is left out because nothing here is published: every package is
+# private and there are no changesets to version.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read

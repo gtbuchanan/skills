@@ -1,125 +1,66 @@
 ---
+# Codecov reads the YAML from the branch under test, so an edit here takes
+# effect on the pull request that makes it. Pinning it to the default branch is
+# opt-in, via `strict_yaml_branch`.
 codecov:
+  # The default withholds Codecov's status and comment whenever an unrelated
+  # check fails — a missing changeset, say — which hides coverage exactly when
+  # a build is being iterated on. The upload job runs `continue-on-error`
+  # because coverage here is informational rather than a merge gate, so tying
+  # the status back to the build's would contradict that.
   require_ci_to_pass: false
-component_management:
-  individual_components:
-    - component_id: eval-gtb-technical-writing
-      name: eval-gtb-technical-writing
-      paths:
-        - evals/gtb-technical-writing/src/**
-    - component_id: eval-gtb-reviewer-followup-verdict
-      name: eval-gtb-reviewer-followup-verdict
-      paths:
-        - evals/gtb-reviewer-followup-verdict/src/**
-    - component_id: eval-gtb-resolve-azp-deployment-backlog
-      name: eval-gtb-resolve-azp-deployment-backlog
-      paths:
-        - evals/gtb-resolve-azp-deployment-backlog/bin/**
-        - evals/gtb-resolve-azp-deployment-backlog/src/**
-    - component_id: eval-gtb-gh-reviewer-followup-plan
-      name: eval-gtb-gh-reviewer-followup-plan
-      paths:
-        - evals/gtb-gh-reviewer-followup-plan/bin/**
-        - evals/gtb-gh-reviewer-followup-plan/src/**
-    - component_id: eval-gtb-gh-reviewer-followup-apply
-      name: eval-gtb-gh-reviewer-followup-apply
-      paths:
-        - evals/gtb-gh-reviewer-followup-apply/bin/**
-        - evals/gtb-gh-reviewer-followup-apply/src/**
-    - component_id: eval-gtb-gh-reviewer-followup
-      name: eval-gtb-gh-reviewer-followup
-      paths:
-        - evals/gtb-gh-reviewer-followup/bin/**
-        - evals/gtb-gh-reviewer-followup/src/**
-    - component_id: eval-gtb-gh-pr-merging
-      name: eval-gtb-gh-pr-merging
-      paths:
-        - evals/gtb-gh-pr-merging/bin/**
-        - evals/gtb-gh-pr-merging/src/**
-    - component_id: eval-gtb-gh-pr-authoring
-      name: eval-gtb-gh-pr-authoring
-      paths:
-        - evals/gtb-gh-pr-authoring/bin/**
-        - evals/gtb-gh-pr-authoring/src/**
-    - component_id: eval-gtb-change-decomposition
-      name: eval-gtb-change-decomposition
-      paths:
-        - evals/gtb-change-decomposition/src/**
-    - component_id: stub-runtime
-      name: stub-runtime
-      paths:
-        - packages/stub-runtime/src/**
-    - component_id: agent-skills-harness
-      name: agent-skills-harness
-      paths:
-        - packages/harness/src/**
-    - component_id: github-cli-stub
-      name: github-cli-stub
-      paths:
-        - packages/github-cli-stub/src/**
-    - component_id: git-fixtures
-      name: git-fixtures
-      paths:
-        - packages/git-fixtures/src/**
-    - component_id: agent-skills-eval-runner
-      name: agent-skills-eval-runner
-      paths:
-        - packages/eval-runner/bin/**
-        - packages/eval-runner/src/**
-flags:
-  agent-skills-eval-runner:
+
+comment:
+  layout: condensed_header, condensed_files, condensed_footer
+  # Skip the comment on a pull request that moved no coverage, so the ones that
+  # appear are worth reading.
+  require_changes: true
+
+# The repository-wide rollup. These name no flags, so they always report, and
+# they are the checks to gate on if coverage ever becomes a merge requirement.
+coverage:
+  status:
+    # New and changed lines carry a fixed bar: a package can be dragged up over
+    # time without a ratchet, but nothing arrives below this.
+    patch:
+      default:
+        target: 80%
+    # The project is compared against itself, with enough slack that ordinary
+    # movement doesn't fail a build.
+    project:
+      default:
+        target: auto
+        threshold: 1%
+
+# Per-package rules, applied to every flag Codecov ingests rather than to a
+# hand-listed set. `gtb task coverage:codecov:upload` names each flag after the
+# package's unscoped manifest name, so a new package earns these rules the
+# moment it first uploads and cannot be forgotten into having none.
+flag_management:
+  default_rules:
+    # A safety net rather than the mechanism. `coverage:codecov:upload` is
+    # uncached, so every package uploads on every commit and there is normally
+    # no gap to carry over; this covers the run that skips one anyway — a
+    # filtered build, a leaf that failed before reporting — by holding that
+    # package's last known coverage instead of dropping it from the report,
+    # which Codecov would otherwise read as 0%.
+    #
+    # Its limit, worth knowing before trusting a green check: Codecov cannot
+    # distinguish coverage it carried forward from coverage that never arrived,
+    # so an upload that quietly stops happening reports its last value
+    # indefinitely.
+    #
+    # No `statuses` here on purpose. A per-flag check would post for every
+    # package on every commit, burying the ones that moved, and the set would
+    # shift as packages come and go — so it could never be a stable branch
+    # protection requirement. The repo-wide checks above are the gate: they
+    # name no flags, so they cover every package at once under one context.
     carryforward: true
-    paths:
-      - packages/eval-runner/
-  agent-skills-harness:
-    carryforward: true
-    paths:
-      - packages/harness/
-  eval-gtb-change-decomposition:
-    carryforward: true
-    paths:
-      - evals/gtb-change-decomposition/
-  eval-gtb-gh-pr-authoring:
-    carryforward: true
-    paths:
-      - evals/gtb-gh-pr-authoring/
-  eval-gtb-gh-pr-merging:
-    carryforward: true
-    paths:
-      - evals/gtb-gh-pr-merging/
-  eval-gtb-gh-reviewer-followup:
-    carryforward: true
-    paths:
-      - evals/gtb-gh-reviewer-followup/
-  eval-gtb-gh-reviewer-followup-apply:
-    carryforward: true
-    paths:
-      - evals/gtb-gh-reviewer-followup-apply/
-  eval-gtb-gh-reviewer-followup-plan:
-    carryforward: true
-    paths:
-      - evals/gtb-gh-reviewer-followup-plan/
-  eval-gtb-resolve-azp-deployment-backlog:
-    carryforward: true
-    paths:
-      - evals/gtb-resolve-azp-deployment-backlog/
-  eval-gtb-reviewer-followup-verdict:
-    carryforward: true
-    paths:
-      - evals/gtb-reviewer-followup-verdict/
-  eval-gtb-technical-writing:
-    carryforward: true
-    paths:
-      - evals/gtb-technical-writing/
-  git-fixtures:
-    carryforward: true
-    paths:
-      - packages/git-fixtures/
-  github-cli-stub:
-    carryforward: true
-    paths:
-      - packages/github-cli-stub/
-  stub-runtime:
-    carryforward: true
-    paths:
-      - packages/stub-runtime/
+
+# Belt and braces against a report that widens. `@gtbuchanan/vitest-config`
+# collects from `bin/`, `scripts/` and `src/` alone, so these match nothing
+# today.
+ignore:
+  - '**/dist/**'
+  - '**/e2e/**'
+  - '**/test/**'

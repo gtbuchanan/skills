@@ -1,0 +1,19 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "test:vitest:fast": {
+      "inputs": [
+        "bin/**",
+        "src/**",
+        "test/**",
+        "scripts/**",
+        "vitest.config.*",
+        "!vitest.config.e2e.*",
+        "$TURBO_ROOT$/skills/gtb-technical-writing/scripts/**"
+      ]
+    }
+  }
+}

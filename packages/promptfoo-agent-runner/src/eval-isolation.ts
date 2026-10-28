@@ -19,11 +19,11 @@ import { type IsolationPolicy, createIsolation } from './scrubbed-path.ts';
 
 export const evalPolicy: IsolationPolicy = {
   /*
-   * The skills reach for GitHub and Azure DevOps, and the azp skill's action is
-   * a bundled PowerShell script. Those are exactly what a suite must never
-   * touch for real, so they are the ones to shadow.
+   * The skills reach for GitHub, Azure DevOps and Forgejo, and the azp skill's
+   * action is a bundled PowerShell script. Those are exactly what a suite must
+   * never touch for real, so they are the ones to shadow.
    */
-  dangerTools: ['az', 'gh', 'powershell', 'pwsh'],
+  dangerTools: ['az', 'gh', 'powershell', 'pwsh', 'tea'],
   /*
    * The runner spawns node, pnpm and git itself, and runs bash for the
    * fail-safe probe and as every agent's shell; on Windows that is Git Bash,

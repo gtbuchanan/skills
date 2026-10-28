@@ -23,11 +23,11 @@ import { type IsolationPolicy, createIsolation } from './scrubbed-path.ts';
 
 export const evalPolicy: IsolationPolicy = {
   /*
-   * The skills reach for GitHub and Azure DevOps, and the azp skill's action is
-   * a bundled PowerShell script. Those are exactly what a suite must never
-   * touch for real, so they are the ones to shadow.
+   * The skills reach for GitHub, Azure DevOps and Forgejo, and the azp skill's
+   * action is a bundled PowerShell script. Those are exactly what a suite must
+   * never touch for real, so they are the ones to shadow.
    */
-  dangerTools: ['az', 'gh', 'powershell', 'pwsh'],
+  dangerTools: ['az', 'gh', 'powershell', 'pwsh', 'tea'],
   /*
    * The agent's shell is Git Bash, which needs the coreutils alongside it;
    * corepack backs pnpm, and the harness drives pnpm and git directly.

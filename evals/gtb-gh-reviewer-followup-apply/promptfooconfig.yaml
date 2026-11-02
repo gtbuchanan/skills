@@ -2,15 +2,12 @@
 #
 # Write-path eval for this skill. Runs the REAL skill via claude-agent-sdk
 # against pre-approved action-list fixtures, but shadows the `gh` CLI with a
-# fake (bin/gh-stub.ts) so NOTHING is written to a real PR. The stub records
-# every invocation to the suite's log under artifacts/skill-evals/ — argv, and
-# the body gh was handed on standard input, where a reply's prose goes — and
-# apply-check.ts asserts the skill made the right GitHub calls.
+# fake (bin/gh-stub.ts) so NOTHING is written to a real PR. Each test runs in
+# its own scenario workspace, and apply-check.ts judges that scenario's log.
 #
 # Runs only under the eval runner, where the fake gh sits at the front of PATH
 # and the real gh is unreachable — so interception is deterministic and a call
-# the suite forgot to stub fails instead of reaching GitHub. setup.ts just sets
-# STUB_LOG.
+# the suite forgot to stub fails instead of reaching GitHub.
 #
 # The confirmation gate is NOT exercised here (we feed an approved list and tell
 # the skill not to ask); its interaction behavior stays human-verified.
@@ -29,7 +26,8 @@ defaultTest:
     disableVarExpansion: true
 description: gtb-gh-reviewer-followup-apply — write path via claude-agent-sdk with a fake gh
 
-# Serial so the shared append-only call log can't interleave between tests.
+# Serial for now. Each test logs to its own scenario's file, so nothing about
+# the record stops them running at once; that is a separate change.
 evaluateOptions:
   maxConcurrency: 1
 
@@ -39,9 +37,12 @@ extensions:
 prompts:
   - |
     You are following up on GitHub pull request #42 of acme/widgets as the
-    reviewer. The reviewer has already reviewed and APPROVED the actions listed
-    in {{fixture}}/actions.json — read that file. Carry out each approved action
-    now against the PR, doing exactly what its `action` field specifies.
+    reviewer. Your task directory is ./scenarios/{{ scenario }}, relative to
+    your working directory: run every command from inside it, and leave every
+    other directory alone. The reviewer has already reviewed and APPROVED the
+    actions listed in actions.json in that directory — read that file. Carry
+    out each approved action now against the PR, doing exactly what its
+    `action` field specifies.
     {{approvalNote}}
     Treat the list as approved and do not ask for confirmation. When finished,
     report what you did and clearly flag anything that failed.
@@ -50,7 +51,7 @@ providers:
   - config:
       apiKeyRequired: false
       append_allowed_tools:
-        - 'Read(evals/gtb-gh-reviewer-followup-apply/fixtures/**)'
+        - 'Read(scenarios/**)'
         - 'Bash(gh:*)'
       ask_user_question:
         behavior: first_option
@@ -69,14 +70,14 @@ tests:
         - { bodyIncludes: 'notify_batch', id: 11002 }
 
       expectResolve: ['PRRT_mixedA']
-      fixture: evals/gtb-gh-reviewer-followup-apply/fixtures/mixed
+      scenario: mixed
   - description: edited reply — the (edited) body is posted verbatim
     vars:
       approvalNote: ''
       expectReply:
         - { bodyIncludes: 'EDITED-BODY-MARKER', id: 12001 }
 
-      fixture: evals/gtb-gh-reviewer-followup-apply/fixtures/edited-reply
+      scenario: edited-reply
   - description: withheld approval — the skipped thread is never touched
     vars:
       approvalNote: >-
@@ -85,13 +86,13 @@ tests:
       expectAbsent: ['PRRT_skipHold', '13002']
 
       expectResolve: ['PRRT_skipDo']
-      fixture: evals/gtb-gh-reviewer-followup-apply/fixtures/skip
+      scenario: skip
   - description: ack — a verified author-resolved fix gets a 🚀 reaction, thread left resolved
     vars:
       approvalNote: ''
       expectAbsent: ['PRRT_ackA']
       expectAck: [14001]
-      fixture: evals/gtb-gh-reviewer-followup-apply/fixtures/ack
+      scenario: ack
   - description: reopen — reply is posted, then the thread is unresolved (reply before reopen)
     vars:
       approvalNote: ''
@@ -100,9 +101,9 @@ tests:
 
       expectReply:
         - { bodyIncludes: 'REOPEN-BODY-MARKER', id: 15001 }
-      fixture: evals/gtb-gh-reviewer-followup-apply/fixtures/reopen
+      scenario: reopen
   - description: failed call — a rejected resolve is reported, not hidden
     vars:
       approvalNote: ''
       expectFailure: true
-      fixture: evals/gtb-gh-reviewer-followup-apply/fixtures/error
+      scenario: error

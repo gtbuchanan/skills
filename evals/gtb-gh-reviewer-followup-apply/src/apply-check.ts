@@ -1,11 +1,6 @@
 /*
- * promptfoo javascript assertion for this suite's write path.
- *
- * The fake gh (bin/gh-stub.ts) appends every invocation, as a JSON line, to the
- * suite's call log under artifacts/skill-evals/ — argv, and the body gh was
- * handed on standard input, which never appears in argv at all. This checks
- * that the skill made the right GitHub calls for the fixture's approved
- * actions:
+ * promptfoo javascript assertion for this suite's write path: the skill made
+ * the right GitHub calls for the fixture's approved actions.
  *
  *   expectResolve  — thread ids that must appear in a resolveReviewThread call
  *   expectReply    — { id, bodyIncludes } that must appear as a REST reply
@@ -14,17 +9,15 @@
  *                    the reply posted BEFORE the unresolve (reply-first ordering)
  *   expectAbsent   — ids that must NEVER appear (the reviewer withheld approval)
  *   expectFailure  — the agent's own report must acknowledge a failure
- *
- * Assertions are presence/absence (not counts), so a shared, append-only log is
- * safe across concurrent tests and repeated runs: fixtures use globally-unique
- * ids, and a correct skill never emits a call for a withheld id.
  */
-import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
+import path from 'node:path';
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { suiteCallLog } from '@gtbuchanan/agent-skills-harness/paths';
+import { suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
+import { type ReportedResult, reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
 import type { LoggedCall } from '@gtbuchanan/stub-runtime/calls';
-import { readCalls } from '@gtbuchanan/stub-runtime/calls';
+import { readCalls, readRefusals } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
+import { unattributedLog } from './scenarios.ts';
 
 const StringListSchema = v.array(v.string());
 
@@ -61,35 +54,40 @@ export const VarsSchema = v.object({
   expectResolve: v.optional(StringListSchema, []),
 });
 
+/**
+ * Which scenario's log to read — kept apart from the expectations, which say
+ * what to look for rather than where.
+ */
+const ScenarioVarsSchema = v.object({ scenario: v.string() });
+
 const failureWording =
   /fail|error|could not|couldn't|unable|did not|didn't/v;
 
-const checkExpectedCalls = (
+const checkResolves = (
   calls: readonly LoggedCall[],
   vars: v.InferOutput<typeof VarsSchema>,
-): string[] => {
-  const problems = [];
-
-  for (const threadId of vars.expectResolve) {
+): string[] =>
+  vars.expectResolve.flatMap((threadId) => {
     const isHit = calls.some(
       call =>
         call.command.includes('resolveReviewThread') &&
         call.command.includes(`threadId=${threadId}`),
     );
-    if (!isHit) problems.push(`missing resolve for ${threadId}`);
-  }
+    return isHit ? [] : [`missing resolve for ${threadId}`];
+  });
 
-  /* argv alone, deliberately: a withheld thread is acted on by naming it in an
-     endpoint or a mutation argument, both of which are the command line. Its id
-     turning up inside some other thread's reply body is prose, not an act. */
-  for (const id of vars.expectAbsent) {
-    if (calls.some(call => call.command.includes(String(id)))) {
-      problems.push(`acted on a withheld thread (${String(id)})`);
-    }
-  }
-
-  return problems;
-};
+/*
+ * argv alone, deliberately: a withheld thread is acted on by naming it in an
+ * endpoint or a mutation argument, both of which are the command line. Its id
+ * turning up inside some other thread's reply body is prose, not an act.
+ */
+const checkWithheld = (
+  calls: readonly LoggedCall[],
+  vars: v.InferOutput<typeof VarsSchema>,
+): string[] =>
+  vars.expectAbsent
+    .filter(id => calls.some(call => call.command.includes(String(id))))
+    .map(id => `acted on a withheld thread (${String(id)})`);
 
 /**
  * gh's inline body field, whatever its value.
@@ -184,16 +182,24 @@ const checkReopens = (
   });
 
 /**
- * Asserts the skill made exactly the GitHub calls the fixture approved.
+ * Asserts the skill made exactly the GitHub calls the fixture approved, reading
+ * the logs the fake gh wrote into `runDir`.
  */
-export default function assertApplyCalls(
+export const applyAssertion = (runDir: string) => (
   output: unknown,
   context: { vars?: unknown },
-): AssertionResult {
-  const calls = readCalls(suiteCallLog(import.meta.url));
+): ReportedResult => {
+  const { scenario } = v.parse(ScenarioVarsSchema, context.vars ?? {});
+  const logPath = path.join(runDir, `${scenario}.jsonl`);
+  const calls = readCalls(logPath);
   const vars = v.parse(VarsSchema, context.vars ?? {});
+  /* A withheld id belongs to this test's fixture alone, so a call naming it
+     is this test's wherever it was made. The other checks read only the
+     test's own log: a refused resolve resolved nothing. */
+  const unattributed = readCalls(path.join(runDir, unattributedLog));
   const problems = [
-    ...checkExpectedCalls(calls, vars),
+    ...checkResolves(calls, vars),
+    ...checkWithheld([...calls, ...unattributed], vars),
     ...checkReplies(calls, vars),
     ...checkAcks(calls, vars),
     ...checkReopens(calls, vars),
@@ -206,5 +212,8 @@ export default function assertApplyCalls(
     }
   }
 
-  return fromProblems(problems);
-}
+  // The log is emptied as the scenario is built, so its refusals are this run's.
+  return reportRefusals(fromProblems(problems), readRefusals(logPath));
+};
+
+export default applyAssertion(suiteRunDir(import.meta.url));

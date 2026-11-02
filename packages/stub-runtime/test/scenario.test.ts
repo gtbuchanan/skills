@@ -15,6 +15,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
 import {
+  findScenario,
   locateScenario,
   markerFile,
   scenarioByKey,
@@ -68,6 +69,29 @@ test('a call outside every workspace is refused rather than defaulted', ({ expec
   const outside = mkdtempSync(path.join(tmpdir(), 'unseeded-'));
 
   expect(() => locateScenario(scenarios, outside)).toThrow(markerFile);
+});
+
+test('finding reports no world outside every workspace, without throwing', ({ expect }) => {
+  // For a double that keeps such a call rather than failing it.
+  const outside = mkdtempSync(path.join(tmpdir(), 'unseeded-'));
+
+  expect(findScenario(scenarios, outside)).toBeUndefined();
+});
+
+test('finding still stops on a marker naming an unknown world', ({ expect }) => {
+  // Only the missing marker is an answer; a wrong key is still a broken seed.
+  const { nested } = seeded('no-such-world');
+
+  expect(() => findScenario(scenarios, nested)).toThrow('no-such-world');
+});
+
+test('finding locates the world a call was made in', ({ expect }) => {
+  const { nested, root } = seeded('merge-stacked');
+
+  expect(findScenario(scenarios, nested)).toStrictEqual({
+    dir: root,
+    scenario: { key: 'merge-stacked' },
+  });
 });
 
 test('a workspace lives under the scenarios directory, keyed by name', ({ expect }) => {

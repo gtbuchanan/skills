@@ -19,31 +19,98 @@
  * setup's per-test assertion count sees it.
  */
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { parseJson } from '@gtbuchanan/stub-runtime/calls';
+import { markerFile, scenarioPath } from '@gtbuchanan/stub-runtime/scenario';
 import { test } from 'vitest';
 
 const stub = path.join(import.meta.dirname, '..', 'bin', 'gh-stub.ts');
 
 /**
- * The lines this call left in a log of its own, parsed.
- *
- * A fresh log per call, so a case reads exactly what it provoked rather than
- * whatever a neighbour appended first.
+ * A fresh eval workspace holding one seeded scenario, and a log directory
+ * beside it — so a case reads exactly what it provoked rather than whatever a
+ * neighbour appended first.
+ */
+const seeded = (key: string): { readonly logDir: string; readonly root: string } => {
+  const root = mkdtempSync(path.join(tmpdir(), 'gh-stub-'));
+  const workspace = path.join(root, ...scenarioPath(key).split('/'));
+  mkdirSync(workspace, { recursive: true });
+  writeFileSync(path.join(workspace, markerFile), `${key}\n`);
+
+  return { logDir: path.join(root, 'logs'), root };
+};
+
+/**
+ * Runs the stub from `cwd` and reports how it exited.
+ */
+const run = (
+  cwd: string,
+  logDir: string,
+  args: readonly string[],
+  input = '',
+): number | null =>
+  spawnSync(process.execPath, [stub, ...args], {
+    cwd,
+    encoding: 'utf8',
+    env: { ...process.env, STUB_LOG_DIR: logDir },
+    input,
+  }).status;
+
+/**
+ * The lines one call made from inside the `mixed` scenario left in that
+ * scenario's log, parsed.
  */
 const logged = (args: readonly string[], input = ''): unknown[] => {
-  const logDir = mkdtempSync(path.join(tmpdir(), 'gh-stub-'));
-  const logPath = path.join(logDir, 'calls.jsonl');
-  spawnSync(process.execPath, [stub, ...args], {
-    encoding: 'utf8',
-    env: { ...process.env, STUB_LOG: logPath },
-    input,
-  });
+  const { logDir, root } = seeded('mixed');
+  run(path.join(root, ...scenarioPath('mixed').split('/')), logDir, args, input);
 
-  return readFileSync(logPath, 'utf8').split('\n').filter(Boolean).map(parseJson);
+  return readFileSync(path.join(logDir, 'mixed.jsonl'), 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map(parseJson);
 };
+
+test('a call is recorded in the log of the scenario it was made in', ({ expect }) => {
+  /*
+   * One log per scenario is what lets the tests run at once: a call lands in
+   * the log of the test that made it, and nowhere else.
+   */
+  const { logDir, root } = seeded('ack');
+  const workspace = path.join(root, ...scenarioPath('ack').split('/'));
+  mkdirSync(path.join(workspace, 'nested'));
+
+  run(path.join(workspace, 'nested'), logDir, ['api', 'user']);
+
+  expect(readdirSync(logDir)).toStrictEqual(['ack.jsonl']);
+});
+
+test('a call made outside every scenario is refused, and kept', ({ expect }) => {
+  /*
+   * No test's log can take it, but a withheld thread acted on from there still
+   * has to be seen, so it is recorded where the checker looks for exactly that.
+   */
+  const { logDir, root } = seeded('ack');
+
+  expect(run(root, logDir, ['api', 'user'])).not.toBe(0);
+  expect(readdirSync(logDir)).toStrictEqual(['unattributed.jsonl']);
+  expect(
+    readFileSync(path.join(logDir, 'unattributed.jsonl'), 'utf8')
+      .split('\n')
+      .filter(Boolean)
+      .map(parseJson),
+  ).toStrictEqual([
+    { argv: ['api', 'user'], cmd: 'gh', stdin: '' },
+    { argv: ['api', 'user'], cmd: 'gh', refusal: 'called outside every scenario' },
+  ]);
+});
 
 const replies = 'repos/acme/widgets/pulls/42/comments/15001/replies';
 

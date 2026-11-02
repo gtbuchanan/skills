@@ -1,37 +1,28 @@
 #!/usr/bin/env node
-/*
- * Fake `gh` for this write-path eval. It never touches the
- * network: it appends the invocation as a JSON line to $STUB_LOG so the
- * checker can assert exactly which GitHub calls the skill made, and returns
- * canned JSON so the skill can proceed.
- *
- * The line carries the body as well as argv, because a reply body does not
- * appear in argv at all: gh takes prose on standard input, which is what keeps
- * a reply's backticks and fenced blocks intact. A log of argv alone would hand
- * the checker a posted reply it cannot read, and the suite would fail a run
- * that did exactly the right thing.
- *
- * Reached as `gh`: the runner installs a wrapper into STUB_BINDIR, at the front
- * of the eval PATH, that execs this file. The real gh CLI is never reachable
- * from a suite.
- *
- * Failure injection: any invocation whose args contain the token FAIL exits
- * non-zero with an error, so a fixture can verify the skill reports the failure
- * instead of claiming success. It is first because it is a guard rather than a
- * command — it decides the outcome whatever was being asked.
- *
- * Anything unclaimed is refused rather than answered with an empty `{}`, which
- * reads as "there is nothing here" rather than "I don't know" — an agent acts
- * on it, and every assertion about what it did call still passes.
- */
+// Fake `gh` for this write-path eval: logs each call and answers from canned JSON.
+import path from 'node:path';
 import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
-import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
+import { type StubOutcome, dispatch } from '@gtbuchanan/stub-runtime/dispatch';
 import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
-import { argv, emit, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
+import { findScenario } from '@gtbuchanan/stub-runtime/scenario';
+import { appendJsonl, argv, emit, joined } from '@gtbuchanan/stub-runtime/stub';
+import { scenarios, unattributedLog } from '#src/scenarios.ts';
 
+/* Undefined for a call made outside every scenario, which no test's log can
+   take; it goes to the unattributed log instead, and is refused below. */
+const scenario = findScenario(scenarios, process.cwd())?.scenario;
+
+/* Logged beside argv because gh reads a reply's body from standard input, so
+   argv alone cannot show what was posted. */
 const stdin = stdinBody(argv);
 
-const log = logCall('gh', stdin);
+const call = { argv, cmd: 'gh', stdin };
+
+const logDir = process.env['STUB_LOG_DIR'];
+const log = logDir === undefined
+  ? undefined
+  : path.join(logDir, scenario === undefined ? unattributedLog : `${scenario.key}.jsonl`);
+if (log !== undefined) appendJsonl(log, call);
 
 /**
  * The thread a mutation names, as gh's `-f threadId=` spells it.
@@ -48,8 +39,10 @@ const commentId = (pattern: RegExp): string =>
 const reactionsPath = /comments\/(?<id>\d+)\/reactions/v;
 const repliesPath = /comments\/(?<id>\d+)\/replies/v;
 
-const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
+const handlers = [
   {
+    /* First, because it decides the outcome whatever was asked: a fixture
+       names FAIL to check that the skill reports a failed call. */
     matches: argument(/FAIL/v),
     name: 'injected failure',
     respond: () => ({
@@ -115,6 +108,17 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     name: 'repo view',
     respond: () => ({ stdout: JSON.stringify({ nameWithOwner: 'acme/widgets' }) }),
   },
-]);
+];
+
+const outcome: StubOutcome = scenario === undefined
+  ? {
+      call,
+      code: 1,
+      kind: 'refused',
+      reason: 'called outside every scenario',
+      stderr: `gh-stub: no scenario at or above ${process.cwd()}\n`,
+      stdout: '',
+    }
+  : dispatch(call, handlers);
 
 emit(outcome, log);

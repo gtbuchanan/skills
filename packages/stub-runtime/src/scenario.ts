@@ -74,16 +74,13 @@ export const scenarioByKey = <TScenario extends Keyed>(
 };
 
 /**
- * The scenario whose workspace contains `start`.
- *
- * Refuses rather than guessing: a call made outside every workspace cannot be
- * answered at all, and answering it from some default world would hand the
- * code under test state belonging to a scenario it is not in.
+ * The scenario whose workspace contains `start`, or `undefined` when no
+ * workspace does.
  */
-export const locateScenario = <TScenario extends Keyed>(
+export const findScenario = <TScenario extends Keyed>(
   scenarios: readonly TScenario[],
   start: string,
-): Located<TScenario> => {
+): Located<TScenario> | undefined => {
   let dir = path.resolve(start);
   for (;;) {
     const marker = path.join(dir, markerFile);
@@ -94,11 +91,28 @@ export const locateScenario = <TScenario extends Keyed>(
       };
 
     const parent = path.dirname(dir);
-    if (parent === dir)
-      throw new Error(
-        `no ${markerFile} at or above ${start}: this call was made outside ` +
-        'every seeded workspace, and there is no world to answer it from.',
-      );
+    if (parent === dir) return undefined;
     dir = parent;
   }
+};
+
+/**
+ * The scenario whose workspace contains `start`.
+ *
+ * Refuses rather than guessing: a call made outside every workspace cannot be
+ * answered at all, and answering it from some default world would hand the
+ * code under test state belonging to a scenario it is not in.
+ */
+export const locateScenario = <TScenario extends Keyed>(
+  scenarios: readonly TScenario[],
+  start: string,
+): Located<TScenario> => {
+  const located = findScenario(scenarios, start);
+  if (located === undefined)
+    throw new Error(
+      `no ${markerFile} at or above ${start}: this call was made outside ` +
+      'every seeded workspace, and there is no world to answer it from.',
+    );
+
+  return located;
 };

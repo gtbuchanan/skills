@@ -1,16 +1,30 @@
-/*
- * promptfoo beforeAll extension for this suite. Its only job is to set STUB_LOG
- * (and start each run with a fresh log) so the fake gh records its calls where
- * apply-check.ts reads them.
- *
- * The fake gh itself is installed into STUB_BINDIR, at the front of PATH, by the
- * runner — so this suite runs only under the harness, where interception is
- * deterministic and the real gh is unreachable.
- */
-import { suiteCallLog } from '@gtbuchanan/agent-skills-harness/paths';
-import { resetCallLog } from '@gtbuchanan/agent-skills-harness/setup';
+// promptfoo beforeAll/beforeEach extension: one workspace and log per test.
+import { copyFileSync } from 'node:fs';
+import path from 'node:path';
+import { suiteDir } from '@gtbuchanan/agent-skills-harness/paths';
+import { scenarioSetup } from '@gtbuchanan/agent-skills-harness/scenario-setup';
+import type { Keyed } from '@gtbuchanan/stub-runtime/scenario';
+import { scenarios } from './scenarios.ts';
 
-export const extensionHook = (hookName: string): void => {
-  if (hookName !== 'beforeAll') return;
-  resetCallLog(suiteCallLog(import.meta.url));
-};
+/**
+ * A seed that copies a scenario's approved action list into its workspace.
+ */
+export const seedFromFixtures = (
+  fixturesDir: string,
+): ((scenario: Keyed, workspace: string) => void) =>
+  (scenario, workspace) => {
+    copyFileSync(
+      path.join(fixturesDir, scenario.key, 'actions.json'),
+      path.join(workspace, 'actions.json'),
+    );
+  };
+
+const fixturesDir = path.join(suiteDir(import.meta.url), 'fixtures');
+
+const setup = scenarioSetup({
+  metaUrl: import.meta.url,
+  scenarios,
+  seed: seedFromFixtures(fixturesDir),
+});
+
+export const extensionHook = setup.extensionHook;

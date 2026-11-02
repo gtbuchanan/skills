@@ -9,9 +9,12 @@
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
  */
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import * as v from 'valibot';
 import { test } from 'vitest';
-import { VarsSchema, checkReplies } from '#src/apply-check.ts';
+import { VarsSchema, applyAssertion, checkReplies } from '#src/apply-check.ts';
 
 interface Call {
   readonly command: string;
@@ -96,4 +99,29 @@ test('a reply to a different thread is not the one asked for', ({ expect }) => {
   );
 
   expect(problems).toStrictEqual(['missing reply to 11002']);
+});
+
+test('a withheld thread acted on outside every scenario is still caught', ({ expect }) => {
+  /*
+   * The call reached no scenario's log, but the thread it names belongs to
+   * this test's fixture alone, so finding it among the unattributed calls is
+   * enough to pin it here.
+   */
+  const runDir = mkdtempSync(path.join(tmpdir(), 'apply-check-'));
+  const resolveHeld = ['api', 'graphql', '-f', 'threadId=PRRT_skipHold'];
+  writeFileSync(
+    path.join(runDir, 'skip.jsonl'),
+    `${JSON.stringify({ argv: ['api', 'graphql', '-f', 'threadId=PRRT_skipDo'], cmd: 'gh' })}\n`,
+  );
+  writeFileSync(
+    path.join(runDir, 'unattributed.jsonl'),
+    `${JSON.stringify({ argv: resolveHeld, cmd: 'gh' })}\n`,
+  );
+
+  const result = applyAssertion(runDir)('', {
+    vars: { expectAbsent: ['PRRT_skipHold'], scenario: 'skip' },
+  });
+
+  expect(result.pass).toBe(false);
+  expect(result.reason).toContain('acted on a withheld thread (PRRT_skipHold)');
 });

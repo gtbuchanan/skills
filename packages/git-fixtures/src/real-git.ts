@@ -49,7 +49,7 @@ const gitNames = process.platform === 'win32'
   : ['git'];
 
 /**
- * A git environment that cannot see the developer's own config.
+ * The variables that keep git from reading any config but a repository's own.
  *
  * Two things ride on this. What leaks in is not obvious — `core.autocrlf`
  * rewrites blobs, `commit.gpgsign` embeds a fresh signature timestamp (or
@@ -64,12 +64,19 @@ const gitNames = process.platform === 'win32'
  * Repo-local config is untouched, so a seeded checkout keeps its origin,
  * branch and identity.
  */
+export const hermeticGitConfig = {
+  GIT_CONFIG_GLOBAL: '/dev/null',
+  GIT_CONFIG_NOSYSTEM: '1',
+} as const satisfies Record<string, string>;
+
+/**
+ * This process's environment, with {@link hermeticGitConfig} over it.
+ */
 export const hermeticGitEnv = (
   extra?: NodeJS.ProcessEnv,
 ): NodeJS.ProcessEnv => ({
   ...process.env,
-  GIT_CONFIG_GLOBAL: '/dev/null',
-  GIT_CONFIG_NOSYSTEM: '1',
+  ...hermeticGitConfig,
   ...extra,
 });
 

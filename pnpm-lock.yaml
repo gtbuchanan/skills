@@ -762,6 +762,9 @@ importers:
       '@gtbuchanan/agent-skills-harness':
         specifier: workspace:*
         version: link:../harness
+      '@gtbuchanan/git-fixtures':
+        specifier: workspace:*
+        version: link:../git-fixtures
       cross-spawn:
         specifier: 'catalog:'
         version: 7.0.6

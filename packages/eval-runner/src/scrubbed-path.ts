@@ -26,6 +26,7 @@ import type { SpawnSyncOptions, SpawnSyncReturns } from 'node:child_process';
 import { chmodSync, existsSync, readdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { hermeticGitConfig } from '@gtbuchanan/git-fixtures/real-git';
 
 /*
  * Aggregator dirs re-export danger CLIs via shims; never admit them wholesale.
@@ -500,6 +501,12 @@ const winDrivePrefixLength = 2;
  * caller's. Only OS plumbing, auth/network config, PATH/STUB_BINDIR, and a clean
  * HOME go in — so behavioral vars from the surrounding session never reach the
  * eval agent. Policy-free: nothing here depends on which tools are admitted.
+ *
+ * Git's config files sit outside that allowlist: it reads a system config from
+ * a path it compiled in, and Git for Windows ships one naming a credential
+ * helper. Left readable, a `git push` to a live remote would authenticate as
+ * the developer, so the agent's git reads its repository's config and nothing
+ * else.
  */
 export const buildEvalEnv = ({
   scrubbedPath,
@@ -513,6 +520,7 @@ export const buildEvalEnv = ({
   sourceEnv?: NodeJS.ProcessEnv;
 }): Record<string, string> => {
   const env: Record<string, string> = {
+    ...hermeticGitConfig,
     CLAUDE_CODE_EXECUTABLE: claudeExecutable(sourceEnv),
     HOME: homeDir,
     PATH: scrubbedPath,

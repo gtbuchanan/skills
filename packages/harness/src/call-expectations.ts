@@ -37,10 +37,11 @@
  * are not repositories.
  */
 import path from 'node:path';
-import { readCallRecords } from '@gtbuchanan/stub-runtime/calls';
+import { readCallRecords, readRefusals } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
-import { type AssertionResult, fromProblems } from './assert.ts';
+import { fromProblems } from './assert.ts';
 import { suiteRunDir } from './paths.ts';
+import { type ReportedResult, reportRefusals } from './refusals.ts';
 
 const StringListSchema = v.array(v.string());
 const ClauseListSchema = v.array(StringListSchema);
@@ -288,7 +289,7 @@ export interface CallExpectationOptions {
  */
 export const callExpectationAssertion = (
   options: CallExpectationOptions,
-): ((output: unknown, context: { vars?: unknown }) => AssertionResult) =>
+): ((output: unknown, context: { vars?: unknown }) => ReportedResult) =>
   (_output, context) => {
     const vars = v.parse(CallVarsSchema, context.vars ?? {});
     /* This scenario's own log, not a shared one: the doubles key a file per
@@ -302,7 +303,7 @@ export const callExpectationAssertion = (
       entry => ({ command: entry.argv.join(' '), stdin: entry.stdin ?? '' }),
     );
 
-    return fromProblems([
+    return reportRefusals(fromProblems([
       ...checkPresence(calls, vars),
       ...checkOneOf(calls, vars),
       ...checkOrder(calls, vars),
@@ -311,5 +312,5 @@ export const callExpectationAssertion = (
       ...checkForbiddenStdin(calls, vars),
       ...checkStdinLength(calls, vars),
       ...(options.outcomeChecks ?? []).flatMap(check => check(context.vars)),
-    ]);
+    ]), readRefusals(logFile));
   };

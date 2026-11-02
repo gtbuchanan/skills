@@ -23,10 +23,10 @@
  * thread the author resolved but whose file the diff never touches → unaddressed
  * → reply + reopen).
  */
-import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
 import { suiteCallLog } from '@gtbuchanan/agent-skills-harness/paths';
-import { parseJson, readCommands } from '@gtbuchanan/stub-runtime/calls';
+import { type ReportedResult, reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
+import { parseJson, readCommands, readRefusals } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 import { readReviews, scenarioDir, selectLastOwnReview, viewer } from './scenario.ts';
 
@@ -199,7 +199,7 @@ const checkSkipped = (byId: ActionsById): string[] =>
 /**
  * Asserts the skill stayed read-only and emitted a usable action list.
  */
-export default function assertDiffOutput(output: unknown): AssertionResult {
+export default function assertDiffOutput(output: unknown): ReportedResult {
   const baseline = readBaseline();
   const logPath = suiteCallLog(import.meta.url);
   const gh = readCommands(logPath, 'gh');
@@ -277,5 +277,5 @@ export default function assertDiffOutput(output: unknown): AssertionResult {
     );
   }
 
-  return fromProblems(problems);
+  return reportRefusals(fromProblems(problems), readRefusals(logPath));
 }

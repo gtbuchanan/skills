@@ -19,11 +19,11 @@
  *                went rather than deciding the division at the end.
  */
 import path from 'node:path';
-import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
 import { skillsRoot, suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
+import { type ReportedResult, reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
 import { readState } from '@gtbuchanan/github-cli-stub/state';
-import { readCallRecords } from '@gtbuchanan/stub-runtime/calls';
+import { readCallRecords, readRefusals } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 import { scenarioPath } from './setup.ts';
 
@@ -43,14 +43,16 @@ const commitCall = /\bcommit\b/v;
 export default function assertBoundaries(
   _output: unknown,
   context: { vars?: unknown },
-): AssertionResult {
+): ReportedResult {
   const vars = v.parse(VarsSchema, context.vars ?? {});
 
   /* One chronological stream. Splitting it by command is what loses the
      ordering the third rule is about. */
-  const calls = readCallRecords(
-    path.join(suiteRunDir(import.meta.url), `${vars.scenario}.jsonl`),
-  ).map(call => ({ cmd: call.cmd, line: call.argv.join(' ') }));
+  const logFile = path.join(suiteRunDir(import.meta.url), `${vars.scenario}.jsonl`);
+  const calls = readCallRecords(logFile).map(call => ({
+    cmd: call.cmd,
+    line: call.argv.join(' '),
+  }));
 
   /* Tagged once, so the two rules below read positions out of one sequence
      rather than reconstructing the order from two filtered lists. */
@@ -111,5 +113,5 @@ export default function assertBoundaries(
     );
   }
 
-  return fromProblems(problems);
+  return reportRefusals(fromProblems(problems), readRefusals(logFile));
 }

@@ -90,15 +90,20 @@ export const scenarioSetup = <TScenario extends Keyed>(
        keeps the failure explicit either way. */
     if (hookName === 'beforeAll') {
       requireHarness('scenario workspaces');
-      /* Cleared once for the run, not once per test: each scenario writes its
-         own file, so a test never has to empty a log another one is writing to.
-         That is what lets distinct tests run at the same time. */
+      /* The whole directory is cleared once for the run; each scenario then
+         empties only its own file, so a test never empties a log another one
+         is writing to. That is what lets distinct tests run at the same time. */
       resetRunDir(logDir);
       return;
     }
     if (hookName !== 'beforeEach') return;
 
     const key = v.parse(HookContextSchema, context).test.vars.scenario;
+    /* The scenario's log starts over with its workspace. A test run again
+       under `--repeat` builds the same scenario, and would otherwise be judged
+       on the calls and refusals of the runs before it. Only this scenario's
+       file goes, so a different scenario running alongside keeps its own. */
+    rmSync(path.join(logDir, `${key}.jsonl`), { force: true });
     buildOne(scenarioByKey(options.scenarios, key), skillsRoot());
   };
 

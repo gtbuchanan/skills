@@ -8,6 +8,7 @@
     "./commit-count": "./src/commit-count.ts",
     "./json-scan": "./src/json-scan.ts",
     "./paths": "./src/paths.ts",
+    "./refusals": "./src/refusals.ts",
     "./repo-scenario": "./src/repo-scenario.ts",
     "./scenario-setup": "./src/scenario-setup.ts",
     "./setup": "./src/setup.ts",

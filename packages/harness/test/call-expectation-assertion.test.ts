@@ -37,7 +37,7 @@ const identity = { email: 'taylor@example.com', name: 'Taylor Buchanan' };
 const writeLog = (
   metaUrl: string,
   scenario: string,
-  calls: readonly { argv: string[]; stdin?: string }[],
+  calls: readonly { argv: string[]; refusal?: string; stdin?: string }[],
 ): void => {
   const dir = suiteRunDir(metaUrl);
   mkdirSync(dir, { recursive: true });
@@ -64,6 +64,26 @@ test('a call the log contains satisfies the clause that names it', ({ expect }) 
   });
 
   expect(result.pass).toBe(true);
+});
+
+test('a call the double refused is reported from the scenario\'s own log', ({
+  expect,
+}) => {
+  const suite = fakeSuite();
+  writeLog(suite.metaUrl, 'open-draft', [
+    { argv: ['pr', 'create', '--draft'] },
+    { argv: ['pr', 'diff'] },
+    { argv: ['pr', 'diff'], refusal: 'no canned response' },
+  ]);
+
+  const assertion = callExpectationAssertion({ metaUrl: suite.metaUrl });
+
+  const result = assertion(undefined, {
+    vars: { requireCalls: [['pr create', '--draft']], scenario: 'open-draft' },
+  });
+
+  expect(result).toMatchObject({ namedScores: { refusals: 1 }, pass: true });
+  expect(result.reason).toContain('pr diff (no canned response)');
 });
 
 test('every failing rule is reported, not only the first', ({ expect }) => {

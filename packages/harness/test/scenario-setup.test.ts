@@ -20,6 +20,7 @@ import path from 'node:path';
 import { markerFile, scenarioPath } from '@gtbuchanan/stub-runtime/scenario';
 import { test } from 'vitest';
 import { fakeSuite } from './fake-suite.ts';
+import { suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
 import { scenarioSetup } from '@gtbuchanan/agent-skills-harness/scenario-setup';
 
 interface Fixture {
@@ -116,6 +117,36 @@ test('the marker is written after the seeder, never before it', ({ expect }) => 
 
     expect(isMarkerPresent).toBe(false);
     expect(existsSync(marker)).toBe(true);
+  });
+});
+
+test('a scenario starts with an empty log, and leaves the others alone', ({
+  expect,
+}) => {
+  /*
+   * Under `--repeat` a scenario is built again for each run of the same test.
+   * Its log has to start over with its workspace, or the second run is judged
+   * on calls and refusals the first one made. Another scenario's log may be
+   * mid-run, so it is not this hook's to touch.
+   */
+  withWorkspace(() => {
+    const suite = fakeSuite();
+    const logDir = suiteRunDir(suite.metaUrl);
+    mkdirSync(logDir, { recursive: true });
+    writeFileSync(path.join(logDir, 'open-draft.jsonl'), '{"argv":["pr","diff"]}\n');
+    writeFileSync(path.join(logDir, 'merge-stacked.jsonl'), '{"argv":["pr","view"]}\n');
+
+    const setup = scenarioSetup<Fixture>({
+      metaUrl: suite.metaUrl,
+      scenarios,
+      seed: writeMarkerless,
+    });
+
+    setup.extensionHook('beforeEach', beforeEachFor('open-draft'));
+
+    expect(existsSync(path.join(logDir, 'open-draft.jsonl'))).toBe(false);
+    expect(readFileSync(path.join(logDir, 'merge-stacked.jsonl'), 'utf8'))
+      .toBe('{"argv":["pr","view"]}\n');
   });
 });
 

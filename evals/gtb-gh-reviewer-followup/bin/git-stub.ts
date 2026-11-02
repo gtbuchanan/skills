@@ -23,7 +23,7 @@
  */
 import { hermeticGitEnv, resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { passThrough } from '@gtbuchanan/stub-runtime/passthrough';
-import { argv, emit, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
+import { argv, emit, joined, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
 
 /* Claude Code's own git calls at startup, which it runs with hooks disabled.
    They are not the agent's, so the real git answers them and nothing records
@@ -41,7 +41,7 @@ if (isRuntimeCall)
  */
 const refusedExit = 1;
 
-const log = logCall('git');
+const log = logCallToRun('git');
 
 emit({
   call: { argv, cmd: 'git', stdin: '' },

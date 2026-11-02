@@ -25,6 +25,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { runLogPath, runVar } from '@gtbuchanan/stub-runtime/run-log';
 import { test } from 'vitest';
 
 const stub = path.join(import.meta.dirname, '..', 'bin', 'git-stub.ts');
@@ -37,15 +38,15 @@ interface Run {
 }
 
 /**
- * One `git` invocation, with a log of its own so a case can tell whether the
+ * One `git` invocation inside a run of its own, so a case can tell whether the
  * call was recorded.
  */
 const git = (...args: readonly string[]): Run => {
   const dir = mkdtempSync(path.join(tmpdir(), 'git-stub-'));
-  const log = path.join(dir, 'calls.jsonl');
+  const log = runLogPath(dir, 'run-1');
   const result = spawnSync(process.execPath, [stub, ...args], {
     encoding: 'utf8',
-    env: { ...process.env, STUB_LOG: log },
+    env: { ...process.env, STUB_LOG_DIR: dir, [runVar]: 'run-1' },
   });
 
   return {

@@ -17,14 +17,14 @@
  */
 import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
 import { subcommand } from '@gtbuchanan/stub-runtime/match';
-import { argv, emit, logCall } from '@gtbuchanan/stub-runtime/stub';
+import { argv, emit, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
 
 /**
  * The fixture PR every canned response refers to.
  */
 const pullNumber = 42;
 
-const log = logCall('gh');
+const log = logCallToRun('gh');
 
 const outcome = dispatch({ argv, cmd: 'gh', stdin: '' }, [
   {

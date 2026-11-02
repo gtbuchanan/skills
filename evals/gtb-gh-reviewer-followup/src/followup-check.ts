@@ -1,7 +1,7 @@
 /*
  * promptfoo javascript assertion for this suite's merge gate.
  *
- * The dependent skills are mocked, so the shared call log under
+ * The dependent skills are mocked, so the run's call log under
  * artifacts/skill-evals/ contains only the gh calls the orchestrator makes
  * itself. This asserts the happy-path gate:
  *
@@ -12,8 +12,8 @@
  *                       the safety invariant: never merge over unresolved feedback.
  */
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { suiteCallLog } from '@gtbuchanan/agent-skills-harness/paths';
 import { type ReportedResult, reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
+import { runLog } from '@gtbuchanan/agent-skills-harness/run-log';
 import { readCommands, readRefusals } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 
@@ -29,11 +29,9 @@ const reviewCall = /\bpr\s+review\b/v;
  */
 export default function assertMergeGate(
   _output: unknown,
-  context: { vars?: unknown },
+  context: { metadata?: unknown; vars?: unknown },
 ): ReportedResult {
-  /* The suite empties this before every test, so its refusals are this test's
-     own. */
-  const logPath = suiteCallLog(import.meta.url);
+  const logPath = runLog(import.meta.url, context.metadata);
   const gh = readCommands(logPath, 'gh');
   const isMerged = gh.some(command => mergeCall.test(command));
   const isApproved = gh.some(

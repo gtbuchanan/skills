@@ -16,21 +16,16 @@
  * the layout agent-neutral (it must match the provider); swapping providers is
  * that one flag.
  *
- * It also sets STUB_LOG (fresh each run) so the fake gh/git record their calls
- * where followup-check.ts reads them. The fakes sit at the front of PATH, put
- * there by the runner, so this suite runs only under the harness.
+ * It also sets STUB_LOG_DIR (fresh each eval) so the fake gh/git record each
+ * run's calls where followup-check.ts reads them. The fakes sit at the front
+ * of PATH, put there by the runner, so this suite runs only under the harness.
  */
 import path from 'node:path';
-import { skillsRoot, suiteCallLog, suiteDir } from '@gtbuchanan/agent-skills-harness/paths';
-import {
-  requireHarness,
-  resetCallLog,
-  truncateCallLog,
-} from '@gtbuchanan/agent-skills-harness/setup';
+import { skillsRoot, suiteDir, suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
+import { requireHarness, resetRunDir } from '@gtbuchanan/agent-skills-harness/setup';
 import { resolveSkillsCli } from '@gtbuchanan/agent-skills-harness/skills-cli';
 import spawn from 'cross-spawn';
 
-const logPath = suiteCallLog(import.meta.url);
 /**
  * Agent-neutral mock deps (diff + apply).
  */
@@ -42,18 +37,10 @@ const mockDepsSrc = path.join(suiteDir(import.meta.url), 'mock-skills');
 const agent = 'claude-code';
 
 export const extensionHook = (hookName: string): void => {
-  // Each test asserts on the ABSENCE of a merge/approve call, so the shared log
-  // must be reset between tests — otherwise the happy-path test's merge leaks
-  // into the safety test's view. The suite runs serially (maxConcurrency 1), so
-  // a per-test truncation is race-free.
-  if (hookName === 'beforeEach') {
-    truncateCallLog(logPath);
-    return;
-  }
   if (hookName !== 'beforeAll') return;
 
   requireHarness('mock skills');
-  resetCallLog(logPath);
+  resetRunDir(suiteRunDir(import.meta.url));
 
   // Overlay the mock deps onto the real skills already installed in the
   // runner's workspace, so gtb-gh-reviewer-followup-plan and

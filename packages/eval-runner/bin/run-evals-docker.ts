@@ -28,6 +28,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { repoRoot as root } from '@gtbuchanan/agent-skills-harness/paths';
 import { evalAgents } from '@gtbuchanan/eval-agents/registry';
 import spawn from 'cross-spawn';
+import { agentAuth, authProblem, credentialsIn } from '#src/agent-setup.ts';
 import {
   nodeModulesShadows,
   workspacePackageDirs,
@@ -105,27 +106,21 @@ if (compose.code !== 0) process.exit(1);
 
 mkdirSync(path.join(root, 'artifacts', 'skill-evals'), { recursive: true });
 
+const auth = agentAuth(evalAgents, {
+  exists: existsSync,
+  hasVar: name => (process.env[name] ?? '') !== '',
+  home: homedir(),
+});
+const problem = authProblem(auth);
+if (problem !== undefined) {
+  console.error(problem);
+  process.exit(1);
+}
+
 /**
  * HOME inside the container.
  */
 const containerHome = '/root';
-
-const agentAuth = evalAgents.map((agent) => {
-  const credentials = path.join(homedir(), agent.auth.credentialsFile);
-  return {
-    agent,
-    credentials,
-    hasCreds: existsSync(credentials),
-    hasKey: (process.env[agent.auth.apiKeyVar] ?? '') !== '',
-  };
-});
-for (const { agent, hasCreds, hasKey } of agentAuth)
-  if (!hasCreds && !hasKey) {
-    console.error(
-      `No auth: log in to ${agent.displayName} or set ${agent.auth.apiKeyVar}.`,
-    );
-    process.exit(1);
-  }
 
 /**
  * Containers to run at once — the agent work, not the server, is the cost.
@@ -156,11 +151,11 @@ const commonMounts = [
    package's is shadowed back to the one the image installed — see
    workspace-mounts.ts for what goes wrong when it is not. */
 commonMounts.push(...nodeModulesShadows('/work', workspacePackageDirs(root)));
-for (const { agent, credentials, hasCreds } of agentAuth)
-  if (hasCreds)
+for (const { agent, credentials, isLoggedIn } of auth)
+  if (isLoggedIn)
     commonMounts.push(
       '-v',
-      `${toHostPath(credentials)}:${path.posix.join(containerHome, agent.auth.credentialsFile)}`,
+      `${toHostPath(credentials)}:${credentialsIn(containerHome, agent, path.posix.join)}`,
     );
 
 const env = [
@@ -176,7 +171,7 @@ const env = [
 if (existsSync(path.join(root, 'artifacts', 'ca-bundle.pem'))) {
   env.push('-e', 'NODE_EXTRA_CA_CERTS=/work/artifacts/ca-bundle.pem');
 }
-for (const { agent, hasKey } of agentAuth)
+for (const { agent, hasKey } of auth)
   if (hasKey) env.push('-e', agent.auth.apiKeyVar);
 
 const runSkill = async (

@@ -39,11 +39,11 @@ import path from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { repoRoot as root } from '@gtbuchanan/agent-skills-harness/paths';
 import { resolveSkillsCli } from '@gtbuchanan/agent-skills-harness/skills-cli';
-import type { EvalAgent } from '@gtbuchanan/eval-agents/eval-agent';
 import { evalAgentForProvider, evalAgents } from '@gtbuchanan/eval-agents/registry';
 import spawn from 'cross-spawn';
 import * as v from 'valibot';
 import { parse as parseYaml } from 'yaml';
+import { agentAuth, agentWorkspaceFiles, authProblem, credentialsIn } from '#src/agent-setup.ts';
 import { beginEphemeralRun } from '#src/ephemeral-run.ts';
 import { evalIsolation } from '#src/eval-isolation.ts';
 import { buildEvalEnv } from '#src/scrubbed-path.ts';
@@ -81,16 +81,16 @@ const firstFlag = args.findIndex(arg => arg.startsWith('-'));
 const nameFilters = firstFlag === -1 ? args : args.slice(0, firstFlag);
 const passthrough = firstFlag === -1 ? [] : args.slice(firstFlag);
 
-const realCredentials = (agent: EvalAgent): string =>
-  path.join(homedir(), agent.auth.credentialsFile);
-const loggedIn = evalAgents.filter(agent => existsSync(realCredentials(agent)));
-for (const agent of evalAgents)
-  if (!loggedIn.includes(agent) && process.env[agent.auth.apiKeyVar] === undefined) {
-    console.error(
-      `No auth: log in to ${agent.displayName} or set ${agent.auth.apiKeyVar}.`,
-    );
-    process.exit(1);
-  }
+const auth = agentAuth(evalAgents, {
+  exists: existsSync,
+  hasVar: name => process.env[name] !== undefined,
+  home: homedir(),
+});
+const problem = authProblem(auth);
+if (problem !== undefined) {
+  console.error(problem);
+  process.exit(1);
+}
 
 const suites = readdirSync(path.join(root, 'evals'), { withFileTypes: true })
   .filter(entry => entry.isDirectory())
@@ -166,10 +166,11 @@ const isolatedEnv = (): {
   /* Before anything else lands in the dir: a suite's own stub is written over
    * the poison later, so declared doubles still win. */
   poisonDangerTools(stubDir);
-  for (const agent of loggedIn) {
-    const destination = path.join(homeDir, agent.auth.credentialsFile);
+  for (const { agent, credentials, isLoggedIn } of auth) {
+    if (!isLoggedIn) continue;
+    const destination = credentialsIn(homeDir, agent);
     mkdirSync(path.dirname(destination), { recursive: true });
-    placeCredentials(realCredentials(agent), destination);
+    placeCredentials(credentials, destination);
   }
   const scrubbed = buildScrubbedPath({ stubDir });
   const env = buildEvalEnv({ scrubbedPath: scrubbed.path, stubDir, homeDir });
@@ -306,12 +307,9 @@ const populateWorkspace = (
     path.join(workspace, 'package.json'),
     '{ "name": "eval-workspace", "private": true }\n',
   );
-  const agentFiles = evalAgents.flatMap(agent =>
-    Object.entries(agent.workspaceFiles(workspace)));
-  for (const [file, content] of agentFiles) {
-    const destination = path.join(workspace, file);
-    mkdirSync(path.dirname(destination), { recursive: true });
-    writeFileSync(destination, content);
+  for (const [file, content] of agentWorkspaceFiles(evalAgents, workspace)) {
+    mkdirSync(path.dirname(file), { recursive: true });
+    writeFileSync(file, content);
   }
   /* Stage the suite's own fixtures into the workspace so an agent that reads its
    * inputs directly can reach them — the SDK sandboxes it to working_dir, and

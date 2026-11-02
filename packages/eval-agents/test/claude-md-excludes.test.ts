@@ -14,7 +14,7 @@ import { test } from 'vitest';
 import {
   ancestorInstructionExcludes,
   workspaceInstructionExcludes,
-} from '#src/workspace-instructions.ts';
+} from '@gtbuchanan/eval-agents/claude-md-excludes';
 
 /**
  * A disposable workspace reached through a link, so the path a caller holds
@@ -22,7 +22,7 @@ import {
  * privilege on Windows; elsewhere the type is ignored.
  */
 const linkedWorkspace = (): Disposable & { readonly linked: string; readonly real: string } => {
-  const root = mkdtempSync(path.join(tmpdir(), 'workspace-instructions-test-'));
+  const root = mkdtempSync(path.join(tmpdir(), 'claude-md-excludes-test-'));
   const realParent = path.join(root, 'real');
   const linkParent = path.join(root, 'link');
 

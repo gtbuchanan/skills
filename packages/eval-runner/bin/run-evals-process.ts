@@ -39,13 +39,13 @@ import path from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { repoRoot as root } from '@gtbuchanan/agent-skills-harness/paths';
 import { resolveSkillsCli } from '@gtbuchanan/agent-skills-harness/skills-cli';
+import { workspaceInstructionExcludes } from '@gtbuchanan/eval-agents/claude-md-excludes';
 import spawn from 'cross-spawn';
 import * as v from 'valibot';
 import { parse as parseYaml } from 'yaml';
 import { beginEphemeralRun } from '#src/ephemeral-run.ts';
 import { evalIsolation } from '#src/eval-isolation.ts';
 import { buildEvalEnv } from '#src/scrubbed-path.ts';
-import { workspaceInstructionExcludes } from '#src/workspace-instructions.ts';
 
 const { assertFailSafe, buildScrubbedPath, poisonDangerTools } = evalIsolation;
 
@@ -307,7 +307,7 @@ const populateWorkspace = (
   );
   /* The workspace sits in the temp dir, inside the user profile on Windows,
    * and the agent would otherwise load the developer's own CLAUDE.md from a
-   * directory above it — see workspace-instructions.ts. */
+   * directory above it — see claude-md-excludes.ts in eval-agents. */
   mkdirSync(path.join(workspace, '.claude'), { recursive: true });
   writeFileSync(
     path.join(workspace, '.claude', 'settings.json'),

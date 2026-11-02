@@ -240,8 +240,23 @@ export const claudeExecutable = (
   (hasNative() ? '' : findOnPath('claude', sourceEnv['PATH'] ?? '') ?? '');
 
 /**
- * Locates Git-for-Windows' tool dirs (`usr\bin` for the shell + coreutils,
- * `mingw64\bin` for git). Those hold `sh`, `env`, `ls`, `cat`, … which the
+ * Git-for-Windows' tool dirs under the install `root`, or `undefined` when
+ * `root` is not one: `usr\bin` for the shell + coreutils, `mingw64\bin` for
+ * git. The `usr\bin` check is what identifies an install root.
+ */
+export const gitToolDirsAt = (
+  root: string,
+  isDir: (candidate: string) => boolean,
+): string[] | undefined => {
+  const usrBin = path.join(root, 'usr', 'bin');
+  if (!isDir(usrBin)) return undefined;
+  const mingwBin = path.join(root, 'mingw64', 'bin');
+  return isDir(mingwBin) ? [usrBin, mingwBin] : [usrBin];
+};
+
+/**
+ * Locates Git-for-Windows' tool dirs (see {@link gitToolDirsAt}). Those hold
+ * `sh`, `env`, `ls`, `cat`, … which the
  * agent's Git Bash needs, yet they are only on PATH inside a Git Bash session —
  * under PowerShell or cmd (where a harness is usually launched) they are absent,
  * so scanning the ambient PATH alone misses them. We instead find any `bash` we
@@ -262,11 +277,8 @@ const windowsGitDirs = (entries: string[]): string[] => {
   for (const seed of seeds) {
     let dir = seed;
     for (let depth = 0; depth < rootDepth; depth += 1) {
-      const usrBin = path.join(dir, 'usr', 'bin');
-      if (existsSync(usrBin)) {
-        const mingwBin = path.join(dir, 'mingw64', 'bin');
-        return existsSync(mingwBin) ? [usrBin, mingwBin] : [usrBin];
-      }
+      const found = gitToolDirsAt(dir, existsSync);
+      if (found !== undefined) return found;
       dir = path.dirname(dir);
     }
   }

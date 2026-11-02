@@ -7,6 +7,7 @@
     "./dispatch": "./src/dispatch.ts",
     "./match": "./src/match.ts",
     "./passthrough": "./src/passthrough.ts",
+    "./run-log": "./src/run-log.ts",
     "./scenario": "./src/scenario.ts",
     "./stub": "./src/stub.ts"
   },

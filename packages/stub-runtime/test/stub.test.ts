@@ -34,8 +34,14 @@ import path from 'node:path';
 import { test } from 'vitest';
 import { parseJson } from '@gtbuchanan/stub-runtime/calls';
 import type { StubAnswer } from '@gtbuchanan/stub-runtime/dispatch';
+import { runLogPath } from '@gtbuchanan/stub-runtime/run-log';
 import { markerFile } from '@gtbuchanan/stub-runtime/scenario';
-import { logCall, logCallToScenario, recordOutcome } from '@gtbuchanan/stub-runtime/stub';
+import {
+  logCall,
+  logCallToRun,
+  logCallToScenario,
+  recordOutcome,
+} from '@gtbuchanan/stub-runtime/stub';
 
 /**
  * A log for one case, pointed at by $STUB_LOG. Disposable because that variable
@@ -203,6 +209,46 @@ test('a call nothing can attribute is passed over, not failed', ({ expect }) => 
   logCallToScenario('git', scenarios, outside);
 
   expect(existsSync(workspace.logDir)).toBe(false);
+});
+
+/**
+ * A run in flight: $STUB_LOG_DIR and $STUB_RUN set as the run provider sets
+ * them for the agent's commands. Disposable for the same reason as
+ * {@link stubLog}.
+ */
+const activeRun = (runId: string | undefined): Disposable & { readonly logDir: string } => {
+  const root = mkdtempSync(path.join(tmpdir(), 'run-'));
+  const logDir = path.join(root, 'runs');
+  const previous = { dir: process.env['STUB_LOG_DIR'], run: process.env['STUB_RUN'] };
+  process.env['STUB_LOG_DIR'] = logDir;
+  if (runId === undefined) delete process.env['STUB_RUN'];
+  else process.env['STUB_RUN'] = runId;
+
+  return {
+    logDir,
+    [Symbol.dispose]: () => {
+      if (previous.dir === undefined) delete process.env['STUB_LOG_DIR'];
+      else process.env['STUB_LOG_DIR'] = previous.dir;
+      if (previous.run === undefined) delete process.env['STUB_RUN'];
+      else process.env['STUB_RUN'] = previous.run;
+    },
+  };
+};
+
+test('a call is recorded in the log of the run it was made in', ({ expect }) => {
+  using run = activeRun('run-1');
+  const logPath = runLogPath(run.logDir, 'run-1');
+
+  expect(logCallToRun('gh', 'body')).toBe(logPath);
+  expect(readFileSync(logPath, 'utf8').split('\n').filter(Boolean).map(parseJson))
+    .toStrictEqual([{ argv: [], cmd: 'gh', stdin: 'body' }]);
+});
+
+test('a call made outside any run is passed over', ({ expect }) => {
+  using run = activeRun(undefined);
+
+  expect(logCallToRun('gh')).toBeUndefined();
+  expect(existsSync(run.logDir)).toBe(false);
 });
 
 /**

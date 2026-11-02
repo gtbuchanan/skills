@@ -42,3 +42,27 @@ test('keeps a parent directory\'s CLAUDE.md from the workspace', ({ expect }) =>
 
   expect(claudeMdExcludes).toContain(`${dirs.parent.replaceAll('\\', '/')}/CLAUDE.md`);
 });
+
+test('hands the agent an env on top of the config\'s own', ({ expect }) => {
+  const config = { env: { KEPT: 'yes', STUB_RUN: 'old' }, skills: ['a'] };
+
+  expect(claudeCode.withEnv(config, { STUB_RUN: 'new' })).toStrictEqual({
+    env: { KEPT: 'yes', STUB_RUN: 'new' },
+    skills: ['a'],
+  });
+});
+
+test('hands the agent an env where the config had none', ({ expect }) => {
+  expect(claudeCode.withEnv({ skills: ['a'] }, { STUB_RUN: 'new' })).toStrictEqual({
+    env: { STUB_RUN: 'new' },
+    skills: ['a'],
+  });
+});
+
+test('leaves the config it was given alone', ({ expect }) => {
+  const config = { env: { KEPT: 'yes' } };
+
+  claudeCode.withEnv(config, { STUB_RUN: 'new' });
+
+  expect(config).toStrictEqual({ env: { KEPT: 'yes' } });
+});

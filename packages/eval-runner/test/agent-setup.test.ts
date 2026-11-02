@@ -22,7 +22,9 @@ const fakeAgent = (name: string): EvalAgent => ({
   executable: { command: name, envVar: `${name.toUpperCase()}_EXE`, sdkPackage: `${name}-sdk` },
   gitBashVar: `${name.toUpperCase()}_BASH`,
   name,
+  providerId: `${name}:provider`,
   runsProvider: () => false,
+  withEnv: config => ({ ...config }),
   workspaceFiles: workspace => ({
     [`.${name}/settings.json`]: `settings for ${workspace}`,
   }),

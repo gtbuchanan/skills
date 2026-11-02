@@ -12,9 +12,21 @@ export interface EvalAgent {
    */
   readonly displayName: string;
   /**
+   * The promptfoo provider that runs this agent.
+   */
+  readonly providerId: string;
+  /**
    * Whether a promptfoo provider id runs this agent.
    */
   readonly runsProvider: (providerId: string) => boolean;
+  /**
+   * `config` for {@link providerId}, changed so that `env` reaches the
+   * commands the agent runs, on top of whatever `config` already passes.
+   */
+  readonly withEnv: (
+    config: Readonly<Record<string, unknown>>,
+    env: Readonly<Record<string, string>>,
+  ) => Record<string, unknown>;
   readonly auth: {
     /**
      * The stored login, relative to HOME. The runners hand a run this file

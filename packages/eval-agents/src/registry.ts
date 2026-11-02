@@ -17,3 +17,12 @@ export const evalAgentForProvider = (providerId: string | undefined): EvalAgent 
     throw new Error(`no agent runs provider '${String(providerId)}'`);
   return agent;
 };
+
+/**
+ * The agent a suite names in its run provider's config.
+ */
+export const evalAgentNamed = (name: string): EvalAgent => {
+  const agent = evalAgents.find(candidate => candidate.name === name);
+  if (agent === undefined) throw new Error(`no agent named '${name}'`);
+  return agent;
+};

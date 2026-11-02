@@ -1,6 +1,17 @@
 import { workspaceInstructionExcludes } from './claude-md-excludes.ts';
 import type { EvalAgent } from './eval-agent.ts';
 
+const providerId = 'anthropic:claude-agent-sdk';
+
+/**
+ * The env a provider config already passes, which the SDK merges over the
+ * agent's own.
+ */
+const envOf = (config: Readonly<Record<string, unknown>>): object => {
+  const { env } = config;
+  return typeof env === 'object' && env !== null ? env : {};
+};
+
 export const claudeCode: EvalAgent = {
   auth: {
     apiKeyVar: 'ANTHROPIC_API_KEY',
@@ -15,7 +26,9 @@ export const claudeCode: EvalAgent = {
   },
   gitBashVar: 'CLAUDE_CODE_GIT_BASH_PATH',
   name: 'claude-code',
-  runsProvider: providerId => providerId.startsWith('anthropic:claude-agent-sdk'),
+  providerId,
+  runsProvider: id => id.startsWith(providerId),
+  withEnv: (config, env) => ({ ...config, env: { ...envOf(config), ...env } }),
   /*
    * The workspace sits in the temp dir, inside the user profile on Windows,
    * and the agent would otherwise load the developer's own CLAUDE.md from a

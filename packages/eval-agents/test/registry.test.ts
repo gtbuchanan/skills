@@ -1,5 +1,5 @@
 import { test } from 'vitest';
-import { evalAgentForProvider } from '@gtbuchanan/eval-agents/registry';
+import { evalAgentForProvider, evalAgentNamed } from '@gtbuchanan/eval-agents/registry';
 
 test('maps the agent SDK provider to Claude Code', ({ expect }) => {
   expect(evalAgentForProvider('anthropic:claude-agent-sdk').name).toBe('claude-code');
@@ -18,4 +18,12 @@ test('refuses a provider no agent runs', ({ expect }) => {
 test('refuses a provider given without an id', ({ expect }) => {
   expect(() => evalAgentForProvider(undefined))
     .toThrow("no agent runs provider 'undefined'");
+});
+
+test('finds an agent by the name a suite gives it', ({ expect }) => {
+  expect(evalAgentNamed('claude-code').displayName).toBe('Claude Code');
+});
+
+test('refuses a name no agent has', ({ expect }) => {
+  expect(() => evalAgentNamed('codex')).toThrow("no agent named 'codex'");
 });

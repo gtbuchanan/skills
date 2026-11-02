@@ -240,9 +240,20 @@ export const claudeExecutable = (
   (hasNative() ? '' : findOnPath('claude', sourceEnv['PATH'] ?? '') ?? '');
 
 /**
+ * The MSYS2 environments Git for Windows has shipped git in: `mingw64` on
+ * older x64 installs, `ucrt64` from 2.56, `clangarm64` on ARM64. An install
+ * carries one of them.
+ */
+const gitEnvironments = ['clangarm64', 'mingw64', 'ucrt64'];
+
+/**
  * Git-for-Windows' tool dirs under the install `root`, or `undefined` when
- * `root` is not one: `usr\bin` for the shell + coreutils, `mingw64\bin` for
- * git. The `usr\bin` check is what identifies an install root.
+ * `root` is not one: `usr\bin` for the shell + coreutils, and the environment's
+ * `bin` for git. The `usr\bin` check is what identifies an install root.
+ *
+ * The environment's dir is the one that matters for git. `Git\bin` also holds
+ * a `git.exe`, but inside Git Bash it translates to `/bin`, which MSYS mounts
+ * onto `usr\bin`, so admitting it reaches no git at all.
  */
 export const gitToolDirsAt = (
   root: string,
@@ -250,8 +261,10 @@ export const gitToolDirsAt = (
 ): string[] | undefined => {
   const usrBin = path.join(root, 'usr', 'bin');
   if (!isDir(usrBin)) return undefined;
-  const mingwBin = path.join(root, 'mingw64', 'bin');
-  return isDir(mingwBin) ? [usrBin, mingwBin] : [usrBin];
+  const gitBins = gitEnvironments
+    .map(environment => path.join(root, environment, 'bin'))
+    .filter(candidate => isDir(candidate));
+  return [usrBin, ...gitBins];
 };
 
 /**

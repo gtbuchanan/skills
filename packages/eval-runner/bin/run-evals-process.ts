@@ -39,14 +39,14 @@ import path from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { repoRoot as root } from '@gtbuchanan/agent-skills-harness/paths';
 import { resolveSkillsCli } from '@gtbuchanan/agent-skills-harness/skills-cli';
-import { evalAgentForProvider, evalAgents } from '@gtbuchanan/eval-agents/registry';
+import { evalAgents } from '@gtbuchanan/eval-agents/registry';
 import spawn from 'cross-spawn';
-import * as v from 'valibot';
 import { parse as parseYaml } from 'yaml';
 import { agentAuth, agentWorkspaceFiles, authProblem, credentialsIn } from '#src/agent-setup.ts';
 import { beginEphemeralRun } from '#src/ephemeral-run.ts';
 import { evalIsolation } from '#src/eval-isolation.ts';
 import { buildEvalEnv } from '#src/scrubbed-path.ts';
+import { skillsByAgent } from '#src/suite-skills.ts';
 
 const { assertFailSafe, buildScrubbedPath, poisonDangerTools } = evalIsolation;
 
@@ -237,21 +237,6 @@ const failTailLines = 120;
 const perTestLog = /Eval #\d+ complete \((?<done>\d+) of (?<total>\d+)\)/v;
 const newline = /\r?\n/v;
 
-/* Just the slice of a promptfoo config the runner needs — each provider's id and
- * declared skills — split into named sub-schemas so the nesting stays readable.
- * Parsed through valibot so a malformed config fails readably rather than
- * deref'ing undefined; unrelated keys are ignored. */
-const skillsSchema = v.optional(v.array(v.string()));
-const providerConfigSchema = v.optional(v.object({ skills: skillsSchema }));
-const providerObjectSchema = v.object({
-  id: v.optional(v.string()),
-  config: providerConfigSchema,
-});
-const providerSchema = v.union([v.string(), providerObjectSchema]);
-const suiteConfigSchema = v.object({
-  providers: v.optional(v.array(providerSchema)),
-});
-
 /**
  * Installs the named skills into the workspace under one agent's layout.
  */
@@ -273,23 +258,6 @@ const installSkills = (options: {
     throw new Error(
       `skills add failed for ${suiteName}/${agent}: ${result.stdout}${result.stderr}`,
     );
-};
-
-// Groups a config's declared skills by their provider's agent target.
-const skillsByAgent = (
-  config: v.InferOutput<typeof suiteConfigSchema>,
-): Map<string, Set<string>> => {
-  const byAgent = new Map<string, Set<string>>();
-  const providers = config.providers ?? [];
-  for (const provider of providers) {
-    if (typeof provider === 'string') continue;
-    const agent = evalAgentForProvider(provider.id).name;
-    const names = byAgent.get(agent) ?? new Set<string>();
-    const declared = provider.config?.skills ?? [];
-    for (const name of declared) names.add(name);
-    byAgent.set(agent, names);
-  }
-  return byAgent;
 };
 
 /**
@@ -321,7 +289,7 @@ const populateWorkspace = (
       recursive: true,
     });
   const configPath = path.join(root, 'evals', suiteName, 'promptfooconfig.yaml');
-  const config = v.parse(suiteConfigSchema, parseYaml(readFileSync(configPath, 'utf8')));
+  const config: unknown = parseYaml(readFileSync(configPath, 'utf8'));
   for (const [agent, names] of skillsByAgent(config))
     if (names.size > 0)
       installSkills({ workspace, suiteName, agent, names: [...names], env });

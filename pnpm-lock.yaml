@@ -924,6 +924,9 @@ importers:
 
   packages/harness:
     dependencies:
+      '@gtbuchanan/eval-agents':
+        specifier: workspace:*
+        version: link:../eval-agents
       '@gtbuchanan/git-fixtures':
         specifier: workspace:*
         version: link:../git-fixtures
@@ -933,6 +936,9 @@ importers:
       find-up-simple:
         specifier: 'catalog:'
         version: 1.0.1
+      promptfoo:
+        specifier: 'catalog:'
+        version: 0.122.0(@aws-sdk/credential-provider-node@3.972.67)(@smithy/signature-v4@5.6.4)(@types/json-schema@7.0.15)(@types/node@26.2.0)(pg@8.22.0)(playwright-core@1.61.1)(socks@2.8.9)(supports-color@7.2.0)
       valibot:
         specifier: 'catalog:'
         version: 1.4.2(typescript@6.0.3)

@@ -32,12 +32,10 @@ const located = locateScenario(scenarios, process.cwd());
 const scenario = located.scenario;
 
 const logDir = process.env['STUB_LOG_DIR'];
-if (logDir !== undefined)
-  appendJsonl(path.join(logDir, `${scenario.key}.jsonl`), {
-    argv,
-    cmd: 'gh',
-    stdin: '',
-  });
+const log = logDir === undefined
+  ? undefined
+  : path.join(logDir, `${scenario.key}.jsonl`);
+if (log !== undefined) appendJsonl(log, { argv, cmd: 'gh', stdin: '' });
 
 const statePath = path.join(located.dir, '.eval-state.json');
 const state = readState(statePath);
@@ -116,4 +114,4 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin: '' }, [
   },
 ]);
 
-emit(outcome);
+emit(outcome, log);

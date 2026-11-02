@@ -60,20 +60,28 @@ export const appendJsonl = (filePath: string, entry: unknown): void => {
  * filled-in body from an absent one. It is omitted rather than defaulted so a
  * stub that does not read stdin says nothing about it, instead of recording an
  * empty body it never looked for.
+ *
+ * Returns the log written to, which is where {@link emit} records how the call
+ * was answered, or `undefined` when there was none.
  */
-export const logCall = (cmd: string, stdin?: string): void => {
+export const logCall = (cmd: string, stdin?: string): string | undefined => {
   const stubLog = process.env['STUB_LOG'];
-  if (stubLog)
-    appendJsonl(stubLog, stdin === undefined ? { argv, cmd } : { argv, cmd, stdin });
+  if (!stubLog) return undefined;
+  appendJsonl(stubLog, stdin === undefined ? { argv, cmd } : { argv, cmd, stdin });
+  return stubLog;
 };
 
 /**
  * Records this invocation into $STUB_LOG_DIR under `fileName`, for callers that
- * key one log file per test rather than sharing one.
+ * key one log file per test rather than sharing one. Returns the log written
+ * to, as {@link logCall} does.
  */
-export const logCallToDir = (cmd: string, fileName: string): void => {
+export const logCallToDir = (cmd: string, fileName: string): string | undefined => {
   const logDir = process.env['STUB_LOG_DIR'];
-  if (logDir) appendJsonl(path.join(logDir, fileName), { argv, cmd });
+  if (!logDir) return undefined;
+  const logPath = path.join(logDir, fileName);
+  appendJsonl(logPath, { argv, cmd });
+  return logPath;
 };
 
 /**
@@ -102,14 +110,33 @@ const scenarioKey = (
  * outside every seeded workspace is a legitimate call, and a passthrough
  * answers it. A double that has to know which world it is in to answer at all
  * should locate the scenario itself and let the failure stand.
+ *
+ * Returns the log written to, as {@link logCall} does.
  */
 export const logCallToScenario = (
   cmd: string,
   scenarios: readonly Keyed[],
   start: string = process.cwd(),
-): void => {
+): string | undefined => {
   const key = scenarioKey(scenarios, start);
-  if (key !== undefined) logCallToDir(cmd, `${key}.jsonl`);
+  return key === undefined ? undefined : logCallToDir(cmd, `${key}.jsonl`);
+};
+
+/**
+ * Records a refusal in `log`, the log the refused call's arrival went to.
+ *
+ * Kept beside the call rather than in a log of its own, so it is attributed to
+ * whichever test made the call however a suite partitions its logs. An answer
+ * records nothing: the call is already there, and how a double answered what
+ * it modelled is no finding.
+ */
+export const recordOutcome = (outcome: StubOutcome, log: string | undefined): void => {
+  if (log !== undefined && outcome.kind === 'refused')
+    appendJsonl(log, {
+      argv: outcome.call.argv,
+      cmd: outcome.call.cmd,
+      refusal: outcome.reason,
+    });
 };
 
 /**
@@ -138,8 +165,13 @@ export const writeJson = (body: unknown): void => {
  *
  * Nothing a stub opens holds the event loop, so the process still ends as soon
  * as the writes land, with the status set here.
+ *
+ * `log` is where the call was recorded — what the logging helpers return — and
+ * where a refusal is recorded beside it. It is required so a stub cannot leave
+ * its refusals out by forgetting it; one that keeps no log passes `undefined`.
  */
-export const emit = (outcome: StubOutcome): void => {
+export const emit = (outcome: StubOutcome, log: string | undefined): void => {
+  recordOutcome(outcome, log);
   process.stdout.write(outcome.stdout);
   process.stderr.write(outcome.stderr);
   process.exitCode = outcome.code;

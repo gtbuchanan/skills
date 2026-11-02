@@ -56,12 +56,10 @@ const scenario = located.scenario;
    Unlike git-stub this is not defensive — a `gh` call outside every checkout
    cannot be answered at all, so locateScenario has already thrown above. */
 const logDir = process.env['STUB_LOG_DIR'];
-if (logDir !== undefined)
-  appendJsonl(path.join(logDir, `${scenario.key}.jsonl`), {
-    argv,
-    cmd: 'gh',
-    stdin,
-  });
+const log = logDir === undefined
+  ? undefined
+  : path.join(logDir, `${scenario.key}.jsonl`);
+if (log !== undefined) appendJsonl(log, { argv, cmd: 'gh', stdin });
 
 /**
  * Where this scenario's checkout keeps what earlier calls did.
@@ -305,4 +303,4 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
   },
 ]);
 
-emit(outcome);
+emit(outcome, log);

@@ -59,6 +59,7 @@ const StringListSchema = v.array(v.string());
 export const CallSchema = v.object({
   argv: v.optional(StringListSchema, []),
   cmd: v.optional(v.string(), ''),
+  refusal: v.optional(v.string()),
   stdin: v.optional(v.string()),
 });
 
@@ -76,13 +77,46 @@ export interface LoggedCall {
 }
 
 /**
+ * Every call a log records, in the order they were made, as the stubs wrote
+ * them — for a checker that needs the command each one went to, or the order
+ * across commands.
+ *
+ * A refusal record is passed over: it notes how a call already in the log was
+ * answered, and reading it as a call would count that call twice. Read the log
+ * through this rather than {@link readJsonl} and {@link CallSchema}, which a
+ * refusal record also satisfies.
+ */
+export const readCallRecords = (
+  logPath: string,
+): v.InferOutput<typeof CallSchema>[] =>
+  readJsonl(logPath, CallSchema).filter(call => call.refusal === undefined);
+
+/**
  * Reads a call log, optionally limited to one command. Stubs that log a single
  * command omit the `cmd` tag, so filtering is opt-in.
  */
 export const readCalls = (logPath: string, cmd?: string): LoggedCall[] =>
-  readJsonl(logPath, CallSchema)
+  readCallRecords(logPath)
     .filter(call => cmd === undefined || call.cmd === cmd)
     .map(call => ({ command: call.argv.join(' '), stdin: call.stdin }));
+
+/**
+ * A call the double declined, as a checker reports it: the command line, and
+ * what the double could not model.
+ */
+export interface RefusedCall {
+  readonly command: string;
+  readonly reason: string;
+}
+
+/**
+ * Reads the refusals in a call log, optionally limited to one command.
+ */
+export const readRefusals = (logPath: string, cmd?: string): RefusedCall[] =>
+  readJsonl(logPath, CallSchema).flatMap(call =>
+    call.refusal !== undefined && (cmd === undefined || call.cmd === cmd)
+      ? [{ command: call.argv.join(' '), reason: call.refusal }]
+      : []);
 
 /**
  * The same log as space-joined command lines, for checkers with nothing to ask

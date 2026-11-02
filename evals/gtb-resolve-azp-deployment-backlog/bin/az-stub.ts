@@ -33,7 +33,7 @@ const cancellingRunId = 900_999;
  */
 const azureRepos = 'tfsgit';
 
-logCallToDir('az', 'az.jsonl');
+const log = logCallToDir('az', 'az.jsonl');
 
 /*
  * Canned pipeline catalog: fictional names the eval prompts reference → their
@@ -121,4 +121,4 @@ const outcome = dispatch({ argv, cmd: 'az', stdin: '' }, [
   },
 ]);
 
-emit(outcome);
+emit(outcome, log);

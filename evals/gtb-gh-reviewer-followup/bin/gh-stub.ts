@@ -24,7 +24,7 @@ import { argv, emit, logCall } from '@gtbuchanan/stub-runtime/stub';
  */
 const pullNumber = 42;
 
-logCall('gh');
+const log = logCall('gh');
 
 const outcome = dispatch({ argv, cmd: 'gh', stdin: '' }, [
   {
@@ -55,4 +55,4 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin: '' }, [
   },
 ]);
 
-emit(outcome);
+emit(outcome, log);

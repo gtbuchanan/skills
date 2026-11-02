@@ -37,7 +37,7 @@
  * are not repositories.
  */
 import path from 'node:path';
-import { readJsonl } from '@gtbuchanan/stub-runtime/calls';
+import { readCallRecords } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 import { type AssertionResult, fromProblems } from './assert.ts';
 import { suiteRunDir } from './paths.ts';
@@ -79,14 +79,9 @@ export const CallVarsSchema = v.object({
 });
 
 /**
- * A logged invocation. `stdin` is present only on the `gh` calls that named it.
+ * A logged invocation. `stdin` is `''` where the double recorded no body, since
+ * nothing here needs to tell an absent body from an empty one.
  */
-const EntrySchema = v.object({
-  argv: v.optional(StringListSchema, []),
-  cmd: v.optional(v.string(), ''),
-  stdin: v.optional(v.string(), ''),
-});
-
 interface Call {
   readonly command: string;
   readonly stdin: string;
@@ -303,8 +298,8 @@ export const callExpectationAssertion = (
       suiteRunDir(options.metaUrl),
       `${vars.scenario}.jsonl`,
     );
-    const calls = readJsonl(logFile, EntrySchema).map(
-      entry => ({ command: entry.argv.join(' '), stdin: entry.stdin }),
+    const calls = readCallRecords(logFile).map(
+      entry => ({ command: entry.argv.join(' '), stdin: entry.stdin ?? '' }),
     );
 
     return fromProblems([

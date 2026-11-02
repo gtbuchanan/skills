@@ -33,8 +33,9 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
 import { parseJson } from '@gtbuchanan/stub-runtime/calls';
+import type { StubAnswer } from '@gtbuchanan/stub-runtime/dispatch';
 import { markerFile } from '@gtbuchanan/stub-runtime/scenario';
-import { logCall, logCallToScenario } from '@gtbuchanan/stub-runtime/stub';
+import { logCall, logCallToScenario, recordOutcome } from '@gtbuchanan/stub-runtime/stub';
 
 /**
  * A log for one case, pointed at by $STUB_LOG. Disposable because that variable
@@ -94,6 +95,57 @@ test('a caller that set no log has nothing written for it', ({ expect }) => {
   logCall('gh', 'dropped');
 
   expect(existsSync(log.path)).toBe(false);
+});
+
+test('recording a call names the log it went to', ({ expect }) => {
+  // Which is where the outcome of that call has to be recorded too.
+  using log = stubLog();
+
+  expect(logCall('gh')).toBe(log.path);
+});
+
+test('recording a call with no log names none', ({ expect }) => {
+  using log = stubLog();
+  delete process.env['STUB_LOG'];
+
+  expect(logCall('gh')).toBeUndefined();
+  expect(existsSync(log.path)).toBe(false);
+});
+
+const refused = {
+  call: { argv: ['pr', 'diff'], cmd: 'gh', stdin: '' },
+  code: 1,
+  kind: 'refused',
+  reason: 'no canned response',
+  stderr: 'gh-stub: no canned response\n',
+  stdout: '',
+} as const;
+
+test('a refusal is recorded in the log of the call it refused', ({ expect }) => {
+  using log = stubLog();
+
+  recordOutcome(refused, log.path);
+
+  expect(log.entries()).toStrictEqual([
+    { argv: ['pr', 'diff'], cmd: 'gh', refusal: 'no canned response' },
+  ]);
+});
+
+test('an answer adds nothing to the log', ({ expect }) => {
+  /* The call itself was recorded when it arrived; an answer says nothing about
+     the double that a checker needs to know. */
+  using log = stubLog();
+
+  recordOutcome({ code: 0, kind: 'answered', stderr: '', stdout: 'ok' }, log.path);
+
+  expect(existsSync(log.path)).toBe(false);
+});
+
+test('a refusal with no log to go to is passed over', ({ expect }) => {
+  // On the same terms as an unlogged call: the double still answers.
+  expect(() => {
+    recordOutcome(refused, undefined);
+  }).not.toThrow();
 });
 
 /**
@@ -174,18 +226,16 @@ const trailer = '<still here>';
 /**
  * Emits `outcome` from a child process and reports what reached the pipes.
  */
-const emitted = (outcome: {
-  code: number;
-  stderr: string;
-  stdout: string;
-}): { status: number | null; stderr: string; stdout: string } =>
+const emitted = (
+  outcome: StubAnswer,
+): { status: number | null; stderr: string; stdout: string } =>
   spawnSync(
     process.execPath,
     [
       '--input-type=module',
       '-e',
       `import { emit } from ${JSON.stringify(stubModule)};` +
-      `emit(${JSON.stringify(outcome)});` +
+      `emit(${JSON.stringify(outcome)}, undefined);` +
       `process.stdout.write(${JSON.stringify(trailer)});`,
     ],
     { encoding: 'utf8' },
@@ -194,7 +244,7 @@ const emitted = (outcome: {
 test('both streams and the status reach whoever called the double', {
   tags: ['slow'],
 }, ({ expect }) => {
-  const result = emitted({ code: 2, stderr: 'refused\n', stdout: '{"ok":true}' });
+  const result = emitted({ code: 2, kind: 'answered', stderr: 'refused\n', stdout: '{"ok":true}' });
 
   expect(result.stdout.startsWith('{"ok":true}')).toBe(true);
   expect(result.stderr).toBe('refused\n');
@@ -204,7 +254,7 @@ test('both streams and the status reach whoever called the double', {
 test('answering does not end the process that answered', { tags: ['slow'] }, ({
   expect,
 }) => {
-  const result = emitted({ code: 1, stderr: 'refused\n', stdout: '' });
+  const result = emitted({ code: 1, kind: 'answered', stderr: 'refused\n', stdout: '' });
 
   expect(result.stdout).toBe(trailer);
 });

@@ -74,13 +74,38 @@ export interface StubHandler {
 }
 
 /**
- * The complete result of a call, ready for the executable to emit.
+ * What reaches the caller's streams and status.
  */
-export interface StubOutcome {
+interface Streams {
   readonly code: number;
   readonly stderr: string;
   readonly stdout: string;
 }
+
+/**
+ * A call a handler claimed and answered, deliberate failures included.
+ */
+export interface StubAnswer extends Streams {
+  readonly kind: 'answered';
+}
+
+/**
+ * A call the double declined, with the call and what it could not model.
+ *
+ * Kept apart from an answer because a refusal is a finding about the double,
+ * not about the code under test: the run met something nobody modelled, so
+ * whatever it did next is no evidence either way.
+ */
+export interface StubRefusal extends Streams {
+  readonly call: StubCall;
+  readonly kind: 'refused';
+  readonly reason: string;
+}
+
+/**
+ * The complete result of a call, ready for the executable to emit.
+ */
+export type StubOutcome = StubAnswer | StubRefusal;
 
 /**
  * Error marking a call the double will not answer.
@@ -104,7 +129,10 @@ export const unmodelled = (what: string): UnmodelledCall =>
  * exactly that call, and it says so — a bare non-zero exit would be read as the
  * command legitimately failing.
  */
-const refusal = (call: StubCall, what: string): StubOutcome => ({
+const refusal = (call: StubCall, what: string): StubRefusal => ({
+  call,
+  kind: 'refused',
+  reason: what,
   code: refusedExit,
   stderr:
     `${call.cmd}-stub: ${what} for "${call.cmd} ${call.argv.join(' ')}". ` +
@@ -129,6 +157,7 @@ export const dispatch = (
   try {
     const response = handler.respond(call);
     return {
+      kind: 'answered',
       code: response.code ?? 0,
       stderr: response.stderr ?? '',
       stdout: response.stdout ?? '',

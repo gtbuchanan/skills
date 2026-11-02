@@ -95,6 +95,49 @@ test('a handler that cannot answer refuses instead of throwing out', ({ expect }
   expect(outcome.stderr).toContain('reviewDecision');
 });
 
+test('an unmodelled call says it was refused, and why', ({ expect }) => {
+  /*
+   * A refusal is a finding about the double rather than about the code under
+   * test, so whoever records the call has to be able to tell one apart from an
+   * ordinary failure without reading the message.
+   */
+  expect(dispatch(call('pr', 'diff'), [])).toMatchObject({
+    call: { argv: ['pr', 'diff'], cmd: 'gh' },
+    kind: 'refused',
+    reason: 'no canned response',
+  });
+});
+
+test('a handler that cannot answer says what it could not model', ({ expect }) => {
+  const outcome = dispatch(call('pr', 'view'), [
+    {
+      matches: () => true,
+      name: 'view',
+      respond: () => {
+        throw unmodelled('field reviewDecision');
+      },
+    },
+  ]);
+
+  expect(outcome).toMatchObject({ kind: 'refused', reason: 'field reviewDecision' });
+});
+
+test('a deliberate failure is an answer, not a refusal', ({ expect }) => {
+  /*
+   * `gh pr checks` exits 8 while checks are pending: the double modelled that,
+   * so the run was told the truth and nothing about the double is in question.
+   */
+  const outcome = dispatch(call('pr', 'checks'), [
+    {
+      matches: () => true,
+      name: 'checks',
+      respond: () => ({ code: 8, stderr: 'still running' }),
+    },
+  ]);
+
+  expect(outcome.kind).toBe('answered');
+});
+
 test('a handler may fail the call deliberately', ({ expect }) => {
   const outcome = dispatch(call('pr', 'checks'), [
     {

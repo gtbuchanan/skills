@@ -31,7 +31,7 @@ import { argv, emit, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
 
 const stdin = stdinBody(argv);
 
-logCall('gh', stdin);
+const log = logCall('gh', stdin);
 
 /**
  * The thread a mutation names, as gh's `-f threadId=` spells it.
@@ -117,4 +117,4 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
   },
 ]);
 
-emit(outcome);
+emit(outcome, log);

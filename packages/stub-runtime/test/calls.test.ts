@@ -18,7 +18,12 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { readCalls, readCommands } from '@gtbuchanan/stub-runtime/calls';
+import {
+  readCallRecords,
+  readCalls,
+  readCommands,
+  readRefusals,
+} from '@gtbuchanan/stub-runtime/calls';
 
 /**
  * A log holding `lines`, each already a JSON object.
@@ -61,6 +66,52 @@ test('an empty body stays distinct from an absent one', ({ expect }) => {
   );
 
   expect(readCalls(logPath).map(call => call.stdin)).toStrictEqual([undefined, '']);
+});
+
+test('a refusal is not read back as a second call', ({ expect }) => {
+  /*
+   * The call was already recorded when it arrived; the refusal is a note about
+   * how it was answered. Counting it again would hand a checker a call the code
+   * under test made once as though it had made it twice.
+   */
+  const logPath = logOf(
+    { argv: ['pr', 'diff'], cmd: 'gh' },
+    { argv: ['pr', 'diff'], cmd: 'gh', refusal: 'no canned response' },
+  );
+
+  expect(readCommands(logPath)).toStrictEqual(['pr diff']);
+});
+
+test('call records keep every call in order, and no refusal', ({ expect }) => {
+  /*
+   * For a checker that needs the raw stream — each call's command and the
+   * order across commands — rather than lines grouped under one of them.
+   */
+  const logPath = logOf(
+    { argv: ['status'], cmd: 'git' },
+    { argv: ['pr', 'diff'], cmd: 'gh', stdin: '' },
+    { argv: ['pr', 'diff'], cmd: 'gh', refusal: 'no canned response' },
+    { argv: ['push'], cmd: 'git' },
+  );
+
+  expect(readCallRecords(logPath)).toStrictEqual([
+    { argv: ['status'], cmd: 'git' },
+    { argv: ['pr', 'diff'], cmd: 'gh', stdin: '' },
+    { argv: ['push'], cmd: 'git' },
+  ]);
+});
+
+test('refusals are read back with what the double could not answer', ({ expect }) => {
+  const logPath = logOf(
+    { argv: ['pr', 'view', '42'], cmd: 'gh' },
+    { argv: ['pr', 'diff'], cmd: 'gh' },
+    { argv: ['pr', 'diff'], cmd: 'gh', refusal: 'no canned response' },
+    { argv: ['status'], cmd: 'git', refusal: 'no canned response' },
+  );
+
+  expect(readRefusals(logPath, 'gh')).toStrictEqual([
+    { command: 'pr diff', reason: 'no canned response' },
+  ]);
 });
 
 test('the command filter still selects by the tag its stub wrote', ({ expect }) => {

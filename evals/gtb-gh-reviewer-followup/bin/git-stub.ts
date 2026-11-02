@@ -21,7 +21,7 @@
  *
  * Installed as `git` at the front of the eval PATH by the runner.
  */
-import { emit, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
+import { argv, emit, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
 
 /**
  * Exit status for a call the double cannot answer. Any non-zero would do; 1 is
@@ -29,13 +29,16 @@ import { emit, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
  */
 const refusedExit = 1;
 
-logCall('git');
+const log = logCall('git');
 
 emit({
+  call: { argv, cmd: 'git', stdin: '' },
   code: refusedExit,
+  kind: 'refused',
+  reason: 'no repository is modelled',
   stderr:
     `git-stub: no canned response for "git ${joined}". This suite models no ` +
     'repository, and the run was told the checkout is already in place. Model ' +
     'the command rather than letting the call return empty success.\n',
   stdout: '',
-});
+}, log);

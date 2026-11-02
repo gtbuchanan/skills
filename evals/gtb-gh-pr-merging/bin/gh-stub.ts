@@ -48,12 +48,10 @@ const scenario = located.scenario;
 /* Logged after the scenario is known, because the scenario is what names the
    file: one log per workspace means concurrent tests never share a writer. */
 const logDir = process.env['STUB_LOG_DIR'];
-if (logDir !== undefined)
-  appendJsonl(path.join(logDir, `${scenario.key}.jsonl`), {
-    argv,
-    cmd: 'gh',
-    stdin,
-  });
+const log = logDir === undefined
+  ? undefined
+  : path.join(logDir, `${scenario.key}.jsonl`);
+if (log !== undefined) appendJsonl(log, { argv, cmd: 'gh', stdin });
 
 /**
  * Where this scenario's workspace keeps what earlier calls did.
@@ -214,4 +212,4 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
   },
 ]);
 
-emit(outcome);
+emit(outcome, log);

@@ -37,7 +37,7 @@ import {
   viewer,
 } from '#src/scenario.ts';
 
-logCall('gh');
+const log = logCall('gh');
 
 const dir = scenarioDir();
 
@@ -83,4 +83,4 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin: '' }, [
   },
 ]);
 
-emit(outcome);
+emit(outcome, log);

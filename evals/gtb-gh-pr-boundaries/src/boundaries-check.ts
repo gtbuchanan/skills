@@ -23,7 +23,7 @@ import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
 import { skillsRoot, suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
 import { readState } from '@gtbuchanan/github-cli-stub/state';
-import { CallSchema, readJsonl } from '@gtbuchanan/stub-runtime/calls';
+import { readCallRecords } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 import { scenarioPath } from './setup.ts';
 
@@ -48,9 +48,8 @@ export default function assertBoundaries(
 
   /* One chronological stream. Splitting it by command is what loses the
      ordering the third rule is about. */
-  const calls = readJsonl(
+  const calls = readCallRecords(
     path.join(suiteRunDir(import.meta.url), `${vars.scenario}.jsonl`),
-    CallSchema,
   ).map(call => ({ cmd: call.cmd, line: call.argv.join(' ') }));
 
   /* Tagged once, so the two rules below read positions out of one sequence

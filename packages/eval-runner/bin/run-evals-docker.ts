@@ -15,8 +15,8 @@
  *   pnpm eval:docker gtb-gh-reviewer-followup-apply   # filter to one skill
  *   pnpm eval:docker --repeat 3        # flags forwarded to promptfoo
  *
- * Auth: mounts the local keyless Claude session (~/.claude/.credentials.json,
- * RW for refresh) if present; otherwise forwards ANTHROPIC_API_KEY.
+ * Auth: mounts each agent's stored login (eval-agents; RW for refresh) if
+ * present; otherwise forwards its API key variable.
  * Behind a TLS-inspection proxy, drop the proxy root CA at
  * artifacts/ca-bundle.pem and it's trusted automatically.
  */
@@ -26,6 +26,7 @@ import { homedir } from 'node:os';
 import path from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { repoRoot as root } from '@gtbuchanan/agent-skills-harness/paths';
+import { evalAgents } from '@gtbuchanan/eval-agents/registry';
 import spawn from 'cross-spawn';
 import {
   nodeModulesShadows,
@@ -104,13 +105,27 @@ if (compose.code !== 0) process.exit(1);
 
 mkdirSync(path.join(root, 'artifacts', 'skill-evals'), { recursive: true });
 
-const creds = path.join(homedir(), '.claude', '.credentials.json');
-const hasCreds = existsSync(creds);
-const hasKey = Boolean(process.env['ANTHROPIC_API_KEY']);
-if (!hasCreds && !hasKey) {
-  console.error('No auth: log in to Claude Code or set ANTHROPIC_API_KEY.');
-  process.exit(1);
-}
+/**
+ * HOME inside the container.
+ */
+const containerHome = '/root';
+
+const agentAuth = evalAgents.map((agent) => {
+  const credentials = path.join(homedir(), agent.auth.credentialsFile);
+  return {
+    agent,
+    credentials,
+    hasCreds: existsSync(credentials),
+    hasKey: (process.env[agent.auth.apiKeyVar] ?? '') !== '',
+  };
+});
+for (const { agent, hasCreds, hasKey } of agentAuth)
+  if (!hasCreds && !hasKey) {
+    console.error(
+      `No auth: log in to ${agent.displayName} or set ${agent.auth.apiKeyVar}.`,
+    );
+    process.exit(1);
+  }
 
 /**
  * Containers to run at once — the agent work, not the server, is the cost.
@@ -141,12 +156,12 @@ const commonMounts = [
    package's is shadowed back to the one the image installed — see
    workspace-mounts.ts for what goes wrong when it is not. */
 commonMounts.push(...nodeModulesShadows('/work', workspacePackageDirs(root)));
-if (hasCreds) {
-  commonMounts.push(
-    '-v',
-    `${toHostPath(creds)}:/root/.claude/.credentials.json`,
-  );
-}
+for (const { agent, credentials, hasCreds } of agentAuth)
+  if (hasCreds)
+    commonMounts.push(
+      '-v',
+      `${toHostPath(credentials)}:${path.posix.join(containerHome, agent.auth.credentialsFile)}`,
+    );
 
 const env = [
   '-e',
@@ -161,7 +176,8 @@ const env = [
 if (existsSync(path.join(root, 'artifacts', 'ca-bundle.pem'))) {
   env.push('-e', 'NODE_EXTRA_CA_CERTS=/work/artifacts/ca-bundle.pem');
 }
-if (hasKey) env.push('-e', 'ANTHROPIC_API_KEY');
+for (const { agent, hasKey } of agentAuth)
+  if (hasKey) env.push('-e', agent.auth.apiKeyVar);
 
 const runSkill = async (
   name: string,

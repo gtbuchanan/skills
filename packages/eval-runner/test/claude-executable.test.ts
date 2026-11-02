@@ -13,12 +13,18 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { claudeCode } from '@gtbuchanan/eval-agents/claude-code';
 import { test } from 'vitest';
 import {
-  claudeExecutable,
+  agentExecutable,
   findOnPath,
-  hasSdkNativeClaude,
+  hasSdkNative,
 } from '#src/scrubbed-path.ts';
+
+const claudeExecutable = (
+  sourceEnv: NodeJS.ProcessEnv,
+  hasNative: () => boolean,
+): string => agentExecutable(claudeCode.executable, sourceEnv, hasNative);
 
 const hasSdkBinary = (): boolean => true;
 const hasNoSdkBinary = (): boolean => false;
@@ -99,13 +105,15 @@ test('the probe agrees with whether the SDK ships a binary for this host', ({ ex
    */
   const host = `${process.platform}-${process.arch}`;
 
-  expect(hasSdkNativeClaude()).toBe(sdkNativeHosts.has(host));
+  expect(hasSdkNative(claudeCode.executable)).toBe(sdkNativeHosts.has(host));
 });
 
 test('the probe reports no binary when the SDK cannot be resolved at all', ({ expect }) => {
   /* Resolution runs from a caller-supplied origin, so an unrelated one has no
    * SDK above it and must not be mistaken for a host without a native build. */
-  expect(hasSdkNativeClaude(path.join(path.sep, 'nowhere', 'index.js'))).toBe(false);
+  const origin = path.join(path.sep, 'nowhere', 'index.js');
+
+  expect(hasSdkNative(claudeCode.executable, origin)).toBe(false);
 });
 
 test('findOnPath resolves a command on the given PATH', ({ expect }) => {

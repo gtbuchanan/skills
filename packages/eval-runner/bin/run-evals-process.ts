@@ -17,11 +17,11 @@
  *   pnpm eval gtb-gh-reviewer-followup-plan  # filter to one skill
  *   pnpm eval --repeat 3      # flags forwarded to promptfoo
  *
- * Auth: reads the local keyless Claude session (~/.claude) or ANTHROPIC_API_KEY,
+ * Auth: reads each agent's stored login or API key variable (eval-agents),
  * exactly like the container path. Only the credentials reach each suite's clean
- * HOME, linked so a refresh persists, so the developer's personal ~/.claude
- * config never colours the eval agent. A suite's skills (and any mock overlay)
- * live in its workspace, never the repo's own .claude/skills.
+ * HOME, linked so a refresh persists, so the developer's personal agent config
+ * never colours the eval agent. A suite's skills (and any mock overlay) live in
+ * its workspace, never the repo's own skill directories.
  */
 import {
   copyFileSync,
@@ -39,7 +39,8 @@ import path from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { repoRoot as root } from '@gtbuchanan/agent-skills-harness/paths';
 import { resolveSkillsCli } from '@gtbuchanan/agent-skills-harness/skills-cli';
-import { workspaceInstructionExcludes } from '@gtbuchanan/eval-agents/claude-md-excludes';
+import type { EvalAgent } from '@gtbuchanan/eval-agents/eval-agent';
+import { evalAgentForProvider, evalAgents } from '@gtbuchanan/eval-agents/registry';
 import spawn from 'cross-spawn';
 import * as v from 'valibot';
 import { parse as parseYaml } from 'yaml';
@@ -54,8 +55,9 @@ const { assertFailSafe, buildScrubbedPath, poisonDangerTools } = evalIsolation;
  */
 const cliArgsIndex = 2;
 
-/* The skills CLI installs into cwd/.claude/skills (no target-dir flag), so each
- * suite's skills are populated by running it with cwd = that suite's workspace. */
+/* The skills CLI installs into the agent's directory under cwd (no target-dir
+ * flag), so each suite's skills are populated by running it with cwd = that
+ * suite's workspace. */
 const skillsCli = resolveSkillsCli();
 
 /*
@@ -79,12 +81,16 @@ const firstFlag = args.findIndex(arg => arg.startsWith('-'));
 const nameFilters = firstFlag === -1 ? args : args.slice(0, firstFlag);
 const passthrough = firstFlag === -1 ? [] : args.slice(firstFlag);
 
-const realCreds = path.join(homedir(), '.claude', '.credentials.json');
-const hasCreds = existsSync(realCreds);
-if (!hasCreds && process.env['ANTHROPIC_API_KEY'] === undefined) {
-  console.error('No auth: log in to Claude Code or set ANTHROPIC_API_KEY.');
-  process.exit(1);
-}
+const realCredentials = (agent: EvalAgent): string =>
+  path.join(homedir(), agent.auth.credentialsFile);
+const loggedIn = evalAgents.filter(agent => existsSync(realCredentials(agent)));
+for (const agent of evalAgents)
+  if (!loggedIn.includes(agent) && process.env[agent.auth.apiKeyVar] === undefined) {
+    console.error(
+      `No auth: log in to ${agent.displayName} or set ${agent.auth.apiKeyVar}.`,
+    );
+    process.exit(1);
+  }
 
 const suites = readdirSync(path.join(root, 'evals'), { withFileTypes: true })
   .filter(entry => entry.isDirectory())
@@ -128,27 +134,27 @@ const warnCredentialsCopied = warnOnce(
  * developer mode) and a copy is the last resort, for a temp dir on another
  * volume. Only that case cannot carry a refresh, and it says so.
  */
-const placeCredentials = (destination: string): void => {
+const placeCredentials = (source: string, destination: string): void => {
   try {
-    symlinkSync(realCreds, destination);
+    symlinkSync(source, destination);
     return;
   } catch {
     // Fall through: a hard link needs no privilege, only the same volume.
   }
   try {
-    linkSync(realCreds, destination);
+    linkSync(source, destination);
     return;
   } catch {
     // Fall through: cross-volume temp, or a filesystem without hard links.
   }
-  copyFileSync(realCreds, destination);
+  copyFileSync(source, destination);
   warnCredentialsCopied();
 };
 
 /**
  * Mints a fresh, isolated environment: its own stub dir (front of a scrubbed
  * PATH) and a clean HOME holding only the credentials, so parallel suites never
- * share STUB_BINDIR, call logs, or the developer's ~/.claude.
+ * share STUB_BINDIR, call logs, or the developer's agent config.
  */
 const isolatedEnv = (): {
   env: Record<string, string>;
@@ -160,9 +166,10 @@ const isolatedEnv = (): {
   /* Before anything else lands in the dir: a suite's own stub is written over
    * the poison later, so declared doubles still win. */
   poisonDangerTools(stubDir);
-  if (hasCreds) {
-    mkdirSync(path.join(homeDir, '.claude'), { recursive: true });
-    placeCredentials(path.join(homeDir, '.claude', '.credentials.json'));
+  for (const agent of loggedIn) {
+    const destination = path.join(homeDir, agent.auth.credentialsFile);
+    mkdirSync(path.dirname(destination), { recursive: true });
+    placeCredentials(realCredentials(agent), destination);
   }
   const scrubbed = buildScrubbedPath({ stubDir });
   const env = buildEvalEnv({ scrubbedPath: scrubbed.path, stubDir, homeDir });
@@ -171,7 +178,8 @@ const isolatedEnv = (): {
       existsSync(path.join(dir, 'bash.exe')),
     );
     if (bashDir !== undefined)
-      env['CLAUDE_CODE_GIT_BASH_PATH'] = path.join(bashDir, 'bash.exe');
+      for (const agent of evalAgents)
+        env[agent.gitBashVar] = path.join(bashDir, 'bash.exe');
   }
   return { env, allow: scrubbed.allow, missing: scrubbed.missing };
 };
@@ -187,7 +195,7 @@ if (preflight.missing.length > 0) {
 }
 if (
   process.platform === 'win32' &&
-  preflight.env['CLAUDE_CODE_GIT_BASH_PATH'] === undefined
+  evalAgents.some(agent => preflight.env[agent.gitBashVar] === undefined)
 ) {
   console.error(
     'Git Bash (bash.exe) not found on the allowlisted PATH; install Git for Windows.',
@@ -227,13 +235,6 @@ const failTailLines = 120;
 // suite reports per-test progress without the rest of the debug noise.
 const perTestLog = /Eval #\d+ complete \((?<done>\d+) of (?<total>\d+)\)/v;
 const newline = /\r?\n/v;
-
-/* Maps a promptfoo provider id to the `skills` CLI agent target (the `-a` flag,
- * which selects the on-disk layout). Centralised so a suite never repeats it. */
-const agentForProvider = (id: string | undefined): string => {
-  if (id?.startsWith('anthropic:claude-agent-sdk') === true) return 'claude-code';
-  throw new Error(`no agent mapping for provider '${String(id)}'`);
-};
 
 /* Just the slice of a promptfoo config the runner needs — each provider's id and
  * declared skills — split into named sub-schemas so the nesting stays readable.
@@ -281,7 +282,7 @@ const skillsByAgent = (
   const providers = config.providers ?? [];
   for (const provider of providers) {
     if (typeof provider === 'string') continue;
-    const agent = agentForProvider(provider.id);
+    const agent = evalAgentForProvider(provider.id).name;
     const names = byAgent.get(agent) ?? new Set<string>();
     const declared = provider.config?.skills ?? [];
     for (const name of declared) names.add(name);
@@ -305,14 +306,13 @@ const populateWorkspace = (
     path.join(workspace, 'package.json'),
     '{ "name": "eval-workspace", "private": true }\n',
   );
-  /* The workspace sits in the temp dir, inside the user profile on Windows,
-   * and the agent would otherwise load the developer's own CLAUDE.md from a
-   * directory above it — see claude-md-excludes.ts in eval-agents. */
-  mkdirSync(path.join(workspace, '.claude'), { recursive: true });
-  writeFileSync(
-    path.join(workspace, '.claude', 'settings.json'),
-    `${JSON.stringify({ claudeMdExcludes: workspaceInstructionExcludes(workspace) })}\n`,
-  );
+  const agentFiles = evalAgents.flatMap(agent =>
+    Object.entries(agent.workspaceFiles(workspace)));
+  for (const [file, content] of agentFiles) {
+    const destination = path.join(workspace, file);
+    mkdirSync(path.dirname(destination), { recursive: true });
+    writeFileSync(destination, content);
+  }
   /* Stage the suite's own fixtures into the workspace so an agent that reads its
    * inputs directly can reach them — the SDK sandboxes it to working_dir, and
    * the fixtures otherwise sit in the repo, outside it. These are test inputs,

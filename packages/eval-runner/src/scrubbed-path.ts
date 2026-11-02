@@ -26,6 +26,8 @@ import type { SpawnSyncOptions, SpawnSyncReturns } from 'node:child_process';
 import { chmodSync, existsSync, readdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import type { EvalAgent } from '@gtbuchanan/eval-agents/eval-agent';
+import { evalAgents } from '@gtbuchanan/eval-agents/registry';
 import { hermeticGitConfig } from '@gtbuchanan/git-fixtures/real-git';
 
 /*
@@ -189,11 +191,11 @@ const canResolve = (origin: string, specifier: string): boolean => {
 };
 
 /**
- * Whether the agent SDK has a native `claude` for this host.
+ * Whether an agent's SDK has a native binary for this host.
  *
  * The SDK ships one per platform as an optional dependency
- * (`@anthropic-ai/claude-agent-sdk-<platform>-<arch>`, `-musl` besides on linux)
- * and spawns it itself. Probing what the installer actually resolved beats
+ * (`<sdkPackage>-<platform>-<arch>`, `-musl` besides on linux) and spawns it
+ * itself. Probing what the installer actually resolved beats
  * hardcoding a platform check, because it asks the same question the SDK does.
  * Resolution runs from the SDK's own entry: the platform packages are its
  * dependencies, not ours, so pnpm's layout hides them from here.
@@ -204,10 +206,10 @@ const canResolve = (origin: string, specifier: string): boolean => {
  * pnpm's strict layout a dependency declared here would resolve to this
  * package's own link instead, and answer for a tree nothing runs in.
  */
-export const hasSdkNativeClaude = (
+export const hasSdkNative = (
+  { sdkPackage: sdk }: EvalAgent['executable'],
   resolvedFrom: string = import.meta.url,
 ): boolean => {
-  const sdk = '@anthropic-ai/claude-agent-sdk';
   if (!canResolve(resolvedFrom, sdk)) return false;
   const entry = createRequire(resolvedFrom).resolve(sdk);
   const base = `${sdk}-${process.platform}-${process.arch}`;
@@ -217,28 +219,30 @@ export const hasSdkNativeClaude = (
 };
 
 /**
- * Resolves the `claude` the agent SDK should spawn.
+ * Resolves the executable an agent's SDK should spawn.
  *
  * The SDK publishes no native binary for android, so on Termux every test errors
  * before reaching the model and one has to be supplied. Everywhere else the
- * SDK's own binary is the right one: substituting whatever `claude` happens to
- * sit on the developer's PATH would quietly change the version under test from
- * host to host. The suites read this through `path_to_claude_code_executable`.
+ * SDK's own binary is the right one: substituting whatever copy of the agent
+ * happens to sit on the developer's PATH would quietly change the version
+ * under test from host to host. The suites read this through their provider's executable
+ * option, such as `path_to_claude_code_executable`.
  *
  * The result is always defined, because promptfoo only substitutes `{{ env.X }}`
  * when X is *set* — unset would reach the SDK as a literal `{{ … }}` path. Empty
- * is falsy, so the provider falls back to its own binary. An explicit
- * CLAUDE_CODE_EXECUTABLE outranks both, as the escape hatch for a host this probe
- * reads wrong. Resolution reads the caller's real PATH, not the scrubbed one —
- * `claude` is not a tool the allowlist admits, and the absolute path it yields
- * does not need to be on PATH to be spawned.
+ * is falsy, so the provider falls back to its own binary. An explicit value in
+ * the agent's executable variable outranks both, as the escape hatch for a host
+ * this probe reads wrong. Resolution reads the caller's real PATH, not the
+ * scrubbed one — the agent is not a tool the allowlist admits, and the absolute
+ * path it yields does not need to be on PATH to be spawned.
  */
-export const claudeExecutable = (
+export const agentExecutable = (
+  executable: EvalAgent['executable'],
   sourceEnv: NodeJS.ProcessEnv,
-  hasNative: () => boolean = hasSdkNativeClaude,
+  hasNative: () => boolean = () => hasSdkNative(executable),
 ): string =>
-  sourceEnv['CLAUDE_CODE_EXECUTABLE'] ??
-  (hasNative() ? '' : findOnPath('claude', sourceEnv['PATH'] ?? '') ?? '');
+  sourceEnv[executable.envVar] ??
+  (hasNative() ? '' : findOnPath(executable.command, sourceEnv['PATH'] ?? '') ?? '');
 
 /**
  * The MSYS2 environments Git for Windows has shipped git in: `mingw64` on
@@ -280,9 +284,9 @@ const windowsGitDirs = (entries: string[]): string[] => {
   if (process.platform !== 'win32') return [];
   const programFiles = process.env['ProgramFiles'] ?? String.raw`C:\Program Files`;
   const localAppData = process.env['LOCALAPPDATA'] ?? '';
-  const bashPath = process.env['CLAUDE_CODE_GIT_BASH_PATH'];
+  const bashPaths = evalAgents.flatMap(agent => process.env[agent.gitBashVar] ?? []);
   const seeds = [
-    ...(bashPath === undefined ? [] : [path.dirname(bashPath)]),
+    ...bashPaths.map(bashPath => path.dirname(bashPath)),
     ...entries.filter(entry => hasTool(entry, 'bash')),
     path.join(programFiles, 'Git', 'bin'),
     path.join(localAppData, 'Programs', 'Git', 'bin'),
@@ -466,7 +470,7 @@ export const createIsolation = (policy: IsolationPolicy): Isolation => {
 };
 
 /*
- * OS plumbing the child chain (node → promptfoo → claude.exe → Git Bash) needs
+ * OS plumbing the child chain (node → promptfoo → the agent → Git Bash) needs
  * to run at all — Docker gets these from its Linux base image; on the host we
  * forward them by name so nothing behavioral rides along. HOME is set separately
  * to a clean dir, so the home-pointing vars here are deliberately omitted.
@@ -485,11 +489,12 @@ const posixEssentialVars = [
 const osEssentialVars =
   process.platform === 'win32' ? windowsEssentialVars : posixEssentialVars;
 /**
- * Auth + network config the SDK needs to reach the API; forwarded only if set.
+ * Network config the SDK needs to reach the API; forwarded only if set, as is
+ * each agent's auth.
  */
-const passthroughVars = [
-  'ANTHROPIC_API_KEY', 'CLAUDE_CODE_OAUTH_TOKEN', 'HTTP_PROXY', 'http_proxy',
-  'HTTPS_PROXY', 'https_proxy', 'NODE_EXTRA_CA_CERTS', 'NO_PROXY', 'no_proxy',
+const networkVars = [
+  'HTTP_PROXY', 'http_proxy', 'HTTPS_PROXY', 'https_proxy',
+  'NODE_EXTRA_CA_CERTS', 'NO_PROXY', 'no_proxy',
 ];
 /**
  * Length of a Windows drive prefix (`C:`) when splitting HOME into drive+path.
@@ -513,20 +518,24 @@ export const buildEvalEnv = ({
   stubDir,
   homeDir,
   sourceEnv = process.env,
+  agents = evalAgents,
 }: {
   scrubbedPath: string;
   stubDir: string;
   homeDir: string;
   sourceEnv?: NodeJS.ProcessEnv;
+  agents?: readonly EvalAgent[];
 }): Record<string, string> => {
   const env: Record<string, string> = {
     ...hermeticGitConfig,
-    CLAUDE_CODE_EXECUTABLE: claudeExecutable(sourceEnv),
+    ...Object.fromEntries(agents.map(({ executable }) =>
+      [executable.envVar, agentExecutable(executable, sourceEnv)])),
     HOME: homeDir,
     PATH: scrubbedPath,
     STUB_BINDIR: stubDir,
   };
-  for (const name of [...osEssentialVars, ...passthroughVars]) {
+  const authVars = agents.flatMap(agent => agent.auth.envVars);
+  for (const name of [...osEssentialVars, ...networkVars, ...authVars]) {
     const value = sourceEnv[name];
     if (value !== undefined) env[name] = value;
   }

@@ -14,6 +14,7 @@ import {
 } from 'node:fs';
 import path from 'node:path';
 import { repoRoot as root } from '@gtbuchanan/agent-skills-harness/paths';
+import { evalAgents } from '@gtbuchanan/eval-agents/registry';
 import spawn from 'cross-spawn';
 
 /**
@@ -67,12 +68,13 @@ const installStubs = (suiteDir: string): void => {
 };
 
 /*
- * The suites interpolate `{{ env.CLAUDE_CODE_EXECUTABLE }}`, and promptfoo only
- * substitutes a variable that is *set* — unset would reach the SDK as a literal
- * path. run-evals-process.ts resolves a real value; the container path has the
- * SDK's own native binary and wants the empty (falsy) default.
+ * The suites interpolate each agent's executable variable, such as
+ * `{{ env.CLAUDE_CODE_EXECUTABLE }}`, and promptfoo only substitutes a variable
+ * that is *set* — unset would reach the SDK as a literal path.
+ * run-evals-process.ts resolves a real value; the container path has the SDK's
+ * own native binary and wants the empty (falsy) default.
  */
-process.env['CLAUDE_CODE_EXECUTABLE'] ??= '';
+for (const { executable } of evalAgents) process.env[executable.envVar] ??= '';
 
 const args = process.argv.slice(cliArgsIndex);
 const firstFlag = args.findIndex(arg => arg.startsWith('-'));

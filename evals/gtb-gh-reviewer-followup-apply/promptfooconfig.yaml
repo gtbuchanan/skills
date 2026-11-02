@@ -26,10 +26,10 @@ defaultTest:
     disableVarExpansion: true
 description: gtb-gh-reviewer-followup-apply — write path via claude-agent-sdk with a fake gh
 
-# Serial for now. Each test logs to its own scenario's file, so nothing about
-# the record stops them running at once; that is a separate change.
+# Concurrent, because each test works in its own scenario and logs to its own
+# file. Repeats of one test still share both, so `--repeat` wants this at 1.
 evaluateOptions:
-  maxConcurrency: 1
+  maxConcurrency: 3
 
 extensions:
   - file://src/setup.ts:extensionHook

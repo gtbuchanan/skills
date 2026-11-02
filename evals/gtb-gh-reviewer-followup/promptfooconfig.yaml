@@ -8,7 +8,8 @@
 # makes itself — pr review --approve and pr merge --squash — and
 # followup-check.ts asserts the gate.
 #
-# The fake git (bin/git-stub.ts) refuses every call rather than answering one.
+# The fake git (bin/git-stub.ts) refuses every call the agent makes rather than
+# answering one; Claude Code's own startup calls go to the real git.
 # There is no repository here to be right about, so a git call means the run
 # went somewhere this suite does not model, and the double says so rather than
 # inventing a clean tree.

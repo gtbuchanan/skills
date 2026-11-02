@@ -22,34 +22,61 @@
  * setup's per-test assertion count sees it.
  */
 import { spawnSync } from 'node:child_process';
+import { existsSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
 
 const stub = path.join(import.meta.dirname, '..', 'bin', 'git-stub.ts');
 
 interface Run {
+  readonly logged: boolean;
   readonly status: number | undefined;
   readonly stderr: string;
   readonly stdout: string;
 }
 
 /**
- * One `git` invocation, as the agent would make it.
- *
- * STUB_LOG is deliberately left unset: the call log is the checker's input, and
- * nothing here is asserting about it.
+ * One `git` invocation, with a log of its own so a case can tell whether the
+ * call was recorded.
  */
 const git = (...args: readonly string[]): Run => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'git-stub-'));
+  const log = path.join(dir, 'calls.jsonl');
   const result = spawnSync(process.execPath, [stub, ...args], {
     encoding: 'utf8',
+    env: { ...process.env, STUB_LOG: log },
   });
 
   return {
+    logged: existsSync(log),
     status: result.status ?? undefined,
     stderr: result.stderr,
     stdout: result.stdout,
   };
 };
+
+test('the agent runtime\'s own git calls are answered, not refused or recorded', ({
+  expect,
+}) => {
+  /*
+   * Claude Code runs these itself at startup, with hooks disabled. They are
+   * not the agent's, so refusing and recording them would count against every
+   * run a gap the agent never reached.
+   */
+  const result = git('-c', 'core.hooksPath=/dev/null', '-c', 'core.fsmonitor=', '--version');
+
+  expect(result).toMatchObject({ logged: false, status: 0 });
+  expect(result.stdout).toContain('git version');
+});
+
+test('the runtime\'s exec-path probe is answered too', ({ expect }) => {
+  expect(git('--exec-path')).toMatchObject({ logged: false, status: 0 });
+});
+
+test('a call from the agent is still recorded', ({ expect }) => {
+  expect(git('status').logged).toBe(true);
+});
 
 test('a read this suite models nothing for fails loudly', ({ expect }) => {
   /* The reads are the dangerous ones: an invented "clean" answer is one an

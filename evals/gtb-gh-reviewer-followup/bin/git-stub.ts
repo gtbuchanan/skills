@@ -21,7 +21,19 @@
  *
  * Installed as `git` at the front of the eval PATH by the runner.
  */
+import { hermeticGitEnv, resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
+import { passThrough } from '@gtbuchanan/stub-runtime/passthrough';
 import { argv, emit, joined, logCall } from '@gtbuchanan/stub-runtime/stub';
+
+/* Claude Code's own git calls at startup, which it runs with hooks disabled.
+   They are not the agent's, so the real git answers them and nothing records
+   them; refused, every run would count a gap the agent never reached. */
+const isRuntimeCall =
+  (argv[0] === '-c' && argv[1] === 'core.hooksPath=/dev/null') ||
+  (argv.length === 1 && argv[0] === '--exec-path');
+
+if (isRuntimeCall)
+  process.exit(passThrough({ argv, binary: resolveRealGit(), env: hermeticGitEnv() }));
 
 /**
  * Exit status for a call the double cannot answer. Any non-zero would do; 1 is

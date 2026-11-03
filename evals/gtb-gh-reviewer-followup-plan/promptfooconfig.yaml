@@ -2,7 +2,7 @@
 #
 # Read-path eval for this skill. Runs the REAL skill via claude-agent-sdk,
 # shadowing both `gh` and `git` with fakes (bin/*-stub.ts) that serve canned PR
-# data from fixtures/scenario and record every call to the suite's log under
+# data from fixtures/scenario and record every call to its run's log under
 # artifacts/skill-evals/. plan-check.ts asserts the
 # skill stayed read-only, queried the right endpoints, scoped the diff to the
 # last-review baseline, and emitted a correct action list (skip-only threads
@@ -26,7 +26,8 @@ defaultTest:
 
 description: gtb-gh-reviewer-followup-plan — read path via claude-agent-sdk with fake gh + git
 
-# Serial so the shared append-only call log can't interleave between runs.
+# Serial for now. Each run's calls already land in a log of their own (see the
+# run provider below), so running repeats concurrently is a separate change.
 evaluateOptions:
   maxConcurrency: 1
 
@@ -43,18 +44,24 @@ prompts:
     gtb-gh-reviewer-followup-apply — the JSON array mapping each thread to its action with the
     ids gtb-gh-reviewer-followup-apply needs — not the raw verdict output.
 
+# The harness's run provider gives every test a run id, which reaches the fake
+# gh/git as STUB_RUN so each run's calls land in a log of their own. It runs
+# the agent named here, with agentConfig as that agent's provider config.
 providers:
   - config:
-      apiKeyRequired: false
-      append_allowed_tools:
-        - 'Bash(gh:*)'
-        - 'Bash(git:*)'
+      agent: claude-code
+      agentConfig:
+        apiKeyRequired: false
+        append_allowed_tools:
+          - 'Bash(gh:*)'
+          - 'Bash(git:*)'
 
-      path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
-      setting_sources: ['project']
-      skills: ['gtb-gh-reviewer-followup-plan', 'gtb-reviewer-followup-verdict']
-      working_dir: '{{ env.EVAL_WORKSPACE }}'
-    id: anthropic:claude-agent-sdk
+        path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
+        setting_sources: ['project']
+        skills:
+          ['gtb-gh-reviewer-followup-plan', 'gtb-reviewer-followup-verdict']
+        working_dir: '{{ env.EVAL_WORKSPACE }}'
+    id: file://node_modules/@gtbuchanan/agent-skills-harness/src/run-provider.ts
     label: gtb-gh-reviewer-followup-plan
 tests:
   - description: mixed threads — drop self-resolved and already-acked, map exact-fix→resolve, partial→reply, and reopen a resolved-by-other thread the fix missed

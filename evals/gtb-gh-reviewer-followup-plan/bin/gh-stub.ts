@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /*
  * Fake `gh` for this read-path eval. It never touches the network:
- * it appends every invocation (argv) as a JSON line to $STUB_LOG and returns
- * canned data from $SCENARIO_DIR so the skill can proceed. plan-check.ts reads
+ * it appends every invocation (argv) as a JSON line to the log of the run that
+ * made it and returns canned data from $SCENARIO_DIR so the skill can proceed. plan-check.ts reads
  * the log to assert the skill stayed read-only and hit the right endpoints.
  *
  * Reached as `gh`: the runner installs a wrapper into STUB_BINDIR, at the front
@@ -28,7 +28,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
 import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
-import { argv, emit, logCall } from '@gtbuchanan/stub-runtime/stub';
+import { argv, emit, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
 import {
   readReviews,
   repo,
@@ -37,7 +37,7 @@ import {
   viewer,
 } from '#src/scenario.ts';
 
-const log = logCall('gh');
+const log = logCallToRun('gh');
 
 const dir = scenarioDir();
 

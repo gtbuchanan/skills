@@ -2,7 +2,7 @@
  * promptfoo javascript assertion for this suite's read path.
  *
  * The fake gh/git (bin/*-stub.ts) append every invocation's argv, as a JSON
- * line tagged with its command, to the suite's call log under
+ * line tagged with its command, to the log of the run that made it under
  * artifacts/skill-evals/. This asserts the skill behaved as the read-only
  * analysis shell it claims to be:
  *
@@ -24,8 +24,8 @@
  * → reply + reopen).
  */
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { suiteCallLog } from '@gtbuchanan/agent-skills-harness/paths';
 import { type ReportedResult, reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
+import { runLog } from '@gtbuchanan/agent-skills-harness/run-log';
 import { parseJson, readCommands, readRefusals } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 import { readReviews, scenarioDir, selectLastOwnReview, viewer } from './scenario.ts';
@@ -199,9 +199,12 @@ const checkSkipped = (byId: ActionsById): string[] =>
 /**
  * Asserts the skill stayed read-only and emitted a usable action list.
  */
-export default function assertDiffOutput(output: unknown): ReportedResult {
+export default function assertDiffOutput(
+  output: unknown,
+  context: { metadata?: unknown },
+): ReportedResult {
   const baseline = readBaseline();
-  const logPath = suiteCallLog(import.meta.url);
+  const logPath = runLog(import.meta.url, context.metadata);
   const gh = readCommands(logPath, 'gh');
   const git = readCommands(logPath, 'git');
 

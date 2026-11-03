@@ -7,8 +7,7 @@
  * missing is a record of what the skill asked, which plan-check.ts reads to
  * assert the diff was scoped to the baseline commit.
  *
- * One log for the suite rather than one per world: this suite is serial and
- * single-scenario, and truncates that log between tests.
+ * Recorded in the log of the run that made the call, beside the fake gh's.
  *
  * Installed as `git` at the front of the eval PATH by the runner, which is why
  * it must resolve the real binary explicitly rather than by name, and under an
@@ -16,8 +15,8 @@
  */
 import { hermeticGitEnv, resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { passThrough } from '@gtbuchanan/stub-runtime/passthrough';
-import { argv, logCall } from '@gtbuchanan/stub-runtime/stub';
+import { argv, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
 
-logCall('git');
+logCallToRun('git');
 
 process.exit(passThrough({ argv, binary: resolveRealGit(), env: hermeticGitEnv() }));

@@ -12,7 +12,7 @@ const RunMetadataSchema = v.object({ runId: v.string() });
  * The run a response came from, or `undefined` when no run provider answered
  * it.
  */
-export const runIdOf = (metadata: unknown): string | undefined => {
+const runIdOf = (metadata: unknown): string | undefined => {
   const parsed = v.safeParse(RunMetadataSchema, metadata);
   return parsed.success ? parsed.output.runId : undefined;
 };

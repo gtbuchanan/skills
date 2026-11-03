@@ -20,6 +20,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { captureGit, runGit, seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
+import { runLogPath } from '@gtbuchanan/stub-runtime/run-log';
 import { scenarioPath } from '@gtbuchanan/stub-runtime/scenario';
 import { test } from 'vitest';
 import { fakeSuite } from './fake-suite.ts';
@@ -32,30 +33,36 @@ const git = resolveRealGit();
 const identity = { email: 'taylor@example.com', name: 'Taylor Buchanan' };
 
 /**
- * Writes one scenario's call log where the assertion will look for it.
+ * Writes one run's call log where the assertion will look for it.
  */
 const writeLog = (
   metaUrl: string,
-  scenario: string,
+  runId: string,
   calls: readonly { argv: string[]; refusal?: string; stdin?: string }[],
 ): void => {
   const dir = suiteRunDir(metaUrl);
   mkdirSync(dir, { recursive: true });
   writeFileSync(
-    path.join(dir, `${scenario}.jsonl`),
+    runLogPath(dir, runId),
     calls.map(call => `${JSON.stringify({ cmd: 'gh', ...call })}\n`).join(''),
   );
 };
 
+/**
+ * The response metadata the run provider hands a checker for run `runId`.
+ */
+const ranAs = (runId: string): { readonly runId: string } => ({ runId });
+
 test('a call the log contains satisfies the clause that names it', ({ expect }) => {
   const suite = fakeSuite();
-  writeLog(suite.metaUrl, 'open-draft', [
+  writeLog(suite.metaUrl, 'run-1', [
     { argv: ['pr', 'create', '--draft', '--body-file', '-'], stdin: '### Description' },
   ]);
 
   const assertion = callExpectationAssertion({ metaUrl: suite.metaUrl });
 
   const result = assertion(undefined, {
+    metadata: ranAs('run-1'),
     vars: {
       requireCalls: [['pr create', '--draft']],
       requireStdin: [{ command: ['pr create'], includes: ['### Description'] }],
@@ -70,7 +77,7 @@ test('a call the double refused is reported from the scenario\'s own log', ({
   expect,
 }) => {
   const suite = fakeSuite();
-  writeLog(suite.metaUrl, 'open-draft', [
+  writeLog(suite.metaUrl, 'run-1', [
     { argv: ['pr', 'create', '--draft'] },
     { argv: ['pr', 'diff'] },
     { argv: ['pr', 'diff'], refusal: 'no canned response' },
@@ -79,6 +86,7 @@ test('a call the double refused is reported from the scenario\'s own log', ({
   const assertion = callExpectationAssertion({ metaUrl: suite.metaUrl });
 
   const result = assertion(undefined, {
+    metadata: ranAs('run-1'),
     vars: { requireCalls: [['pr create', '--draft']], scenario: 'open-draft' },
   });
 
@@ -92,11 +100,12 @@ test('every failing rule is reported, not only the first', ({ expect }) => {
    * failure into several runs.
    */
   const suite = fakeSuite();
-  writeLog(suite.metaUrl, 'open-draft', [{ argv: ['pr', 'ready', '44'] }]);
+  writeLog(suite.metaUrl, 'run-1', [{ argv: ['pr', 'ready', '44'] }]);
 
   const assertion = callExpectationAssertion({ metaUrl: suite.metaUrl });
 
   const result = assertion(undefined, {
+    metadata: ranAs('run-1'),
     vars: {
       forbidCalls: [['pr ready']],
       requireCalls: [['pr create']],
@@ -117,13 +126,14 @@ test('a body past the scenario’s word cap fails through the assertion', ({ exp
    * wiser.
    */
   const suite = fakeSuite();
-  writeLog(suite.metaUrl, 'open-draft', [
+  writeLog(suite.metaUrl, 'run-1', [
     { argv: ['pr', 'create', '--draft', '--body-file', '-'], stdin: 'word '.repeat(300) },
   ]);
 
   const assertion = callExpectationAssertion({ metaUrl: suite.metaUrl });
 
   const result = assertion(undefined, {
+    metadata: ranAs('run-1'),
     vars: {
       maxStdinWords: [{ command: ['pr create'], max: 250 }],
       scenario: 'open-draft',
@@ -134,23 +144,39 @@ test('a body past the scenario’s word cap fails through the assertion', ({ exp
   expect(result.reason).toContain('300 words');
 });
 
-test('a scenario reads its own log, not another scenario’s', ({ expect }) => {
+test('a run reads its own log, not another run’s', ({ expect }) => {
   /*
-   * The doubles key one log per checkout so tests can run at once. Reading a
-   * shared log instead would let a concurrent test's calls satisfy this one —
-   * which passes, and is the failure nothing catches.
+   * The doubles key one log per run so tests can run at once. Reading a shared
+   * log instead would let a concurrent test's calls satisfy this one — which
+   * passes, and is the failure nothing catches.
    */
   const suite = fakeSuite();
-  writeLog(suite.metaUrl, 'open-draft', [{ argv: ['pr', 'create', '--draft'] }]);
-  writeLog(suite.metaUrl, 'promote-ready', [{ argv: ['pr', 'ready', '44'] }]);
+  writeLog(suite.metaUrl, 'run-1', [{ argv: ['pr', 'create', '--draft'] }]);
+  writeLog(suite.metaUrl, 'run-2', [{ argv: ['pr', 'ready', '44'] }]);
 
   const assertion = callExpectationAssertion({ metaUrl: suite.metaUrl });
 
   const result = assertion(undefined, {
+    metadata: ranAs('run-2'),
     vars: { requireCalls: [['pr create']], scenario: 'promote-ready' },
   });
 
   expect(result.pass).toBe(false);
+});
+
+test('a response no run provider answered is refused, not read as no calls', ({
+  expect,
+}) => {
+  /*
+   * With no run to name there is no log, and reading none as empty fails every
+   * required call while every forbidden one passes unchecked.
+   */
+  const assertion = callExpectationAssertion({ metaUrl: fakeSuite().metaUrl });
+
+  expect(() => assertion(undefined, {
+    metadata: { sessionId: 's' },
+    vars: { forbidCalls: [['pr merge']], scenario: 'open-draft' },
+  })).toThrow('no run id in the response metadata');
 });
 
 /**
@@ -224,7 +250,7 @@ test('commits are counted from the recorded baseline, not from the branch point'
   const scenario = 'review-feedback';
   const { baselines, workspace } = seededScenario(scenario, 2);
   const suite = fakeSuite();
-  writeLog(suite.metaUrl, scenario, [{ argv: ['pr', 'view', '23'] }]);
+  writeLog(suite.metaUrl, 'run-1', [{ argv: ['pr', 'view', '23'] }]);
 
   const assertion = callExpectationAssertion({
     outcomeChecks: [commitCountCheck({ baselinesPath: () => baselines })],
@@ -232,9 +258,11 @@ test('commits are counted from the recorded baseline, not from the branch point'
   });
 
   withWorkspace(workspace, () => {
-    expect(assertion(undefined, { vars: { minCommits: 2, scenario } }).pass).toBe(true);
+    const metadata = ranAs('run-1');
 
-    const short = assertion(undefined, { vars: { minCommits: 3, scenario } });
+    expect(assertion(undefined, { metadata, vars: { minCommits: 2, scenario } }).pass).toBe(true);
+
+    const short = assertion(undefined, { metadata, vars: { minCommits: 3, scenario } });
 
     expect(short.pass).toBe(false);
     expect(short.reason).toContain('added 2 commit(s)');
@@ -252,7 +280,7 @@ test('a baselines manifest that was never written fails the scenario, not the ru
    * check with a seeder that records no tips would hit exactly that.
    */
   const suite = fakeSuite();
-  writeLog(suite.metaUrl, 'review-feedback', [{ argv: ['pr', 'view', '23'] }]);
+  writeLog(suite.metaUrl, 'run-1', [{ argv: ['pr', 'view', '23'] }]);
   const absentDir = mkdtempSync(path.join(tmpdir(), 'absent-'));
   const missing = path.join(absentDir, 'nothing.json');
 
@@ -262,6 +290,7 @@ test('a baselines manifest that was never written fails the scenario, not the ru
   });
 
   const result = assertion(undefined, {
+    metadata: ranAs('run-1'),
     vars: { minCommits: 2, scenario: 'review-feedback' },
   });
 
@@ -279,7 +308,7 @@ test('a scenario with no recorded baseline says so rather than reporting none ad
    */
   const { baselines, workspace } = seededScenario('review-feedback', 1);
   const suite = fakeSuite();
-  writeLog(suite.metaUrl, 'never-seeded', [{ argv: ['pr', 'view', '23'] }]);
+  writeLog(suite.metaUrl, 'run-1', [{ argv: ['pr', 'view', '23'] }]);
 
   const assertion = callExpectationAssertion({
     outcomeChecks: [commitCountCheck({ baselinesPath: () => baselines })],
@@ -288,6 +317,7 @@ test('a scenario with no recorded baseline says so rather than reporting none ad
 
   withWorkspace(workspace, () => {
     const result = assertion(undefined, {
+      metadata: ranAs('run-1'),
       vars: { minCommits: 2, scenario: 'never-seeded' },
     });
 

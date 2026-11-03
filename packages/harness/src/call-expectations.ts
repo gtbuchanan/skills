@@ -1,8 +1,8 @@
 /*
  * A promptfoo javascript assertion driven by per-test expectations.
  *
- * A suite's doubles append every invocation to a log under the suite's run
- * directory, carrying the body they were handed on standard input.
+ * A suite's doubles append every invocation to the log of the run that made it
+ * (see run-log.ts), carrying the body they were handed on standard input.
  * Almost everything a CLI-shaped skill governs shows up there: which flags a
  * merge carried, whether checks were watched, whether every feedback surface
  * was read, which threads were answered.
@@ -28,22 +28,18 @@
  *                    to read rather than what it says
  *
  * Matching is substring-based over the joined argv, and every check is
- * presence, absence or relative order rather than a count — so a shared log
- * stays safe across repeats, which the suite truncates per test anyway.
+ * presence, absence or relative order rather than a count.
  *
  * All of it reads the call log and nothing else. An expectation about the
  * world the run left behind — the commits it added, say — is a `checks` entry
  * a suite supplies, which is what keeps this usable by a suite whose scenarios
  * are not repositories.
  */
-import path from 'node:path';
 import { readCallRecords, readRefusals } from '@gtbuchanan/stub-runtime/calls';
-import { runLogPath } from '@gtbuchanan/stub-runtime/run-log';
 import * as v from 'valibot';
 import { fromProblems } from './assert.ts';
-import { suiteRunDir } from './paths.ts';
 import { type ReportedResult, reportRefusals } from './refusals.ts';
-import { runIdOf } from './run-log.ts';
+import { runLog } from './run-log.ts';
 
 const StringListSchema = v.array(v.string());
 const ClauseListSchema = v.array(StringListSchema);
@@ -282,25 +278,6 @@ export interface CallExpectationOptions {
 }
 
 /**
- * The log a test's calls were recorded in: its run's, when the run provider
- * answered (see run-provider.ts), and otherwise its scenario's.
- *
- * The scenario's log is for suites still on an agent's own provider, and goes
- * once none is. A run's log holds that call alone, where a scenario's holds
- * every repeat of the test.
- */
-export const callLogFor = (
-  metaUrl: string,
-  metadata: unknown,
-  scenario: string,
-): string => {
-  const runId = runIdOf(metadata);
-  return runId === undefined
-    ? path.join(suiteRunDir(metaUrl), `${scenario}.jsonl`)
-    : runLogPath(suiteRunDir(metaUrl), runId);
-};
-
-/**
  * A promptfoo assertion that the skill made the calls its rules require, in
  * the order they require, and none of the ones they forbid.
  *
@@ -313,7 +290,7 @@ export const callExpectationAssertion = (
 ): ((output: unknown, context: { metadata?: unknown; vars?: unknown }) => ReportedResult) =>
   (_output, context) => {
     const vars = v.parse(CallVarsSchema, context.vars ?? {});
-    const logFile = callLogFor(options.metaUrl, context.metadata, vars.scenario);
+    const logFile = runLog(options.metaUrl, context.metadata);
     const calls = readCallRecords(logFile).map(
       entry => ({ command: entry.argv.join(' '), stdin: entry.stdin ?? '' }),
     );

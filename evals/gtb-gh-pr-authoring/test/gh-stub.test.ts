@@ -28,6 +28,8 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { readCalls } from '@gtbuchanan/stub-runtime/calls';
+import { runLogPath, runVar } from '@gtbuchanan/stub-runtime/run-log';
 import { markerFile } from '@gtbuchanan/stub-runtime/scenario';
 import { test } from 'vitest';
 
@@ -103,6 +105,21 @@ const createPr = (dir: string): Run =>
     ['pr', 'create', '--draft', '--title', 'Back the retry off', '--body-file', '-'],
     'Filled-in template.\n',
   );
+
+test('a call is recorded in the log of the run that made it', ({ expect }) => {
+  /* The checker reads only that log, so a call recorded anywhere else is one
+     it never sees, body included. */
+  const logDir = mkdtempSync(path.join(tmpdir(), 'gh-stub-runs-'));
+  spawnSync(process.execPath, [stub, 'pr', 'create', '--draft', '--body-file', '-'], {
+    cwd: worldFor('open-draft'),
+    env: { ...process.env, STUB_LOG_DIR: logDir, [runVar]: 'run-1' },
+    input: 'Filled-in template.\n',
+  });
+
+  expect(readCalls(runLogPath(logDir, 'run-1'), 'gh')).toStrictEqual([
+    { command: 'pr create --draft --body-file -', stdin: 'Filled-in template.\n' },
+  ]);
+});
 
 test('an unnamed pr view answers for the branch the run just opened', ({ expect }) => {
   /*

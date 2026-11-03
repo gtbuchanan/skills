@@ -31,7 +31,7 @@ defaultTest:
 description: gtb-gh-pr-authoring — PR lifecycle against seeded repositories with a fake gh
 
 # Distinct tests are independent all the way down: each owns a checkout, and
-# the stubs key one call log per scenario, so nothing is shared for them to
+# every agent call logs to a run of its own, so nothing is shared for them to
 # race over. Every test is an agent session, and waiting on them is most of
 # this suite's runtime.
 #
@@ -54,23 +54,28 @@ prompts:
 
     When you are finished, briefly report what you did.
 
+# The harness's run provider gives every test a run id, which reaches the
+# doubles as STUB_RUN so each test's calls land in a log of their own. It runs
+# the agent named here, with agentConfig as that agent's provider config.
 providers:
   - config:
-      apiKeyRequired: false
-      append_allowed_tools:
-        - 'Bash(gh:*)'
-        - 'Bash(git:*)'
-        - 'Edit(scenarios/**)'
-        - 'Read(scenarios/**)'
-        - 'Write(scenarios/**)'
-      ask_user_question:
-        behavior: first_option
+      agent: claude-code
+      agentConfig:
+        apiKeyRequired: false
+        append_allowed_tools:
+          - 'Bash(gh:*)'
+          - 'Bash(git:*)'
+          - 'Edit(scenarios/**)'
+          - 'Read(scenarios/**)'
+          - 'Write(scenarios/**)'
+        ask_user_question:
+          behavior: first_option
 
-      path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
-      setting_sources: ['project']
-      skills: ['gtb-gh-pr-authoring', 'gtb-git-commit-conventions']
-      working_dir: '{{ env.EVAL_WORKSPACE }}'
-    id: anthropic:claude-agent-sdk
+        path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
+        setting_sources: ['project']
+        skills: ['gtb-gh-pr-authoring', 'gtb-git-commit-conventions']
+        working_dir: '{{ env.EVAL_WORKSPACE }}'
+    id: file://node_modules/@gtbuchanan/agent-skills-harness/src/run-provider.ts
     label: gtb-gh-pr-authoring
 tests:
   - description: opening — a draft PR whose body is the repository's template, filled in and piped

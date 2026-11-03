@@ -14,9 +14,8 @@
  */
 import { hermeticGitEnv, resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { passThrough } from '@gtbuchanan/stub-runtime/passthrough';
-import { argv, logCallToScenario } from '@gtbuchanan/stub-runtime/stub';
-import { scenarios } from '#src/scenarios.ts';
+import { argv, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
 
-logCallToScenario('git', scenarios);
+logCallToRun('git');
 
 process.exit(passThrough({ argv, binary: resolveRealGit(), env: hermeticGitEnv() }));

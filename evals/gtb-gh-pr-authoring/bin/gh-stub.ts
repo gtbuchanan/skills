@@ -5,8 +5,7 @@
  * It never reaches the network: it answers from the canned scenarios in
  * `src/scenarios.ts`, picking the world by walking up from the working
  * directory to the marker the seed dropped, and records every invocation to
- * that scenario's own log under $STUB_LOG_DIR. One log per scenario rather
- * than one for the suite is what lets the tests run concurrently.
+ * the log of the run that made it, so concurrent tests never share one.
  *
  * The body is why this logs more than argv. The skill is supposed to pass
  * prose on standard input (`--body-file -`), which keeps it out of the command
@@ -42,7 +41,7 @@ import { readState, writeState } from '@gtbuchanan/github-cli-stub/state';
 import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
 import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
 import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
-import { appendJsonl, argv, emit, joined } from '@gtbuchanan/stub-runtime/stub';
+import { argv, emit, joined, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
 import { scenarios } from '#src/scenarios.ts';
 
@@ -51,15 +50,9 @@ const stdin = stdinBody(argv);
 const located = locateScenario(scenarios, process.cwd());
 const scenario = located.scenario;
 
-/* Logged after the scenario is known, because the scenario is what names the
-   file: one log per checkout means concurrent tests never share a writer.
-   Unlike git-stub this is not defensive — a `gh` call outside every checkout
+/* Logged after the scenario is known: a `gh` call outside every checkout
    cannot be answered at all, so locateScenario has already thrown above. */
-const logDir = process.env['STUB_LOG_DIR'];
-const log = logDir === undefined
-  ? undefined
-  : path.join(logDir, `${scenario.key}.jsonl`);
-if (log !== undefined) appendJsonl(log, { argv, cmd: 'gh', stdin });
+const log = logCallToRun('gh', stdin);
 
 /**
  * Where this scenario's checkout keeps what earlier calls did.

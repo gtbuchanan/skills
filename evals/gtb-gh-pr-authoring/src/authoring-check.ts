@@ -3,8 +3,8 @@
  *
  * The matching itself is `@gtbuchanan/agent-skills-harness/call-expectations`: each
  * test states its rule as vars — which calls must appear, which must not, which
- * must precede which, what body was piped in — and the shared engine reads this
- * scenario's call log and judges them.
+ * must precede which, what body was piped in — and the shared engine reads the
+ * test's call log and judges them.
  *
  * The commit count is added rather than built in, because it is the one
  * expectation here that needs a repository and the engine deliberately knows

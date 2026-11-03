@@ -27,10 +27,11 @@ defaultTest:
 
 description: gtb-gh-reviewer-followup — merge gate via claude-agent-sdk with mocked deps
 
-# Serial for now. Each test's calls already land in a log of their own (see the
-# run provider below), so running them concurrently is a separate change.
+# Concurrent, because every agent call logs to a run of its own (see the run
+# provider below) and the doubles answer the same whatever ran before. That
+# holds for repeats of one test too, so `--repeat` needs no cap.
 evaluateOptions:
-  maxConcurrency: 1
+  maxConcurrency: 4
 
 extensions:
   - file://src/setup.ts:extensionHook

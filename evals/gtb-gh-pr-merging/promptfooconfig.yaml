@@ -31,8 +31,8 @@ defaultTest:
 description: gtb-gh-pr-merging — landing a pull request against seeded repositories with a fake gh
 
 # Distinct tests are independent all the way down: each owns a workspace, and
-# the stubs key one call log per scenario, so nothing is shared for them to race
-# over.
+# every agent call logs to a run of its own, so nothing is shared for them to
+# race over.
 #
 # `--repeat` is the exception and still needs `--max-concurrency 1` on the
 # command line: repeats of one test share that test's workspace, and would seed
@@ -53,23 +53,28 @@ prompts:
 
     When you are finished, briefly report what you did.
 
+# The harness's run provider gives every test a run id, which reaches the
+# doubles as STUB_RUN so each test's calls land in a log of their own. It runs
+# the agent named here, with agentConfig as that agent's provider config.
 providers:
   - config:
-      apiKeyRequired: false
-      append_allowed_tools:
-        - 'Bash(gh:*)'
-        - 'Bash(git:*)'
-        - 'Edit(scenarios/**)'
-        - 'Read(scenarios/**)'
-        - 'Write(scenarios/**)'
-      ask_user_question:
-        behavior: first_option
+      agent: claude-code
+      agentConfig:
+        apiKeyRequired: false
+        append_allowed_tools:
+          - 'Bash(gh:*)'
+          - 'Bash(git:*)'
+          - 'Edit(scenarios/**)'
+          - 'Read(scenarios/**)'
+          - 'Write(scenarios/**)'
+        ask_user_question:
+          behavior: first_option
 
-      path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
-      setting_sources: ['project']
-      skills: ['gtb-gh-pr-merging', 'gtb-git-commit-conventions']
-      working_dir: '{{ env.EVAL_WORKSPACE }}'
-    id: anthropic:claude-agent-sdk
+        path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
+        setting_sources: ['project']
+        skills: ['gtb-gh-pr-merging', 'gtb-git-commit-conventions']
+        working_dir: '{{ env.EVAL_WORKSPACE }}'
+    id: file://node_modules/@gtbuchanan/agent-skills-harness/src/run-provider.ts
     label: gtb-gh-pr-merging
 tests:
   - description: >-

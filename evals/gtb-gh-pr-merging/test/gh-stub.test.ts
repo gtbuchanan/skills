@@ -29,6 +29,8 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { readCalls } from '@gtbuchanan/stub-runtime/calls';
+import { runLogPath, runVar } from '@gtbuchanan/stub-runtime/run-log';
 import { markerFile } from '@gtbuchanan/stub-runtime/scenario';
 import { test } from 'vitest';
 
@@ -66,6 +68,21 @@ const gh = (dir: string, args: readonly string[], input = ''): Run => {
     stdout: result.stdout.trim(),
   };
 };
+
+test('a call is recorded in the log of the run that made it', ({ expect }) => {
+  /* The checker reads only that log, so a call recorded anywhere else is one
+     it never sees, squash body included. */
+  const logDir = mkdtempSync(path.join(tmpdir(), 'gh-stub-runs-'));
+  spawnSync(process.execPath, [stub, 'pr', 'merge', '7', '--squash', '--body-file', '-'], {
+    cwd: worldFor('merge-stacked'),
+    env: { ...process.env, STUB_LOG_DIR: logDir, [runVar]: 'run-1' },
+    input: 'Squashed.\n',
+  });
+
+  expect(readCalls(runLogPath(logDir, 'run-1'), 'gh')).toStrictEqual([
+    { command: 'pr merge 7 --squash --body-file -', stdin: 'Squashed.\n' },
+  ]);
+});
 
 test('a stack member is refused in the words that name the way in', ({ expect }) => {
   /*

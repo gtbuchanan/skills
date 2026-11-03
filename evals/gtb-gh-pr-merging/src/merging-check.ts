@@ -4,7 +4,7 @@
  * The matching is `@gtbuchanan/agent-skills-harness/call-expectations`: each
  * test states its rule as vars — which calls must appear, which must not,
  * which must precede which, what body was piped in — and the shared engine
- * reads this scenario's call log and judges them.
+ * reads the test's call log and judges them.
  *
  * No `outcomeChecks` here. Every rule this skill has shows up in what was
  * called and what was piped to it: the flags a merge carried, whether the

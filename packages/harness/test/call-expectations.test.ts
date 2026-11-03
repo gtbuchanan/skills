@@ -13,16 +13,20 @@
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
  */
+import path from 'node:path';
 import * as v from 'valibot';
 import { test } from 'vitest';
+import { fakeSuite } from './fake-suite.ts';
 import {
   CallVarsSchema,
+  callLogFor,
   checkForbiddenOrder,
   checkForbiddenStdin,
   checkOrder,
   checkStdin,
   checkStdinLength,
 } from '@gtbuchanan/agent-skills-harness/call-expectations';
+import { suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
 
 interface Call {
   readonly command: string;
@@ -33,6 +37,21 @@ const call = (command: string, stdin = ''): Call => ({ command, stdin });
 
 const varsOf = (declared: Record<string, unknown>): v.InferOutput<typeof CallVarsSchema> =>
   v.parse(CallVarsSchema, { scenario: 'merge-stacked', ...declared });
+
+test('reads the log of the run the response came from', ({ expect }) => {
+  // The scenario's log would also hold every repeat of this test's calls.
+  const { metaUrl } = fakeSuite();
+
+  expect(callLogFor(metaUrl, { runId: 'run-1' }, 'merge-stacked'))
+    .toBe(path.join(suiteRunDir(metaUrl), 'run-1.jsonl'));
+});
+
+test('reads the scenario\'s log for a suite not on the run provider', ({ expect }) => {
+  const { metaUrl } = fakeSuite();
+
+  expect(callLogFor(metaUrl, { sessionId: 's' }, 'merge-stacked'))
+    .toBe(path.join(suiteRunDir(metaUrl), 'merge-stacked.jsonl'));
+});
 
 const mergeBody = [
   { command: ['pr', 'merge'], includes: ['Co-authored-by:', 'rate limiter'] },

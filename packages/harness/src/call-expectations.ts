@@ -1,8 +1,8 @@
 /*
  * A promptfoo javascript assertion driven by per-test expectations.
  *
- * A suite's doubles append every invocation to a per-scenario log under the
- * suite's run directory, carrying the body they were handed on standard input.
+ * A suite's doubles append every invocation to a log under the suite's run
+ * directory, carrying the body they were handed on standard input.
  * Almost everything a CLI-shaped skill governs shows up there: which flags a
  * merge carried, whether checks were watched, whether every feedback surface
  * was read, which threads were answered.
@@ -38,10 +38,12 @@
  */
 import path from 'node:path';
 import { readCallRecords, readRefusals } from '@gtbuchanan/stub-runtime/calls';
+import { runLogPath } from '@gtbuchanan/stub-runtime/run-log';
 import * as v from 'valibot';
 import { fromProblems } from './assert.ts';
 import { suiteRunDir } from './paths.ts';
 import { type ReportedResult, reportRefusals } from './refusals.ts';
+import { runIdOf } from './run-log.ts';
 
 const StringListSchema = v.array(v.string());
 const ClauseListSchema = v.array(StringListSchema);
@@ -280,6 +282,25 @@ export interface CallExpectationOptions {
 }
 
 /**
+ * The log a test's calls were recorded in: its run's, when the run provider
+ * answered (see run-provider.ts), and otherwise its scenario's.
+ *
+ * The scenario's log is for suites still on an agent's own provider, and goes
+ * once none is. A run's log holds that call alone, where a scenario's holds
+ * every repeat of the test.
+ */
+export const callLogFor = (
+  metaUrl: string,
+  metadata: unknown,
+  scenario: string,
+): string => {
+  const runId = runIdOf(metadata);
+  return runId === undefined
+    ? path.join(suiteRunDir(metaUrl), `${scenario}.jsonl`)
+    : runLogPath(suiteRunDir(metaUrl), runId);
+};
+
+/**
  * A promptfoo assertion that the skill made the calls its rules require, in
  * the order they require, and none of the ones they forbid.
  *
@@ -289,16 +310,10 @@ export interface CallExpectationOptions {
  */
 export const callExpectationAssertion = (
   options: CallExpectationOptions,
-): ((output: unknown, context: { vars?: unknown }) => ReportedResult) =>
+): ((output: unknown, context: { metadata?: unknown; vars?: unknown }) => ReportedResult) =>
   (_output, context) => {
     const vars = v.parse(CallVarsSchema, context.vars ?? {});
-    /* This scenario's own log, not a shared one: the doubles key a file per
-       workspace, so a concurrent test's calls are never in here to be
-       matched. */
-    const logFile = path.join(
-      suiteRunDir(options.metaUrl),
-      `${vars.scenario}.jsonl`,
-    );
+    const logFile = callLogFor(options.metaUrl, context.metadata, vars.scenario);
     const calls = readCallRecords(logFile).map(
       entry => ({ command: entry.argv.join(' '), stdin: entry.stdin ?? '' }),
     );

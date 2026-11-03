@@ -13,10 +13,12 @@
  * it resolves the real binary explicitly rather than by name, and under an
  * environment no ambient config reaches.
  */
+import { isAgentRuntimeCall } from '@gtbuchanan/eval-agents/registry';
 import { hermeticGitEnv, resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { passThrough } from '@gtbuchanan/stub-runtime/passthrough';
 import { argv, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
 
-logCallToRun('git');
+// The agent runtime's own calls, such as Claude Code's at startup, are not the agent's.
+if (!isAgentRuntimeCall('git', argv)) logCallToRun('git');
 
 process.exit(passThrough({ argv, binary: resolveRealGit(), env: hermeticGitEnv() }));

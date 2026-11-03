@@ -39,3 +39,11 @@ test('a gh call is recorded in the log of the run that made it', ({ expect }) =>
 test('a git call is recorded in the log of the run that made it', ({ expect }) => {
   expect(readCommands(runDouble('git-stub', ['--version']), 'git')).toStrictEqual(['--version']);
 });
+
+test('a git call the agent runtime makes for itself is not recorded', ({ expect }) => {
+  /* Claude Code's startup calls are not the agent's, so a rule about what the
+     agent did must not be judged on them. */
+  const log = runDouble('git-stub', ['-c', 'core.hooksPath=/dev/null', '--version']);
+
+  expect(readCommands(log, 'git')).toStrictEqual([]);
+});

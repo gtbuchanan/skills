@@ -14,8 +14,11 @@
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
  */
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { test } from 'vitest';
-import { checkReport, scriptCallsFor } from '#src/backlog-check.ts';
+import { backlogAssertion, checkReport, scriptCallsFor } from '#src/backlog-check.ts';
 
 const runUrl =
   'https://dev.azure.com/example-org/default-project/_build/results?buildId=900999';
@@ -161,6 +164,27 @@ test('reads the script calls a run made against its pipeline, in order', ({ expe
     expect.objectContaining({ approveLatest: false, whatIf: true }),
     expect.objectContaining({ approveLatest: true, whatIf: false }),
   ]);
+});
+
+test('reports the calls the doubles refused beside the verdict', ({ expect }) => {
+  /*
+   * A refusal says the run reached something the doubles do not model, so a
+   * pass was earned past a gap. The auth-fail case asks `az pipelines show`,
+   * which the az double refuses.
+   */
+  const dir = mkdtempSync(path.join(tmpdir(), 'backlog-check-'));
+  const logPath = path.join(dir, 'run-1.jsonl');
+  const show = ['pipelines', 'show', '--id', '900911'];
+  writeFileSync(logPath, [
+    { argv: show, cmd: 'az' },
+    { argv: show, cmd: 'az', refusal: 'no canned response' },
+    { cmd: 'script', pipelineId: 900_911, whatIf: true },
+  ].map(entry => `${JSON.stringify(entry)}\n`).join(''));
+
+  const result = backlogAssertion(() => logPath)('', { vars: { pipelineId: 900_911 } });
+
+  expect(result).toMatchObject({ namedScores: { refusals: 1 } });
+  expect(result.reason).toContain('pipelines show --id 900911 (no canned response)');
 });
 
 test('skips the checks whose expectation is absent', ({ expect }) => {

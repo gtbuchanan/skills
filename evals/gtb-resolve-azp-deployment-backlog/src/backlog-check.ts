@@ -36,10 +36,10 @@
  * with the expected id is itself proof the agent resolved the name via
  * `az pipelines list` (it could not have guessed the id).
  */
-import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
+import { type ReportedResult, reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
 import { runLog } from '@gtbuchanan/agent-skills-harness/run-log';
-import { readJsonl } from '@gtbuchanan/stub-runtime/calls';
+import { readJsonl, readRefusals } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 
 /**
@@ -229,15 +229,17 @@ export const checkReport = (
 };
 
 /**
- * Asserts the skill dry-ran first and passed -ApproveLatest only when wanted.
+ * Asserts the skill dry-ran first and passed -ApproveLatest only when wanted,
+ * reading the log `logFor` names for the response's metadata.
  */
-export default function assertBacklogRuns(
+export const backlogAssertion = (logFor: (metadata: unknown) => string) => (
   output: unknown,
   context: { metadata?: unknown; vars?: unknown },
-): AssertionResult {
+): ReportedResult => {
   const vars = v.parse(VarsSchema, context.vars ?? {});
   const pipelineId = Number(vars.pipelineId);
-  const entries = readJsonl(runLog(import.meta.url, context.metadata), v.unknown());
+  const logPath = logFor(context.metadata);
+  const entries = readJsonl(logPath, v.unknown());
 
   const scriptCalls = scriptCallsFor(entries, pipelineId);
   const problems = [];
@@ -265,5 +267,7 @@ export default function assertBacklogRuns(
     typeof output === 'string' ? output : JSON.stringify(output ?? '');
   problems.push(...checkReport(text, vars));
 
-  return fromProblems(problems);
-}
+  return reportRefusals(fromProblems(problems), readRefusals(logPath));
+};
+
+export default backlogAssertion(metadata => runLog(import.meta.url, metadata));

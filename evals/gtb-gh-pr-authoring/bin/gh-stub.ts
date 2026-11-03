@@ -28,6 +28,7 @@ import path from 'node:path';
 import { branchAt } from '@gtbuchanan/git-fixtures/checkout';
 import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
 import { checksAnswer } from '@gtbuchanan/github-cli-stub/checks';
+import { mergeAnswer } from '@gtbuchanan/github-cli-stub/merge';
 import { prRecords, toWireComment } from '@gtbuchanan/github-cli-stub/pr-records';
 import {
   currentHead,
@@ -42,7 +43,7 @@ import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
 import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
 import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
 import { argv, emit, joined, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
-import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
+import { author, baseBranch, repoSlug, viewer } from '#src/repository.ts';
 import { scenarios } from '#src/scenarios.ts';
 
 const stdin = stdinBody(argv);
@@ -227,20 +228,19 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     matches: subcommand('pr', 'merge'),
     name: 'pr merge',
     respond: () => {
-      if (scenario.isStackMember === true) {
-        return {
-          code: 1,
-          stderr:
-            'pull request is part of a stack and must be merged using the ' +
-            'asynchronous merge REST API\n',
-        };
-      }
-
-      /* --auto only defers the merge when something is outstanding; nothing
-         here is, so it lands now and the record has to say so. */
-      const number = namedNumber() ?? impliedNumber(state, scenario, head());
-      writeState(statePath, { ...state, merged: [...state.merged, number] });
-      return { stdout: `✓ Merged pull request ${repoSlug}#${String(number)}\n` };
+      const merged = mergeAnswer({
+        argv,
+        body: stdin,
+        now: () => new Date().toISOString(),
+        number: () => namedNumber() ?? impliedNumber(state, scenario, head()),
+        repoSlug,
+        scenario,
+        state,
+        viewer: { login: viewer, name: author.name },
+      });
+      // Only a merge that happened leaves anything to persist.
+      if (merged.state !== state) writeState(statePath, merged.state);
+      return merged.response;
     },
   },
 ]);

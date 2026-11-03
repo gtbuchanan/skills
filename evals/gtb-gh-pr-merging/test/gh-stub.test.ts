@@ -16,7 +16,7 @@
  * The other two cases are the worlds this suite exists for. A stack member has
  * to be refused in the words gh uses, because that refusal is the only way the
  * skill discovers the stack — `pr list` does not report membership. And
- * `--auto` has to defer rather than merge while the checks are pending, since
+ * `--auto` has to wait rather than merge while the checks are pending, since
  * a double that merges on the spot makes the scenario's premise untrue.
  *
  * Driven as a subprocess rather than by importing the module: the stub's whole
@@ -105,20 +105,32 @@ test('a pull request outside a stack merges rather than being refused', ({ expec
    */
   const result = gh(worldFor('merge-stacked'), ['pr', 'merge', '7', '--squash']);
 
-  expect(result.status).toBe(0);
-  expect(result.stdout).toContain('Merged pull request');
+  /* gh prints its success line only to a terminal, and an agent's shell is not
+     one, so a merge that lands says nothing. */
+  expect(result).toStrictEqual({ status: 0, stderr: '', stdout: '' });
 });
 
-test('auto-merge on a pending world defers instead of reporting a merge', ({ expect }) => {
-  /*
-   * `--auto` only defers while something is outstanding. A double that reports
-   * an immediate merge contradicts the task the scenario set, and the run then
-   * reasonably stops looking for the thing it was asked to arrange.
-   */
+test('auto-merge on a pending world answers with nothing', ({ expect }) => {
+  // gh prints its line about waiting only to a terminal.
   const result = gh(worldFor('auto-merge'), ['pr', 'merge', '31', '--auto', '--squash']);
 
-  expect(result.status).toBe(0);
-  expect(result.stdout).toContain('will be automatically merged');
+  expect(result).toStrictEqual({ status: 0, stderr: '', stdout: '' });
+});
+
+test('an auto-merge on a pending world is what pr view reports next', {
+  tags: ['slow'],
+}, ({ expect }) => {
+  /*
+   * `--auto` only waits while something blocks the merge. It answers with
+   * nothing either way, so the request read back is the only sign it took — a
+   * double reporting no request leaves the run believing it arranged nothing.
+   */
+  const dir = worldFor('auto-merge');
+  gh(dir, ['pr', 'merge', '31', '--auto', '--squash']);
+
+  expect(
+    ghJson(dir, ['pr', 'view', '31', '--json', 'autoMergeRequest']),
+  ).toMatchObject({ autoMergeRequest: { mergeMethod: 'SQUASH' } });
 });
 
 test('a command no merge scenario motivates is refused, not answered', ({ expect }) => {

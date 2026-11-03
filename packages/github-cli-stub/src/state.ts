@@ -29,9 +29,42 @@ export interface OpenedPr {
 }
 
 /**
+ * A GitHub account, as far as a scenario models one.
+ */
+export interface Account {
+  readonly login: string;
+  readonly name: string;
+}
+
+/**
+ * An auto-merge `pr merge --auto` enabled on a pull request that could not
+ * merge yet, as GitHub keeps it until the merge happens.
+ */
+export interface AutoMerge {
+  /**
+   * The squash body, where the call gave one.
+   */
+  readonly commitBody?: string | undefined;
+  /**
+   * `--subject`, where the call gave one.
+   */
+  readonly commitHeadline?: string | undefined;
+  readonly enabledAt: string;
+  /**
+   * The account that enabled it.
+   */
+  readonly enabledBy: Account;
+  readonly mergeMethod: 'MERGE' | 'REBASE' | 'SQUASH';
+}
+
+/**
  * Everything earlier calls did that a later one has to agree with.
  */
 export interface State {
+  /**
+   * Auto-merges waiting on something, by pull request number.
+   */
+  readonly autoMerge: Record<string, AutoMerge>;
   readonly merged: number[];
   readonly opened: Record<string, OpenedPr>;
   readonly ready: number[];
@@ -43,6 +76,7 @@ export interface State {
 }
 
 export const emptyState: State = {
+  autoMerge: {},
   merged: [],
   opened: {},
   ready: [],
@@ -71,7 +105,18 @@ const NumberListSchema = v.array(v.number());
 const OpenedMapSchema = v.record(PrNumberKeySchema, OpenedPrSchema);
 const BaseMapSchema = v.record(v.string(), v.string());
 
+const AutoMergeSchema = v.object({
+  commitBody: v.optional(v.string()),
+  commitHeadline: v.optional(v.string()),
+  enabledAt: v.string(),
+  enabledBy: v.object({ login: v.string(), name: v.string() }),
+  mergeMethod: v.picklist(['MERGE', 'REBASE', 'SQUASH']),
+});
+
+const AutoMergeMapSchema = v.record(PrNumberKeySchema, AutoMergeSchema);
+
 const StateSchema = v.object({
+  autoMerge: v.optional(AutoMergeMapSchema, {}),
   merged: v.optional(NumberListSchema, []),
   opened: v.optional(OpenedMapSchema, {}),
   ready: v.optional(NumberListSchema, []),

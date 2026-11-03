@@ -27,7 +27,7 @@
 import path from 'node:path';
 import { branchAt } from '@gtbuchanan/git-fixtures/checkout';
 import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
-import { checkRecord } from '@gtbuchanan/github-cli-stub/checks';
+import { checksAnswer } from '@gtbuchanan/github-cli-stub/checks';
 import { prRecords, toWireComment } from '@gtbuchanan/github-cli-stub/pr-records';
 import {
   currentHead,
@@ -83,61 +83,10 @@ const flagValue = (flag: string): string | undefined => {
 };
 
 /**
- * gh's documented exit status for checks that have not finished.
- */
-const checksPendingExit = 8;
-
-const checks = checksFor(scenario);
-
-/**
  * `gh` prints a bare scalar when `--jq` selects one, and JSON otherwise. This
  * does not run jq, so it emulates the selections the skill actually makes.
  */
 const isSelectsBody = joined.includes('.body');
-
-const checksResponse = (): { code?: number; stderr?: string; stdout: string } => {
-  if (checks.length === 0) {
-    /* An empty list is a failure to gh, not a pass: it says so on stderr and
-       exits 1. The skill has a rule about not reading that as red, so a double
-       answering "All checks were successful" here would deny a scenario the
-       one state that rule is about — and `[].every()` is true, so the success
-       branch below would claim it. */
-    return {
-      code: 1,
-      stderr: `no checks reported on the '${scenario.branch}' branch\n`,
-      stdout: '',
-    };
-  }
-
-  const rows = checks.map(check => checkRecord(check, { repoSlug }));
-  const isPending = checks.some(check => check.bucket === 'pending');
-  /* A scenario whose task says the checks are still running has to say so
-     here too, or the agent reads the contradiction and acts on the world. */
-  const code = isPending ? checksPendingExit : 0;
-
-  if (requestedFields(argv).kind !== 'all') {
-    /* `--jq` is not evaluated here — this double has no jq — so a call that
-       asked for one gets the selected fields and reads them itself. That is
-       more than it asked for, which is normally this file's cardinal sin; it
-       is allowed only because the alternative is guessing at an expression the
-       skill does not fix, and the fields themselves are still narrowed. */
-    const selected = rows.map(row => pick(row, requestedFields(argv)));
-    return { code, stdout: `${JSON.stringify(selected)}\n` };
-  }
-
-  if (checks.every(check => check.bucket === 'pass'))
-    return { code, stdout: 'All checks were successful\n' };
-
-  return {
-    code,
-    stdout: rows
-      .map(row =>
-        [row['name'], row['bucket'], '0', row['link'], row['description']].join('\t'),
-      )
-      .map(line => `${line}\n`)
-      .join(''),
-  };
-};
 
 const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
   {
@@ -173,7 +122,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
   {
     matches: subcommand('pr', 'checks'),
     name: 'pr checks',
-    respond: checksResponse,
+    respond: () => checksAnswer(checksFor(scenario), { argv, branch: scenario.branch, repoSlug }),
   },
   {
     matches: subcommand('pr', 'view'),

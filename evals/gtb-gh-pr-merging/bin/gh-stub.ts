@@ -26,7 +26,7 @@
 import path from 'node:path';
 import { branchAt } from '@gtbuchanan/git-fixtures/checkout';
 import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
-import { checkRecord } from '@gtbuchanan/github-cli-stub/checks';
+import { checksAnswer } from '@gtbuchanan/github-cli-stub/checks';
 import { prRecords } from '@gtbuchanan/github-cli-stub/pr-records';
 import { currentHead, impliedNumber } from '@gtbuchanan/github-cli-stub/pulls';
 import { checksFor } from '@gtbuchanan/github-cli-stub/scenario-world';
@@ -76,13 +76,6 @@ const flagValue = (flag: string): string | undefined => {
   return at === -1 ? undefined : argv[at + 1];
 };
 
-/**
- * gh's documented exit status for checks that have not finished.
- */
-const checksPendingExit = 8;
-
-const checks = checksFor(scenario);
-
 const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
   {
     matches: subcommand('repo', 'view'),
@@ -109,28 +102,7 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
   {
     matches: subcommand('pr', 'checks'),
     name: 'pr checks',
-    respond: () => {
-      const rows = checks.map(check => checkRecord(check, { repoSlug }));
-      const isPending = checks.some(check => check.bucket === 'pending');
-      /* A scenario whose task says the checks are still running has to say so
-         here too, or the agent reads the contradiction and acts on the world
-         rather than on what it was asked. */
-      const code = isPending ? checksPendingExit : 0;
-
-      if (requestedFields(argv).kind !== 'all') {
-        const narrowed = rows.map(row => pick(row, requestedFields(argv)));
-        return { code, stdout: `${JSON.stringify(narrowed)}\n` };
-      }
-
-      return checks.every(check => check.bucket === 'pass')
-        ? { code, stdout: 'All checks were successful\n' }
-        : {
-            code,
-            stdout: rows
-              .map(row => `${String(row['name'])}\t${String(row['bucket'])}\n`)
-              .join(''),
-          };
-    },
+    respond: () => checksAnswer(checksFor(scenario), { argv, branch: scenario.branch, repoSlug }),
   },
   {
     matches: subcommand('pr', 'view'),

@@ -18,7 +18,6 @@ import {
   artifactPath,
   repoRoot,
   skillsRoot,
-  suiteCallLog,
   suiteDir,
   suiteName,
 } from '@gtbuchanan/agent-skills-harness/paths';
@@ -160,10 +159,4 @@ test('suiteName derives the skill from the suite, not the file beside it', ({ ex
   const { nested } = suiteTree();
 
   expect(suiteName(fileUrlIn(nested))).toBe(suite);
-});
-
-test('suiteCallLog keys the log by suite, under the artifact dir', ({ expect }) => {
-  const { nested } = suiteTree();
-
-  expect(suiteCallLog(fileUrlIn(nested))).toBe(artifactPath(`${suite}.calls.jsonl`));
 });

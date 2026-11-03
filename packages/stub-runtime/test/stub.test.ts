@@ -30,127 +30,15 @@ import { parseJson } from '@gtbuchanan/stub-runtime/calls';
 import type { StubAnswer } from '@gtbuchanan/stub-runtime/dispatch';
 import { runLogPath } from '@gtbuchanan/stub-runtime/run-log';
 import {
-  logCall,
   logCallToRun,
   recordOutcome,
   runLogInFlight,
 } from '@gtbuchanan/stub-runtime/stub';
 
 /**
- * A log for one case, pointed at by $STUB_LOG. Disposable because that variable
- * is process-wide, so a failing case would otherwise leave it to the next one.
- */
-const stubLog = (): Disposable & {
-  readonly entries: () => unknown[];
-  readonly path: string;
-} => {
-  const dir = mkdtempSync(path.join(tmpdir(), 'stub-'));
-  const logPath = path.join(dir, 'calls.jsonl');
-  const previous = process.env['STUB_LOG'];
-  process.env['STUB_LOG'] = logPath;
-
-  return {
-    entries: () =>
-      readFileSync(logPath, 'utf8').split('\n').filter(Boolean).map(parseJson),
-    path: logPath,
-    [Symbol.dispose]: () => {
-      if (previous === undefined) delete process.env['STUB_LOG'];
-      else process.env['STUB_LOG'] = previous;
-    },
-  };
-};
-
-test('a stub that never read stdin says nothing about it', ({ expect }) => {
-  using log = stubLog();
-
-  logCall('gh');
-  const entries = log.entries();
-
-  expect(entries).toHaveLength(1);
-  expect(entries[0]).toHaveProperty('cmd', 'gh');
-  expect(entries[0]).not.toHaveProperty('stdin');
-});
-
-test('a stub that read stdin and found nothing says so', ({ expect }) => {
-  using log = stubLog();
-
-  logCall('gh', '');
-
-  expect(log.entries()[0]).toHaveProperty('stdin', '');
-});
-
-test('a body the stub was handed is recorded', ({ expect }) => {
-  using log = stubLog();
-
-  logCall('gh', 'Applied in 2f8665e.');
-
-  expect(log.entries()[0]).toHaveProperty('stdin', 'Applied in 2f8665e.');
-});
-
-test('a caller that set no log has nothing written for it', ({ expect }) => {
-  using log = stubLog();
-  delete process.env['STUB_LOG'];
-
-  logCall('gh', 'dropped');
-
-  expect(existsSync(log.path)).toBe(false);
-});
-
-test('recording a call names the log it went to', ({ expect }) => {
-  // Which is where the outcome of that call has to be recorded too.
-  using log = stubLog();
-
-  expect(logCall('gh')).toBe(log.path);
-});
-
-test('recording a call with no log names none', ({ expect }) => {
-  using log = stubLog();
-  delete process.env['STUB_LOG'];
-
-  expect(logCall('gh')).toBeUndefined();
-  expect(existsSync(log.path)).toBe(false);
-});
-
-const refused = {
-  call: { argv: ['pr', 'diff'], cmd: 'gh', stdin: '' },
-  code: 1,
-  kind: 'refused',
-  reason: 'no canned response',
-  stderr: 'gh-stub: no canned response\n',
-  stdout: '',
-} as const;
-
-test('a refusal is recorded in the log of the call it refused', ({ expect }) => {
-  using log = stubLog();
-
-  recordOutcome(refused, log.path);
-
-  expect(log.entries()).toStrictEqual([
-    { argv: ['pr', 'diff'], cmd: 'gh', refusal: 'no canned response' },
-  ]);
-});
-
-test('an answer adds nothing to the log', ({ expect }) => {
-  /* The call itself was recorded when it arrived; an answer says nothing about
-     the double that a checker needs to know. */
-  using log = stubLog();
-
-  recordOutcome({ code: 0, kind: 'answered', stderr: '', stdout: 'ok' }, log.path);
-
-  expect(existsSync(log.path)).toBe(false);
-});
-
-test('a refusal with no log to go to is passed over', ({ expect }) => {
-  // On the same terms as an unlogged call: the double still answers.
-  expect(() => {
-    recordOutcome(refused, undefined);
-  }).not.toThrow();
-});
-
-/**
  * A run in flight: $STUB_LOG_DIR and $STUB_RUN set as the run provider sets
- * them for the agent's commands. Disposable for the same reason as
- * {@link stubLog}.
+ * them for the agent's commands. Disposable because both variables are
+ * process-wide, so a failing case would otherwise leave them to the next one.
  */
 const activeRun = (runId: string | undefined): Disposable & { readonly logDir: string } => {
   const root = mkdtempSync(path.join(tmpdir(), 'run-'));
@@ -170,6 +58,75 @@ const activeRun = (runId: string | undefined): Disposable & { readonly logDir: s
     },
   };
 };
+
+/**
+ * The lines in the log at `logPath`, parsed.
+ */
+const entriesOf = (logPath: string): unknown[] =>
+  readFileSync(logPath, 'utf8').split('\n').filter(Boolean).map(parseJson);
+
+test('a stub that never read stdin says nothing about it', ({ expect }) => {
+  using run = activeRun('run-1');
+
+  logCallToRun('gh');
+  const entries = entriesOf(runLogPath(run.logDir, 'run-1'));
+
+  expect(entries).toHaveLength(1);
+  expect(entries[0]).toHaveProperty('cmd', 'gh');
+  expect(entries[0]).not.toHaveProperty('stdin');
+});
+
+test('a stub that read stdin and found nothing says so', ({ expect }) => {
+  using run = activeRun('run-1');
+
+  logCallToRun('gh', '');
+
+  expect(entriesOf(runLogPath(run.logDir, 'run-1'))[0]).toHaveProperty('stdin', '');
+});
+
+const refused = {
+  call: { argv: ['pr', 'diff'], cmd: 'gh', stdin: '' },
+  code: 1,
+  kind: 'refused',
+  reason: 'no canned response',
+  stderr: 'gh-stub: no canned response\n',
+  stdout: '',
+} as const;
+
+/**
+ * A path for a log that does not exist yet.
+ */
+const freshLog = (): string => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'stub-'));
+  return path.join(dir, 'run-1.jsonl');
+};
+
+test('a refusal is recorded in the log of the call it refused', ({ expect }) => {
+  const logPath = freshLog();
+
+  recordOutcome(refused, logPath);
+
+  expect(entriesOf(logPath)).toStrictEqual([
+    { argv: ['pr', 'diff'], cmd: 'gh', refusal: 'no canned response' },
+  ]);
+});
+
+test('an answer adds nothing to the log', ({ expect }) => {
+  /* The call itself was recorded when it arrived; an answer says nothing about
+     the double that a checker needs to know. */
+  const logPath = freshLog();
+
+  recordOutcome({ code: 0, kind: 'answered', stderr: '', stdout: 'ok' }, logPath);
+
+  expect(existsSync(logPath)).toBe(false);
+});
+
+test('a refusal with no log to go to is passed over', ({ expect }) => {
+  // On the same terms as an unlogged call: the double still answers.
+  expect(() => {
+    recordOutcome(refused, undefined);
+  }).not.toThrow();
+});
 
 test('a call is recorded in the log of the run it was made in', ({ expect }) => {
   using run = activeRun('run-1');

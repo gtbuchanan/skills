@@ -58,8 +58,8 @@ interface Run {
 /**
  * One `gh` invocation against a seeded checkout, as the agent would make it.
  *
- * STUB_LOG is deliberately left unset: the call log is the checker's input, and
- * nothing here is asserting about it.
+ * No run is set, so nothing is recorded: the call log is the checker's input,
+ * and these cases are asserting about the answer.
  */
 const gh = (dir: string, args: readonly string[], input = ''): Run => {
   const result = spawnSync(process.execPath, [stub, ...args], {

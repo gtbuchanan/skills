@@ -99,14 +99,7 @@ export const suiteName = (metaUrl: string): string =>
   path.basename(suiteDir(metaUrl));
 
 /**
- * The append-only stub call log for the calling suite.
- */
-export const suiteCallLog = (metaUrl: string): string =>
-  artifactPath(`${suiteName(metaUrl)}.calls.jsonl`);
-
-/**
- * The per-run log directory for suites whose doubles key one file per test
- * instead of appending to a single shared log.
+ * The directory of the calling suite's run logs (see run-log.ts).
  */
 export const suiteRunDir = (metaUrl: string): string =>
   artifactPath(`${suiteName(metaUrl)}.runs`);

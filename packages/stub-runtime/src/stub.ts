@@ -6,7 +6,7 @@
  * Logging is best-effort by design — a stub must never fail the call it is
  * standing in for just because it could not write its own log.
  *
- * `STUB_LOG` and `STUB_LOG_DIR` name where a call is recorded: a convention
+ * `STUB_LOG_DIR` and `STUB_RUN` name where a call is recorded: a convention
  * between whoever installs the stub and whoever reads the log, not something
  * the code under test knows about. Unset, a stub records nothing and still
  * answers.
@@ -51,26 +51,6 @@ export const appendJsonl = (filePath: string, entry: unknown): void => {
 };
 
 /**
- * Records this invocation to $STUB_LOG, tagged with the command it fakes.
- * Silently does nothing when no log was set.
- *
- * `stdin` is what the call was handed on standard input, for the CLIs that take
- * prose there — it never appears in argv, so a log without it cannot tell a
- * filled-in body from an absent one. It is omitted rather than defaulted so a
- * stub that does not read stdin says nothing about it, instead of recording an
- * empty body it never looked for.
- *
- * Returns the log written to, which is where {@link emit} records how the call
- * was answered, or `undefined` when there was none.
- */
-export const logCall = (cmd: string, stdin?: string): string | undefined => {
-  const stubLog = process.env['STUB_LOG'];
-  if (!stubLog) return undefined;
-  appendJsonl(stubLog, stdin === undefined ? { argv, cmd } : { argv, cmd, stdin });
-  return stubLog;
-};
-
-/**
  * The log of the run this invocation was made in, named by $STUB_RUN under
  * $STUB_LOG_DIR (see run-log.ts), or `undefined` when either is unset.
  */
@@ -82,8 +62,17 @@ export const runLogInFlight = (): string | undefined => {
 
 /**
  * Records this invocation into the log of the run it was made in (see
- * {@link runLogInFlight}). Records nothing outside a run. Takes `stdin` and
- * returns the log written to, as {@link logCall} does.
+ * {@link runLogInFlight}), tagged with the command it fakes. Records nothing
+ * outside a run.
+ *
+ * `stdin` is what the call was handed on standard input, for the CLIs that take
+ * prose there — it never appears in argv, so a log without it cannot tell a
+ * filled-in body from an absent one. It is omitted rather than defaulted so a
+ * stub that does not read stdin says nothing about it, instead of recording an
+ * empty body it never looked for.
+ *
+ * Returns the log written to, which is where {@link emit} records how the call
+ * was answered, or `undefined` when there was none.
  */
 export const logCallToRun = (cmd: string, stdin?: string): string | undefined => {
   const logPath = runLogInFlight();

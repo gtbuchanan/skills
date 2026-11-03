@@ -3,8 +3,8 @@
  * Fake `gh` for this eval. The dependent skills are mocked, so
  * the only real GitHub calls are the ones the orchestrator makes itself — the
  * happy-path `pr review --approve` and `pr merge --squash`. This logs every
- * invocation (argv) to $STUB_LOG so followup-check.ts can assert the merge gate
- * fired (or held) correctly.
+ * invocation (argv) to the log of the run that made it, so followup-check.ts can
+ * assert the merge gate fired (or held) correctly.
  *
  * Anything else is refused rather than answered. An empty `{}` with exit 0 does
  * not read as "I don't know" — it reads as "there is nothing here", and an

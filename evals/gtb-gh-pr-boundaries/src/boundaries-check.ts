@@ -20,8 +20,9 @@
  */
 import path from 'node:path';
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { skillsRoot, suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
+import { skillsRoot } from '@gtbuchanan/agent-skills-harness/paths';
 import { type ReportedResult, reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
+import { runLog } from '@gtbuchanan/agent-skills-harness/run-log';
 import { readState } from '@gtbuchanan/github-cli-stub/state';
 import { readCallRecords, readRefusals } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
@@ -42,13 +43,13 @@ const commitCall = /\bcommit\b/v;
  */
 export default function assertBoundaries(
   _output: unknown,
-  context: { vars?: unknown },
+  context: { metadata?: unknown; vars?: unknown },
 ): ReportedResult {
   const vars = v.parse(VarsSchema, context.vars ?? {});
 
-  /* One chronological stream. Splitting it by command is what loses the
-     ordering the third rule is about. */
-  const logFile = path.join(suiteRunDir(import.meta.url), `${vars.scenario}.jsonl`);
+  /* One chronological stream, the run's own. Splitting it by command is what
+     loses the ordering the third rule is about. */
+  const logFile = runLog(import.meta.url, context.metadata);
   const calls = readCallRecords(logFile).map(call => ({
     cmd: call.cmd,
     line: call.argv.join(' '),

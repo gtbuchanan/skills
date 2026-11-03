@@ -24,18 +24,16 @@ import { readState, writeState } from '@gtbuchanan/github-cli-stub/state';
 import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
 import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
 import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
-import { appendJsonl, argv, emit } from '@gtbuchanan/stub-runtime/stub';
+import { argv, emit, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
 import { scenarios } from '#src/scenarios.ts';
 
 const located = locateScenario(scenarios, process.cwd());
 const scenario = located.scenario;
 
-const logDir = process.env['STUB_LOG_DIR'];
-const log = logDir === undefined
-  ? undefined
-  : path.join(logDir, `${scenario.key}.jsonl`);
-if (log !== undefined) appendJsonl(log, { argv, cmd: 'gh', stdin: '' });
+/* Logged after the scenario is known: a `gh` call outside every checkout
+   cannot be answered at all, so locateScenario has already thrown above. */
+const log = logCallToRun('gh', '');
 
 const statePath = path.join(located.dir, '.eval-state.json');
 const state = readState(statePath);

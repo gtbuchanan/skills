@@ -16,6 +16,8 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { readCommands } from '@gtbuchanan/stub-runtime/calls';
+import { runLogPath, runVar } from '@gtbuchanan/stub-runtime/run-log';
 import { markerFile } from '@gtbuchanan/stub-runtime/scenario';
 import { test } from 'vitest';
 
@@ -41,6 +43,19 @@ const create = (dir: string, head: string): string =>
     [stub, 'pr', 'create', '--draft', '--head', head, '--title', head, '--body', ''],
     { cwd: dir, encoding: 'utf8' },
   ).stdout.trim();
+
+test('a call is recorded in the log of the run that made it', ({ expect }) => {
+  /* The checker orders creates against commits from that log alone, so a
+     create recorded anywhere else is one it never sees. */
+  const logDir = mkdtempSync(path.join(tmpdir(), 'gh-stub-runs-'));
+  spawnSync(process.execPath, [stub, 'pr', 'create', '--draft', '--head', 'fix-parser'], {
+    cwd: worldFor('two-units'),
+    env: { ...process.env, STUB_LOG_DIR: logDir, [runVar]: 'run-1' },
+  });
+
+  expect(readCommands(runLogPath(logDir, 'run-1'), 'gh'))
+    .toStrictEqual(['pr create --draft --head fix-parser']);
+});
 
 test('each pull request opened gets a number of its own', ({ expect }) => {
   const dir = worldFor('two-units');

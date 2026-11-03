@@ -20,6 +20,7 @@ catalog:
   # itself is `os: [android]`, so every other platform skips it and keeps the
   # real binding.
   '@libsql/android-arm64': npm:@gtbuchanan/libsql-termux-shim@0.1.1
+  '@octokit/graphql-schema': 15.26.1
   '@pnpm/lockfile.types': 1100.1.1
   '@types/cross-spawn': 6.0.6
   '@types/node': 26.2.0
@@ -27,6 +28,7 @@ catalog:
   cross-spawn: 7.0.6
   eslint: 10.8.1
   find-up-simple: 1.0.1
+  graphql: 17.0.2
   jiti: 2.7.0
   promptfoo: 0.122.0
   skills: 1.5.22

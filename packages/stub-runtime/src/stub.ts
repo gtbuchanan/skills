@@ -22,8 +22,6 @@ import { appendFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import type { StubOutcome } from './dispatch.ts';
 import { runLogPath, runVar } from './run-log.ts';
-import { locateScenario } from './scenario.ts';
-import type { Keyed } from './scenario.ts';
 
 /**
  * `process.argv` leads with the node binary and the stub itself.
@@ -73,19 +71,6 @@ export const logCall = (cmd: string, stdin?: string): string | undefined => {
 };
 
 /**
- * Records this invocation into $STUB_LOG_DIR under `fileName`, for callers that
- * key one log file per test rather than sharing one. Returns the log written
- * to, as {@link logCall} does.
- */
-export const logCallToDir = (cmd: string, fileName: string): string | undefined => {
-  const logDir = process.env['STUB_LOG_DIR'];
-  if (!logDir) return undefined;
-  const logPath = path.join(logDir, fileName);
-  appendJsonl(logPath, { argv, cmd });
-  return logPath;
-};
-
-/**
  * The log of the run this invocation was made in, named by $STUB_RUN under
  * $STUB_LOG_DIR (see run-log.ts), or `undefined` when either is unset.
  */
@@ -105,44 +90,6 @@ export const logCallToRun = (cmd: string, stdin?: string): string | undefined =>
   if (logPath === undefined) return undefined;
   appendJsonl(logPath, stdin === undefined ? { argv, cmd } : { argv, cmd, stdin });
   return logPath;
-};
-
-/**
- * The key of the world `start` stands in, or `undefined` when nothing can
- * attribute it.
- */
-const scenarioKey = (
-  scenarios: readonly Keyed[],
-  start: string,
-): string | undefined => {
-  try {
-    return locateScenario(scenarios, start).scenario.key;
-  } catch {
-    return undefined;
-  }
-};
-
-/**
- * Records this invocation into the log named for the world it was made in —
- * one file per scenario, which is what lets a suite's tests run concurrently
- * without writing over each other's record.
- *
- * A call nothing can attribute is recorded nowhere rather than refused, on the
- * same terms as {@link appendJsonl}: a double must never fail the call it is
- * standing in for because it could not write its own log. `git --version` from
- * outside every seeded workspace is a legitimate call, and a passthrough
- * answers it. A double that has to know which world it is in to answer at all
- * should locate the scenario itself and let the failure stand.
- *
- * Returns the log written to, as {@link logCall} does.
- */
-export const logCallToScenario = (
-  cmd: string,
-  scenarios: readonly Keyed[],
-  start: string = process.cwd(),
-): string | undefined => {
-  const key = scenarioKey(scenarios, start);
-  return key === undefined ? undefined : logCallToDir(cmd, `${key}.jsonl`);
 };
 
 /**

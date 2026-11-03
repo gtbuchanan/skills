@@ -7,8 +7,8 @@
  * a confident answer about a body from a stub that never asked.
  *
  * Where a call is recorded matters for the same reason: suites that run
- * concurrently give each world its own log, so a call written to the wrong file
- * — or to a shared one — is evidence against a scenario that never made it.
+ * concurrently give each run its own log, so a call written to the wrong file
+ * — or to a shared one — is evidence against a test that never made it.
  *
  * Answering is pinned in a child process, since in-process there is nothing to
  * observe: the writes land on the runner's own streams and the exit never
@@ -22,24 +22,16 @@
  * setup's per-test assertion count sees it.
  */
 import { spawnSync } from 'node:child_process';
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  writeFileSync,
-} from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
 import { parseJson } from '@gtbuchanan/stub-runtime/calls';
 import type { StubAnswer } from '@gtbuchanan/stub-runtime/dispatch';
 import { runLogPath } from '@gtbuchanan/stub-runtime/run-log';
-import { markerFile } from '@gtbuchanan/stub-runtime/scenario';
 import {
   logCall,
   logCallToRun,
-  logCallToScenario,
   recordOutcome,
   runLogInFlight,
 } from '@gtbuchanan/stub-runtime/stub';
@@ -153,63 +145,6 @@ test('a refusal with no log to go to is passed over', ({ expect }) => {
   expect(() => {
     recordOutcome(refused, undefined);
   }).not.toThrow();
-});
-
-/**
- * A seeded workspace, with $STUB_LOG_DIR pointed at a log directory beside it.
- * Disposable for the same reason as {@link stubLog}: the variable is
- * process-wide, so a failing case would otherwise leave it to the next one.
- */
-const seededWorkspace = (key: string): Disposable & {
-  readonly dir: string;
-  readonly entries: (fileName: string) => unknown[];
-  readonly logDir: string;
-} => {
-  const root = mkdtempSync(path.join(tmpdir(), 'scenario-'));
-  const dir = path.join(root, 'checkout');
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(path.join(dir, markerFile), key);
-  const logDir = path.join(root, 'logs');
-  const previous = process.env['STUB_LOG_DIR'];
-  process.env['STUB_LOG_DIR'] = logDir;
-
-  return {
-    dir,
-    entries: fileName =>
-      readFileSync(path.join(logDir, fileName), 'utf8')
-        .split('\n')
-        .filter(Boolean)
-        .map(parseJson),
-    logDir,
-    [Symbol.dispose]: () => {
-      if (previous === undefined) delete process.env['STUB_LOG_DIR'];
-      else process.env['STUB_LOG_DIR'] = previous;
-    },
-  };
-};
-
-const scenarios = [{ key: 'ready-to-merge' }];
-
-test('a call is recorded under the world it was made in', ({ expect }) => {
-  using workspace = seededWorkspace('ready-to-merge');
-
-  /* From below the marker rather than beside it: the code under test moves
-     around inside its checkout, and the log it lands in must not. */
-  logCallToScenario('git', scenarios, path.join(workspace.dir, 'nested'));
-
-  expect(workspace.entries('ready-to-merge.jsonl')).toHaveLength(1);
-  expect(workspace.entries('ready-to-merge.jsonl')[0]).toHaveProperty('cmd', 'git');
-});
-
-test('a call nothing can attribute is passed over, not failed', ({ expect }) => {
-  using workspace = seededWorkspace('ready-to-merge');
-  const outside = mkdtempSync(path.join(tmpdir(), 'outside-'));
-
-  /* `git --version` from outside every seeded workspace is a legitimate call,
-     and a recorder that threw here would fail the call it stands in for. */
-  logCallToScenario('git', scenarios, outside);
-
-  expect(existsSync(workspace.logDir)).toBe(false);
 });
 
 /**

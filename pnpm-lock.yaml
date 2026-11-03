@@ -485,6 +485,9 @@ importers:
       '@gtbuchanan/agent-skills-harness':
         specifier: workspace:*
         version: link:../../packages/harness
+      '@gtbuchanan/eval-agents':
+        specifier: workspace:*
+        version: link:../../packages/eval-agents
       '@gtbuchanan/git-fixtures':
         specifier: workspace:*
         version: link:../../packages/git-fixtures

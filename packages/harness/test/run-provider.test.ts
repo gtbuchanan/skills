@@ -29,6 +29,7 @@ const agent: EvalAgent = {
   name: 'fake',
   providerId: 'fake:provider',
   runsProvider: () => false,
+  isOwnCall: () => false,
   withEnv: (config, env) => ({ ...config, injected: env }),
   workspaceFiles: () => ({}),
 };

@@ -25,6 +25,14 @@ export const claudeCode: EvalAgent = {
     sdkPackage: '@anthropic-ai/claude-agent-sdk',
   },
   gitBashVar: 'CLAUDE_CODE_GIT_BASH_PATH',
+  /*
+   * At startup the runtime asks git about the repository with hooks turned
+   * off, and asks where git keeps its helpers. Neither is the agent's.
+   */
+  isOwnCall: (cmd, argv) =>
+    cmd === 'git' &&
+    ((argv[0] === '-c' && argv[1] === 'core.hooksPath=/dev/null') ||
+      (argv.length === 1 && argv[0] === '--exec-path')),
   name: 'claude-code',
   providerId,
   runsProvider: id => id.startsWith(providerId),

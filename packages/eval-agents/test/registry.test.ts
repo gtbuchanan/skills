@@ -1,5 +1,9 @@
 import { test } from 'vitest';
-import { evalAgentForProvider, evalAgentNamed } from '@gtbuchanan/eval-agents/registry';
+import {
+  evalAgentForProvider,
+  evalAgentNamed,
+  isAgentRuntimeCall,
+} from '@gtbuchanan/eval-agents/registry';
 
 test('maps the agent SDK provider to Claude Code', ({ expect }) => {
   expect(evalAgentForProvider('anthropic:claude-agent-sdk').name).toBe('claude-code');
@@ -26,4 +30,12 @@ test('finds an agent by the name a suite gives it', ({ expect }) => {
 
 test('refuses a name no agent has', ({ expect }) => {
   expect(() => evalAgentNamed('codex')).toThrow("no agent named 'codex'");
+});
+
+test('knows a runtime\'s own call without being told which agent runs', ({ expect }) => {
+  expect(isAgentRuntimeCall('git', ['--exec-path'])).toBe(true);
+});
+
+test('leaves a call no agent\'s runtime makes', ({ expect }) => {
+  expect(isAgentRuntimeCall('git', ['status'])).toBe(false);
 });

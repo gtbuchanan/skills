@@ -21,6 +21,7 @@ const fakeAgent = (name: string): EvalAgent => ({
   displayName: `Fake ${name}`,
   executable: { command: name, envVar: `${name.toUpperCase()}_EXE`, sdkPackage: `${name}-sdk` },
   gitBashVar: `${name.toUpperCase()}_BASH`,
+  isOwnCall: () => false,
   name,
   providerId: `${name}:provider`,
   runsProvider: () => false,

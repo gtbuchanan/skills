@@ -26,3 +26,11 @@ export const evalAgentNamed = (name: string): EvalAgent => {
   if (agent === undefined) throw new Error(`no agent named '${name}'`);
   return agent;
 };
+
+/**
+ * Whether a call to `cmd` with `argv` is one an agent's runtime makes for
+ * itself (see {@link EvalAgent.isOwnCall}), for a double that does not know
+ * which agent is running.
+ */
+export const isAgentRuntimeCall = (cmd: string, argv: readonly string[]): boolean =>
+  evalAgents.some(agent => agent.isOwnCall(cmd, argv));

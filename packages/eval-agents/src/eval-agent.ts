@@ -27,6 +27,12 @@ export interface EvalAgent {
     config: Readonly<Record<string, unknown>>,
     env: Readonly<Record<string, string>>,
   ) => Record<string, unknown>;
+  /**
+   * Whether a call to `cmd` with `argv` is one the agent's runtime makes for
+   * itself, such as probing git at startup, rather than one the agent chose to
+   * make. A double answers such a call and leaves it out of the run's log.
+   */
+  readonly isOwnCall: (cmd: string, argv: readonly string[]) => boolean;
   readonly auth: {
     /**
      * The stored login, relative to HOME. The runners hand a run this file

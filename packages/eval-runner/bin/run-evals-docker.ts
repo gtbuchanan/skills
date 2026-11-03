@@ -26,9 +26,9 @@ import { homedir } from 'node:os';
 import path from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { repoRoot as root } from '@gtbuchanan/agent-skills-harness/paths';
-import { evalAgents } from '@gtbuchanan/eval-agents/registry';
 import spawn from 'cross-spawn';
 import { agentAuth, authProblem, credentialsIn } from '#src/agent-setup.ts';
+import { agentsUsedBy, readSuiteConfigs } from '#src/suite-skills.ts';
 import {
   nodeModulesShadows,
   workspacePackageDirs,
@@ -106,7 +106,8 @@ if (compose.code !== 0) process.exit(1);
 
 mkdirSync(path.join(root, 'artifacts', 'skill-evals'), { recursive: true });
 
-const auth = agentAuth(evalAgents, {
+// Only the agents these suites drive need a login or a key.
+const auth = agentAuth(agentsUsedBy(readSuiteConfigs(root, skills)), {
   exists: existsSync,
   hasVar: name => (process.env[name] ?? '') !== '',
   home: homedir(),

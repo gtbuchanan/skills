@@ -29,7 +29,6 @@ import {
   existsSync,
   linkSync,
   mkdirSync,
-  readFileSync,
   readdirSync,
   symlinkSync,
   writeFileSync,
@@ -41,12 +40,16 @@ import { repoRoot as root } from '@gtbuchanan/agent-skills-harness/paths';
 import { resolveSkillsCli } from '@gtbuchanan/agent-skills-harness/skills-cli';
 import { evalAgents } from '@gtbuchanan/eval-agents/registry';
 import spawn from 'cross-spawn';
-import { parse as parseYaml } from 'yaml';
 import { agentAuth, agentWorkspaceFiles, authProblem, credentialsIn } from '#src/agent-setup.ts';
 import { beginEphemeralRun } from '#src/ephemeral-run.ts';
 import { evalIsolation } from '#src/eval-isolation.ts';
 import { buildEvalEnv } from '#src/scrubbed-path.ts';
-import { skillsByAgent } from '#src/suite-skills.ts';
+import {
+  agentsUsedBy,
+  readSuiteConfig,
+  readSuiteConfigs,
+  skillsByAgent,
+} from '#src/suite-skills.ts';
 
 const { assertFailSafe, buildScrubbedPath, poisonDangerTools } = evalIsolation;
 
@@ -81,17 +84,6 @@ const firstFlag = args.findIndex(arg => arg.startsWith('-'));
 const nameFilters = firstFlag === -1 ? args : args.slice(0, firstFlag);
 const passthrough = firstFlag === -1 ? [] : args.slice(firstFlag);
 
-const auth = agentAuth(evalAgents, {
-  exists: existsSync,
-  hasVar: name => process.env[name] !== undefined,
-  home: homedir(),
-});
-const problem = authProblem(auth);
-if (problem !== undefined) {
-  console.error(problem);
-  process.exit(1);
-}
-
 const suites = readdirSync(path.join(root, 'evals'), { withFileTypes: true })
   .filter(entry => entry.isDirectory())
   .map(entry => entry.name)
@@ -102,6 +94,18 @@ const suites = readdirSync(path.join(root, 'evals'), { withFileTypes: true })
 
 if (suites.length === 0) {
   console.error('No eval suites found for:', nameFilters.join(', ') || '(all)');
+  process.exit(1);
+}
+
+// Only the agents these suites drive need a login or a key.
+const auth = agentAuth(agentsUsedBy(readSuiteConfigs(root, suites)), {
+  exists: existsSync,
+  hasVar: name => process.env[name] !== undefined,
+  home: homedir(),
+});
+const problem = authProblem(auth);
+if (problem !== undefined) {
+  console.error(problem);
   process.exit(1);
 }
 
@@ -288,9 +292,8 @@ const populateWorkspace = (
     cpSync(fixtures, path.join(workspace, 'evals', suiteName, 'fixtures'), {
       recursive: true,
     });
-  const configPath = path.join(root, 'evals', suiteName, 'promptfooconfig.yaml');
-  const config: unknown = parseYaml(readFileSync(configPath, 'utf8'));
-  for (const [agent, names] of skillsByAgent(config))
+  const skills = skillsByAgent(readSuiteConfig(root, suiteName));
+  for (const [agent, names] of skills)
     if (names.size > 0)
       installSkills({ workspace, suiteName, agent, names: [...names], env });
 };

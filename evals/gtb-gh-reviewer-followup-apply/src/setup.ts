@@ -1,4 +1,4 @@
-// promptfoo beforeAll/beforeEach extension: one workspace and log per test.
+// promptfoo beforeAll/beforeEach extension: one workspace per test.
 import { copyFileSync } from 'node:fs';
 import path from 'node:path';
 import { suiteDir } from '@gtbuchanan/agent-skills-harness/paths';

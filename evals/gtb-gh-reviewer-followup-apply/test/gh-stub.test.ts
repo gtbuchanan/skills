@@ -29,6 +29,7 @@ import {
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { parseJson } from '@gtbuchanan/stub-runtime/calls';
+import { runLogPath, runVar } from '@gtbuchanan/stub-runtime/run-log';
 import { markerFile, scenarioPath } from '@gtbuchanan/stub-runtime/scenario';
 import { test } from 'vitest';
 
@@ -49,7 +50,7 @@ const seeded = (key: string): { readonly logDir: string; readonly root: string }
 };
 
 /**
- * Runs the stub from `cwd` and reports how it exited.
+ * Runs the stub from `cwd`, inside run `run-1`, and reports how it exited.
  */
 const run = (
   cwd: string,
@@ -60,54 +61,49 @@ const run = (
   spawnSync(process.execPath, [stub, ...args], {
     cwd,
     encoding: 'utf8',
-    env: { ...process.env, STUB_LOG_DIR: logDir },
+    env: { ...process.env, STUB_LOG_DIR: logDir, [runVar]: 'run-1' },
     input,
   }).status;
 
 /**
- * The lines one call made from inside the `mixed` scenario left in that
- * scenario's log, parsed.
+ * The lines in run `run-1`'s log, parsed.
+ */
+const runLines = (logDir: string): unknown[] =>
+  readFileSync(runLogPath(logDir, 'run-1'), 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map(parseJson);
+
+/**
+ * The lines one call made from inside the `mixed` scenario left in its run's
+ * log.
  */
 const logged = (args: readonly string[], input = ''): unknown[] => {
   const { logDir, root } = seeded('mixed');
   run(path.join(root, ...scenarioPath('mixed').split('/')), logDir, args, input);
 
-  return readFileSync(path.join(logDir, 'mixed.jsonl'), 'utf8')
-    .split('\n')
-    .filter(Boolean)
-    .map(parseJson);
+  return runLines(logDir);
 };
 
-test('a call is recorded in the log of the scenario it was made in', ({ expect }) => {
-  /*
-   * One log per scenario is what lets the tests run at once: a call lands in
-   * the log of the test that made it, and nowhere else.
-   */
+test('a call is recorded in the log of the run it was made in', ({ expect }) => {
   const { logDir, root } = seeded('ack');
   const workspace = path.join(root, ...scenarioPath('ack').split('/'));
   mkdirSync(path.join(workspace, 'nested'));
 
   run(path.join(workspace, 'nested'), logDir, ['api', 'user']);
 
-  expect(readdirSync(logDir)).toStrictEqual(['ack.jsonl']);
+  expect(readdirSync(logDir)).toStrictEqual(['run-1.jsonl']);
 });
 
-test('a call made outside every scenario is refused, and kept', ({ expect }) => {
+test('a call made outside every scenario is refused, and kept as a refusal', ({ expect }) => {
   /*
-   * No test's log can take it, but a withheld thread acted on from there still
-   * has to be seen, so it is recorded where the checker looks for exactly that.
+   * A withheld thread acted on from there still has to be seen. Recorded as a
+   * call, though, a refused resolve would count as one that happened.
    */
   const { logDir, root } = seeded('ack');
 
   expect(run(root, logDir, ['api', 'user'])).not.toBe(0);
-  expect(readdirSync(logDir)).toStrictEqual(['unattributed.jsonl']);
-  expect(
-    readFileSync(path.join(logDir, 'unattributed.jsonl'), 'utf8')
-      .split('\n')
-      .filter(Boolean)
-      .map(parseJson),
-  ).toStrictEqual([
-    { argv: ['api', 'user'], cmd: 'gh', stdin: '' },
+  expect(runLines(logDir)).toStrictEqual([
     { argv: ['api', 'user'], cmd: 'gh', refusal: 'called outside every scenario' },
   ]);
 });

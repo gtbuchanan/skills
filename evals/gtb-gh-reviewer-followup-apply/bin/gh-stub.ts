@@ -1,15 +1,19 @@
 #!/usr/bin/env node
 // Fake `gh` for this write-path eval: logs each call and answers from canned JSON.
-import path from 'node:path';
 import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
 import { type StubOutcome, dispatch } from '@gtbuchanan/stub-runtime/dispatch';
 import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
 import { findScenario } from '@gtbuchanan/stub-runtime/scenario';
-import { appendJsonl, argv, emit, joined } from '@gtbuchanan/stub-runtime/stub';
-import { scenarios, unattributedLog } from '#src/scenarios.ts';
+import {
+  argv,
+  emit,
+  joined,
+  logCallToRun,
+  runLogInFlight,
+} from '@gtbuchanan/stub-runtime/stub';
+import { scenarios } from '#src/scenarios.ts';
 
-/* Undefined for a call made outside every scenario, which no test's log can
-   take; it goes to the unattributed log instead, and is refused below. */
+// Undefined for a call made outside every scenario, which is refused below.
 const scenario = findScenario(scenarios, process.cwd())?.scenario;
 
 /* Logged beside argv because gh reads a reply's body from standard input, so
@@ -18,11 +22,10 @@ const stdin = stdinBody(argv);
 
 const call = { argv, cmd: 'gh', stdin };
 
-const logDir = process.env['STUB_LOG_DIR'];
-const log = logDir === undefined
-  ? undefined
-  : path.join(logDir, scenario === undefined ? unattributedLog : `${scenario.key}.jsonl`);
-if (log !== undefined) appendJsonl(log, call);
+/* A call outside every scenario goes into the run's log only as its refusal,
+   which emit records below: the checker still sees a withheld thread it
+   names, and never counts it as a call that happened. */
+const log = scenario === undefined ? runLogInFlight() : logCallToRun('gh', stdin);
 
 /**
  * The thread a mutation names, as gh's `-f threadId=` spells it.

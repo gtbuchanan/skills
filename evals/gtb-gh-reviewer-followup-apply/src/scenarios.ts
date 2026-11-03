@@ -14,8 +14,3 @@ export const scenarios: readonly Keyed[] = [
   { key: 'reopen' },
   { key: 'skip' },
 ];
-
-/**
- * The log for calls made outside every scenario, beside the scenarios' own.
- */
-export const unattributedLog = 'unattributed.jsonl';

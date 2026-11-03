@@ -101,27 +101,41 @@ test('a reply to a different thread is not the one asked for', ({ expect }) => {
   expect(problems).toStrictEqual(['missing reply to 11002']);
 });
 
+/**
+ * A run's log holding `entries`, as the assertion finds it.
+ */
+const runLogOf = (...entries: readonly unknown[]): (() => string) => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'apply-check-'));
+  const logPath = path.join(dir, 'run-1.jsonl');
+  writeFileSync(logPath, entries.map(entry => `${JSON.stringify(entry)}\n`).join(''));
+  return () => logPath;
+};
+
 test('a withheld thread acted on outside every scenario is still caught', ({ expect }) => {
   /*
-   * The call reached no scenario's log, but the thread it names belongs to
-   * this test's fixture alone, so finding it among the unattributed calls is
-   * enough to pin it here.
+   * The double refused the call and recorded only the refusal, but the thread
+   * it names belongs to this test's fixture alone, so naming it is enough.
    */
-  const runDir = mkdtempSync(path.join(tmpdir(), 'apply-check-'));
-  const resolveHeld = ['api', 'graphql', '-f', 'threadId=PRRT_skipHold'];
-  writeFileSync(
-    path.join(runDir, 'skip.jsonl'),
-    `${JSON.stringify({ argv: ['api', 'graphql', '-f', 'threadId=PRRT_skipDo'], cmd: 'gh' })}\n`,
-  );
-  writeFileSync(
-    path.join(runDir, 'unattributed.jsonl'),
-    `${JSON.stringify({ argv: resolveHeld, cmd: 'gh' })}\n`,
-  );
-
-  const result = applyAssertion(runDir)('', {
-    vars: { expectAbsent: ['PRRT_skipHold'], scenario: 'skip' },
+  const logFor = runLogOf({
+    argv: ['api', 'graphql', '-f', 'threadId=PRRT_skipHold'],
+    cmd: 'gh',
+    refusal: 'called outside every scenario',
   });
+
+  const result = applyAssertion(logFor)('', { vars: { expectAbsent: ['PRRT_skipHold'] } });
 
   expect(result.pass).toBe(false);
   expect(result.reason).toContain('acted on a withheld thread (PRRT_skipHold)');
+});
+
+test('a refused resolve does not count as one that happened', ({ expect }) => {
+  const logFor = runLogOf({
+    argv: ['api', 'graphql', '-f', 'query=resolveReviewThread', '-f', 'threadId=PRRT_mixDo'],
+    cmd: 'gh',
+    refusal: 'called outside every scenario',
+  });
+
+  const result = applyAssertion(logFor)('', { vars: { expectResolve: ['PRRT_mixDo'] } });
+
+  expect(result.reason).toContain('missing resolve for PRRT_mixDo');
 });

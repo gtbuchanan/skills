@@ -10,14 +10,12 @@
  *   expectAbsent   — ids that must NEVER appear (the reviewer withheld approval)
  *   expectFailure  — the agent's own report must acknowledge a failure
  */
-import path from 'node:path';
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
 import { type ReportedResult, reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
+import { runLog } from '@gtbuchanan/agent-skills-harness/run-log';
 import type { LoggedCall } from '@gtbuchanan/stub-runtime/calls';
 import { readCalls, readRefusals } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
-import { unattributedLog } from './scenarios.ts';
 
 const StringListSchema = v.array(v.string());
 
@@ -53,12 +51,6 @@ export const VarsSchema = v.object({
   expectReply: v.optional(ReplyExpectationListSchema, []),
   expectResolve: v.optional(StringListSchema, []),
 });
-
-/**
- * Which scenario's log to read — kept apart from the expectations, which say
- * what to look for rather than where.
- */
-const ScenarioVarsSchema = v.object({ scenario: v.string() });
 
 const failureWording =
   /fail|error|could not|couldn't|unable|did not|didn't/v;
@@ -183,23 +175,27 @@ const checkReopens = (
 
 /**
  * Asserts the skill made exactly the GitHub calls the fixture approved, reading
- * the logs the fake gh wrote into `runDir`.
+ * the log `logFor` names for the response's metadata.
  */
-export const applyAssertion = (runDir: string) => (
+export const applyAssertion = (logFor: (metadata: unknown) => string) => (
   output: unknown,
-  context: { vars?: unknown },
+  context: { metadata?: unknown; vars?: unknown },
 ): ReportedResult => {
-  const { scenario } = v.parse(ScenarioVarsSchema, context.vars ?? {});
-  const logPath = path.join(runDir, `${scenario}.jsonl`);
+  const logPath = logFor(context.metadata);
   const calls = readCalls(logPath);
+  const refusals = readRefusals(logPath);
   const vars = v.parse(VarsSchema, context.vars ?? {});
-  /* A withheld id belongs to this test's fixture alone, so a call naming it
-     is this test's wherever it was made. The other checks read only the
-     test's own log: a refused resolve resolved nothing. */
-  const unattributed = readCalls(path.join(runDir, unattributedLog));
+  /* A withheld id is acted on by naming it, whether or not the double
+     answered — a call from outside every scenario is logged only as its
+     refusal. The other checks read calls alone: a refused resolve resolved
+     nothing. */
+  const attempted = [
+    ...calls,
+    ...refusals.map(refusal => ({ command: refusal.command, stdin: undefined })),
+  ];
   const problems = [
     ...checkResolves(calls, vars),
-    ...checkWithheld([...calls, ...unattributed], vars),
+    ...checkWithheld(attempted, vars),
     ...checkReplies(calls, vars),
     ...checkAcks(calls, vars),
     ...checkReopens(calls, vars),
@@ -212,8 +208,7 @@ export const applyAssertion = (runDir: string) => (
     }
   }
 
-  // The log is emptied as the scenario is built, so its refusals are this run's.
-  return reportRefusals(fromProblems(problems), readRefusals(logPath));
+  return reportRefusals(fromProblems(problems), refusals);
 };
 
-export default applyAssertion(suiteRunDir(import.meta.url));
+export default applyAssertion(metadata => runLog(import.meta.url, metadata));

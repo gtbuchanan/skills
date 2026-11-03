@@ -41,6 +41,7 @@ import {
   logCallToRun,
   logCallToScenario,
   recordOutcome,
+  runLogInFlight,
 } from '@gtbuchanan/stub-runtime/stub';
 
 /**
@@ -242,6 +243,22 @@ test('a call is recorded in the log of the run it was made in', ({ expect }) => 
   expect(logCallToRun('gh', 'body')).toBe(logPath);
   expect(readFileSync(logPath, 'utf8').split('\n').filter(Boolean).map(parseJson))
     .toStrictEqual([{ argv: [], cmd: 'gh', stdin: 'body' }]);
+});
+
+test('the log of the run in flight is named without recording anything', ({ expect }) => {
+  /* For a double that records a call its own way, such as a refusal alone,
+     where recording it as a call would count it as done. */
+  using run = activeRun('run-1');
+
+  expect(runLogInFlight()).toBe(runLogPath(run.logDir, 'run-1'));
+  expect(existsSync(run.logDir)).toBe(false);
+});
+
+test('no run in flight names no log', ({ expect }) => {
+  using run = activeRun(undefined);
+
+  expect(runLogInFlight()).toBeUndefined();
+  expect(existsSync(run.logDir)).toBe(false);
 });
 
 test('a call made outside any run is passed over', ({ expect }) => {

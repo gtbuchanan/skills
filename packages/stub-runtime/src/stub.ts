@@ -86,16 +86,23 @@ export const logCallToDir = (cmd: string, fileName: string): string | undefined 
 };
 
 /**
- * Records this invocation into the log of the run it was made in, named by
- * $STUB_RUN under $STUB_LOG_DIR (see run-log.ts). Records nothing when either
- * is unset. Takes `stdin` and returns the log written to, as {@link logCall}
- * does.
+ * The log of the run this invocation was made in, named by $STUB_RUN under
+ * $STUB_LOG_DIR (see run-log.ts), or `undefined` when either is unset.
  */
-export const logCallToRun = (cmd: string, stdin?: string): string | undefined => {
+export const runLogInFlight = (): string | undefined => {
   const logDir = process.env['STUB_LOG_DIR'];
   const runId = process.env[runVar];
-  if (!logDir || !runId) return undefined;
-  const logPath = runLogPath(logDir, runId);
+  return logDir && runId ? runLogPath(logDir, runId) : undefined;
+};
+
+/**
+ * Records this invocation into the log of the run it was made in (see
+ * {@link runLogInFlight}). Records nothing outside a run. Takes `stdin` and
+ * returns the log written to, as {@link logCall} does.
+ */
+export const logCallToRun = (cmd: string, stdin?: string): string | undefined => {
+  const logPath = runLogInFlight();
+  if (logPath === undefined) return undefined;
   appendJsonl(logPath, stdin === undefined ? { argv, cmd } : { argv, cmd, stdin });
   return logPath;
 };

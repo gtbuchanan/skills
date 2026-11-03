@@ -502,6 +502,18 @@ const networkVars = [
 const winDrivePrefixLength = 2;
 
 /**
+ * GH_REAL, naming the real gh, when the caller has one.
+ *
+ * gh stays shadowed on the scrubbed PATH. A double that hands calls on to the
+ * real gh, against a fake GitHub, finds it here instead: looked up on the
+ * caller's PATH, which the double cannot shadow, unless named outright.
+ */
+const realGhVar = (sourceEnv: NodeJS.ProcessEnv): Record<string, string> => {
+  const realGh = sourceEnv['GH_REAL'] ?? findOnPath('gh', sourceEnv['PATH'] ?? '');
+  return realGh === undefined ? {} : { GH_REAL: realGh };
+};
+
+/**
  * Constructs the eval env from scratch (allowlist), rather than inheriting the
  * caller's. Only OS plumbing, auth/network config, PATH/STUB_BINDIR, and a clean
  * HOME go in — so behavioral vars from the surrounding session never reach the
@@ -530,6 +542,7 @@ export const buildEvalEnv = ({
     ...hermeticGitConfig,
     ...Object.fromEntries(agents.map(({ executable }) =>
       [executable.envVar, agentExecutable(executable, sourceEnv)])),
+    ...realGhVar(sourceEnv),
     HOME: homeDir,
     PATH: scrubbedPath,
     STUB_BINDIR: stubDir,

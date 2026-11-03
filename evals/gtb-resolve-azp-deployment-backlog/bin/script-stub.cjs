@@ -4,10 +4,8 @@
  * overlays this onto the synced skill copy (with an executable node shebang) so
  * the suite runs Node-only under the harness — no PowerShell is reachable, and
  * no Azure DevOps. It mimics the real script's PowerShell-style parameters
- * and console shape, and records each invocation to a per-pipeline log file so
- * the suite can run its tests in parallel: $STUB_LOG_DIR/script-<PipelineId>.jsonl.
- * Because every test uses a distinct pipeline id, those files never collide, so
- * no shared log to truncate and no per-test env — the tests are independent.
+ * and console shape, and records each invocation to the log of the run that
+ * made it, so concurrent tests never share one.
  *
  * The authFailPipelineId sentinel reproduces the first-run AADSTS500011 consent
  * error (in place of a per-test env var) so the auth-guidance behavior can be
@@ -113,15 +111,19 @@ for (let index = 0; index < argv.length; index += 1) {
   index += consumed;
 }
 
+/*
+ * The log of the run that made this call: `<STUB_RUN>.jsonl` under
+ * $STUB_LOG_DIR, the path stub-runtime's run-log.ts names. Spelled out rather
+ * than imported, since this file runs from the skill copy, where no package
+ * resolves.
+ */
 const logDir = process.env['STUB_LOG_DIR'];
-if (logDir) {
+const runId = process.env['STUB_RUN'];
+if (logDir && runId) {
   try {
     mkdirSync(logDir, { recursive: true });
-    const id = Number.isNaN(opts.pipelineId)
-      ? 'unknown'
-      : String(opts.pipelineId);
     appendFileSync(
-      path.join(logDir, `script-${id}.jsonl`),
+      path.join(logDir, `${runId}.jsonl`),
       `${JSON.stringify({ cmd: 'script', ...opts })}\n`,
     );
   } catch {

@@ -15,7 +15,7 @@
  * setup's per-test assertion count sees it.
  */
 import { test } from 'vitest';
-import { checkReport } from '#src/backlog-check.ts';
+import { checkReport, scriptCallsFor } from '#src/backlog-check.ts';
 
 const runUrl =
   'https://dev.azure.com/example-org/default-project/_build/results?buildId=900999';
@@ -142,6 +142,25 @@ test('still accepts a link wrapped in Markdown', ({ expect }) => {
     expectPipelineName: '',
     expectRunNames: [],
   })).toStrictEqual([]);
+});
+
+test('reads the script calls a run made against its pipeline, in order', ({ expect }) => {
+  /*
+   * A run's log holds every double's calls. An `az` call parsed as a script
+   * call would count as a live run, and one against another id would count
+   * toward this test's pipeline.
+   */
+  const entries = [
+    { argv: ['pipelines', 'list'], cmd: 'az' },
+    { approveLatest: false, cmd: 'script', pipelineId: 900_001, whatIf: true },
+    { approveLatest: true, cmd: 'script', pipelineId: 900_002, whatIf: false },
+    { approveLatest: true, cmd: 'script', pipelineId: 900_001, whatIf: false },
+  ];
+
+  expect(scriptCallsFor(entries, 900_001)).toStrictEqual([
+    expect.objectContaining({ approveLatest: false, whatIf: true }),
+    expect.objectContaining({ approveLatest: true, whatIf: false }),
+  ]);
 });
 
 test('skips the checks whose expectation is absent', ({ expect }) => {

@@ -1,10 +1,9 @@
 /*
  * promptfoo javascript assertion for gtb-resolve-azp-deployment-backlog.
  *
- * The overlaid script stub appends one JSON line per invocation to a
- * per-pipeline log file, artifacts/skill-evals/….runs/script-<PipelineId>.jsonl.
- * Each test uses a distinct id, so this reads only its own test's file — which
- * is what makes the suite parallel-safe. Vars drive the expectations:
+ * The overlaid script stub appends one JSON line per invocation to the log of
+ * the run that made it, beside the az double's calls, so this reads only its
+ * own test's calls however many run at once. Vars drive the expectations:
  *
  *   pipelineId     — the numeric id the script must be invoked with
  *   approveLatest  — true:  the live run must pass -ApproveLatest
@@ -37,10 +36,9 @@
  * with the expected id is itself proof the agent resolved the name via
  * `az pipelines list` (it could not have guessed the id).
  */
-import path from 'node:path';
 import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
+import { runLog } from '@gtbuchanan/agent-skills-harness/run-log';
 import { readJsonl } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 
@@ -54,8 +52,27 @@ const azureDevOpsResourceId = '499b84ac-1321-427f-aa17-267ca6975798';
  */
 const ScriptCallSchema = v.looseObject({
   approveLatest: v.optional(v.boolean(), false),
+  cmd: v.literal('script'),
+  pipelineId: v.number(),
   whatIf: v.optional(v.boolean(), false),
 });
+
+type ScriptCall = v.InferOutput<typeof ScriptCallSchema>;
+
+/**
+ * The script calls a run made against `pipelineId`, in the order it made them.
+ *
+ * A run's log holds every double's calls, so anything that is not the script,
+ * or is the script against another pipeline, is passed over.
+ */
+export const scriptCallsFor = (
+  entries: readonly unknown[],
+  pipelineId: number,
+): ScriptCall[] =>
+  entries
+    .map(entry => v.safeParse(ScriptCallSchema, entry))
+    .flatMap(result => result.success ? [result.output] : [])
+    .filter(call => call.pipelineId === pipelineId);
 
 // promptfoo vars arrive as strings when templated, so booleans are loose.
 const LooseBooleanSchema = v.union([v.boolean(), v.string()]);
@@ -216,16 +233,13 @@ export const checkReport = (
  */
 export default function assertBacklogRuns(
   output: unknown,
-  context: { vars?: unknown },
+  context: { metadata?: unknown; vars?: unknown },
 ): AssertionResult {
   const vars = v.parse(VarsSchema, context.vars ?? {});
   const pipelineId = Number(vars.pipelineId);
-  const logFile = path.join(
-    suiteRunDir(import.meta.url),
-    `script-${String(pipelineId)}.jsonl`,
-  );
+  const entries = readJsonl(runLog(import.meta.url, context.metadata), v.unknown());
 
-  const scriptCalls = readJsonl(logFile, ScriptCallSchema);
+  const scriptCalls = scriptCallsFor(entries, pipelineId);
   const problems = [];
 
   // The skill must run its bundled script with the expected id, not hand-roll

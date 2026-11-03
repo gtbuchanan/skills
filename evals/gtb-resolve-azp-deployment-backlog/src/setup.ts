@@ -10,10 +10,9 @@
  * runner also installs a fake `az` (bin/az-stub.ts) on PATH for name→id
  * resolution.
  *
- * The doubles log to $STUB_LOG_DIR, one file per pipeline id
- * (script-<PipelineId>.jsonl). Every test uses a distinct id, so the files never
- * collide — there is no shared log to truncate and no per-test env, which is why
- * the suite runs in parallel. This hook only has to set up once (beforeAll).
+ * The doubles log to $STUB_LOG_DIR, one file per agent run, so there is no
+ * shared log to truncate and the suite runs in parallel. This hook only has to
+ * set up once (beforeAll).
  *
  * Like the gtb-gh-reviewer-followup overlay, this mutates .claude/skills, so it is
  * guarded to the harness's ephemeral per-suite context — STUB_BINDIR, set by
@@ -61,7 +60,7 @@ export const extensionHook = (hookName: string): void => {
   if (hookName !== 'beforeAll') return;
 
   requireHarness('a script stub');
-  // Fresh per-pipeline call logs each run; the stubs point here via STUB_LOG_DIR.
+  // Fresh per-run call logs each eval; the stubs point here via STUB_LOG_DIR.
   resetRunDir(suiteRunDir(import.meta.url));
 
   const shebang = '#!/usr/bin/env node\n';

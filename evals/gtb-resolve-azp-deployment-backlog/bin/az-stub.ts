@@ -15,12 +15,12 @@
  * Note: the behavioral assertions do NOT read this stub's log. A named
  * pipeline's numeric id lives only in the catalog below, so the script being
  * invoked with the correct resolved id is itself proof the agent called
- * `az pipelines list` — no cross-test az-call correlation needed, which is what
- * lets the suite run in parallel. The log is kept only for debugging.
+ * `az pipelines list`. Its calls go to the log of the run that made them, beside
+ * the script's, and are kept only for debugging.
  */
 import { dispatch, unmodelled } from '@gtbuchanan/stub-runtime/dispatch';
 import { subcommand } from '@gtbuchanan/stub-runtime/match';
-import { argv, emit, logCallToDir } from '@gtbuchanan/stub-runtime/stub';
+import { argv, emit, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
 
 /**
  * The id the fake `pipelines runs update` echoes back.
@@ -33,7 +33,7 @@ const cancellingRunId = 900_999;
  */
 const azureRepos = 'tfsgit';
 
-const log = logCallToDir('az', 'az.jsonl');
+const log = logCallToRun('az');
 
 /*
  * Canned pipeline catalog: fictional names the eval prompts reference → their

@@ -1,8 +1,14 @@
 # Generic Linux image for running the eval harness in a deterministic shell.
 # It contains no skill specifics — just Node, pnpm, and the repo's eval deps.
 # Each suite mounts its own source at run time and supplies any test doubles
-# (e.g. a fake gh); real provider CLIs are never installed, so a suite that
-# mocks one physically cannot reach the real service.
+# (e.g. a fake az); real provider CLIs are never on PATH, so a suite that
+# mocks one cannot reach the real service through it.
+#
+# gh is installed, off PATH, for the gh spy (github-cli-spy) to hand calls
+# to. The spy gives it an environment built from an allowlist whose only way out is the
+# fake GitHub, which refuses a tunnel to anywhere else. An agent that runs the
+# binary directly gets past the spy, but the image holds no credential to
+# give it.
 #
 # git is the deliberate exception, and not a hole in that: it is in the
 # harness's `neededTools` rather than its `dangerTools`
@@ -31,6 +37,27 @@ RUN find . -type f \
       ! -name pnpm-lock.yaml \
       -delete \
   && find . -mindepth 1 -type d -empty -delete
+
+# The real gh the eval suites run against a fake GitHub, installed by mise from
+# the repository's own mise.toml and mise.lock, so the image and the host run
+# the same pinned version and Renovate bumps both. Only the binary leaves this
+# stage: mise itself stays out of the image, where an agent could use it to
+# reach the real gh past the spy.
+#
+# mise also runs the repository's postinstall hook, which wants hk and only
+# warns without it; nothing here needs Git hooks.
+FROM node:26-bookworm-slim AS gh
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+COPY --from=jdxcode/mise:2026.10.25 /usr/local/bin/mise /usr/local/bin/mise
+
+WORKDIR /pin
+COPY mise.toml mise.lock ./
+RUN mise trust \
+  && MISE_LOCKED=1 mise install gh \
+  && cp "$(mise which gh)" /gh
 
 # Named so a fresh install can be aimed here alone
 # (`--no-cache-filter=runtime`) rather than at a bare `--no-cache`, which
@@ -116,3 +143,12 @@ RUN node --input-type=module -e ' \
     `${base} did not install: pnpm drops an optional whose download fails \
 and still exits 0. Every eval in this image would want that native CLI.`); \
   console.log(`native CLI present: ${found}`);'
+
+# Off PATH, so `gh` only ever resolves to the suite's spy, which hands the
+# call to the binary GH_REAL names with an environment pointing it at the fake.
+COPY --from=gh /gh /opt/gh/gh
+ENV GH_REAL=/opt/gh/gh
+
+# The spy needs a gh to hand calls to, and nothing named `gh` may be on PATH
+# for an agent to reach past the spy.
+RUN "$GH_REAL" --version && ! command -v gh

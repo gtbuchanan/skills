@@ -7,6 +7,7 @@
     "./dispatch": "./src/dispatch.ts",
     "./match": "./src/match.ts",
     "./passthrough": "./src/passthrough.ts",
+    "./real-tool": "./src/real-tool.ts",
     "./run-log": "./src/run-log.ts",
     "./scenario": "./src/scenario.ts",
     "./stub": "./src/stub.ts"
@@ -21,15 +22,18 @@
   },
   "dependencies": {
     "cross-spawn": "catalog:",
-    "valibot": "catalog:"
+    "valibot": "catalog:",
+    "which": "catalog:"
   },
   "devDependencies": {
+    "@faker-js/faker": "catalog:",
     "@gtbuchanan/cli": "catalog:",
     "@gtbuchanan/eslint-config": "catalog:",
     "@gtbuchanan/tsconfig": "catalog:",
     "@gtbuchanan/vitest-config": "catalog:",
     "@types/cross-spawn": "catalog:",
     "@types/node": "catalog:",
+    "@types/which": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "typescript": "catalog:",

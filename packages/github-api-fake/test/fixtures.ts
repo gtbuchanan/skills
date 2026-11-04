@@ -11,16 +11,16 @@ import { request } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { readRefusals } from '@gtbuchanan/stub-runtime/calls';
+import { resolveRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 import { runLogPath } from '@gtbuchanan/stub-runtime/run-log';
 import { vi } from 'vitest';
 import { callerToken } from '@gtbuchanan/github-api-fake/caller';
 import { fakeGhEnv } from '@gtbuchanan/github-api-fake/gh-env';
-import { resolveRealGh } from '@gtbuchanan/github-api-fake/real-gh';
 import { startFakeGitHub } from '@gtbuchanan/github-api-fake/server';
 import { GitHubError } from '@gtbuchanan/github-api-fake/world';
 import type { World } from '@gtbuchanan/github-api-fake/world';
 
-const gh = resolveRealGh(process.env) ?? 'gh';
+const gh = process.env['GH_REAL'] ?? resolveRealTool('gh') ?? 'gh';
 
 const run = 'run-1';
 

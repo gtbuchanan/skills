@@ -194,6 +194,9 @@ catalogs:
     '@types/node':
       specifier: 26.2.0
       version: 26.2.0
+    '@types/which':
+      specifier: 3.0.4
+      version: 3.0.4
     '@vitest/coverage-v8':
       specifier: 4.1.10
       version: 4.1.10
@@ -233,6 +236,9 @@ catalogs:
     vitest:
       specifier: 4.1.10
       version: 4.1.10
+    which:
+      specifier: 7.0.0
+      version: 7.0.0
     yaml:
       specifier: 2.9.0
       version: 2.9.0
@@ -834,9 +840,9 @@ importers:
       '@gtbuchanan/git-fixtures':
         specifier: workspace:*
         version: link:../git-fixtures
-      '@gtbuchanan/github-api-fake':
+      '@gtbuchanan/stub-runtime':
         specifier: workspace:*
-        version: link:../github-api-fake
+        version: link:../stub-runtime
       cross-spawn:
         specifier: 'catalog:'
         version: 7.0.6
@@ -1055,7 +1061,13 @@ importers:
       valibot:
         specifier: 'catalog:'
         version: 1.4.2(typescript@6.0.3)
+      which:
+        specifier: 'catalog:'
+        version: 7.0.0
     devDependencies:
+      '@faker-js/faker':
+        specifier: 'catalog:'
+        version: 10.6.0
       '@gtbuchanan/cli':
         specifier: 'catalog:'
         version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
@@ -1074,6 +1086,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 26.2.0
+      '@types/which':
+        specifier: 'catalog:'
+        version: 3.0.4
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 4.1.10(vitest@4.1.10)
@@ -3240,6 +3255,9 @@ packages:
   '@types/whatwg-url@13.0.0':
     resolution: {integrity: sha512-N8WXpbE6Wgri7KUSvrmQcqrMllKZ9uxkYWMt+mCSGwNc0Hsw9VQTW7ApqI4XNrx6/SaM2QQJCzMPDEXE058s+Q==}
 
+  '@types/which@3.0.4':
+    resolution: {integrity: sha512-liyfuo/106JdlgSchJzXEQCVArk0CvevqPote8F8HgWgJ3dRCcTHgJIsLDuee0kxk/mhbInzIZk3QWSZJ8R+2w==}
+
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
@@ -4972,6 +4990,10 @@ packages:
 
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
+
+  isexe@4.0.0:
+    resolution: {integrity: sha512-FFUtZMpoZ8RqHS3XeXEmHWLA4thH+ZxCv2lOiPIn1Xc7CxrqhWzNSDzD+/chS/zbYezmiwWLdQC09JdQKmthOw==}
+    engines: {node: '>=20'}
 
   isstream@0.1.2:
     resolution: {integrity: sha512-Yljz7ffyPbrLpLngrMtZ7NduUgVvi6wG9RJ9IUcyCd59YQ911PBJphODUcbOVbqYfxe1wuYf/LJ8PauMRwsM/g==}
@@ -6760,6 +6782,11 @@ packages:
   which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
     engines: {node: '>= 8'}
+    hasBin: true
+
+  which@7.0.0:
+    resolution: {integrity: sha512-RancgH2dmbLdHl6LRhEqvklWMgl/Hdnun0Y90KhBOLkMefg8Qa7/Zel8Sm+8HEcP6DEjzsWzpkuBQEZok58isA==}
+    engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
     hasBin: true
 
   why-is-node-running@2.3.0:
@@ -9074,6 +9101,8 @@ snapshots:
       '@types/webidl-conversions': 7.0.3
     optional: true
 
+  '@types/which@3.0.4': {}
+
   '@types/ws@8.18.1':
     dependencies:
       '@types/node': 26.2.0
@@ -10855,6 +10884,8 @@ snapshots:
     optional: true
 
   isexe@2.0.0: {}
+
+  isexe@4.0.0: {}
 
   isstream@0.1.2:
     optional: true
@@ -13180,6 +13211,10 @@ snapshots:
   which@2.0.2:
     dependencies:
       isexe: 2.0.0
+
+  which@7.0.0:
+    dependencies:
+      isexe: 4.0.0
 
   why-is-node-running@2.3.0:
     dependencies:

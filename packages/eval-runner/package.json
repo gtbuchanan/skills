@@ -17,7 +17,7 @@
     "@gtbuchanan/agent-skills-harness": "workspace:*",
     "@gtbuchanan/eval-agents": "workspace:*",
     "@gtbuchanan/git-fixtures": "workspace:*",
-    "@gtbuchanan/github-api-fake": "workspace:*",
+    "@gtbuchanan/stub-runtime": "workspace:*",
     "cross-spawn": "catalog:",
     "valibot": "catalog:",
     "yaml": "catalog:"

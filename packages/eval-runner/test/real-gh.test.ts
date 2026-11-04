@@ -8,11 +8,16 @@
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
  */
-import { mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
 import { buildEvalEnv } from '#src/scrubbed-path.ts';
+
+/**
+ * rwxr-xr-x, so the stand-in gh is found as an executable.
+ */
+const executableMode = 0o755;
 
 /**
  * A disposable directory holding a stand-in gh, named as the platform names
@@ -22,6 +27,7 @@ const ghDir = (): Disposable & { readonly dir: string; readonly gh: string } => 
   const dir = mkdtempSync(path.join(tmpdir(), 'real-gh-test-'));
   const gh = path.join(dir, process.platform === 'win32' ? 'gh.exe' : 'gh');
   writeFileSync(gh, '');
+  chmodSync(gh, executableMode);
 
   return {
     dir,

@@ -29,7 +29,7 @@ import path from 'node:path';
 import type { EvalAgent } from '@gtbuchanan/eval-agents/eval-agent';
 import { evalAgents } from '@gtbuchanan/eval-agents/registry';
 import { hermeticGitConfig } from '@gtbuchanan/git-fixtures/real-git';
-import { resolveRealGh } from '@gtbuchanan/github-api-fake/real-gh';
+import { resolveRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 
 /*
  * Aggregator dirs re-export danger CLIs via shims; never admit them wholesale.
@@ -512,7 +512,7 @@ const winDrivePrefixLength = 2;
  * names one outright.
  */
 const realGhVar = (sourceEnv: NodeJS.ProcessEnv): Record<string, string> => {
-  const realGh = resolveRealGh(sourceEnv);
+  const realGh = sourceEnv['GH_REAL'] ?? resolveRealTool('gh', sourceEnv);
   return realGh === undefined ? {} : { GH_REAL: realGh };
 };
 

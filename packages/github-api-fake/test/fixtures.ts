@@ -2,8 +2,8 @@
  * What the fake's tests share: a world to answer from, and two ways to reach
  * a fake started for one test alone.
  *
- * The real gh is `GH_REAL` where the runner names one, and the gh on PATH
- * otherwise.
+ * The real gh is `GH_REAL` where the runner names one, and the first gh on PATH
+ * outside mise's shims otherwise.
  */
 import { spawn } from 'node:child_process';
 import { existsSync, mkdtempSync } from 'node:fs';
@@ -15,11 +15,12 @@ import { runLogPath } from '@gtbuchanan/stub-runtime/run-log';
 import { vi } from 'vitest';
 import { callerToken } from '@gtbuchanan/github-api-fake/caller';
 import { fakeGhEnv } from '@gtbuchanan/github-api-fake/gh-env';
+import { resolveRealGh } from '@gtbuchanan/github-api-fake/real-gh';
 import { startFakeGitHub } from '@gtbuchanan/github-api-fake/server';
 import { GitHubError } from '@gtbuchanan/github-api-fake/world';
 import type { World } from '@gtbuchanan/github-api-fake/world';
 
-const gh = process.env['GH_REAL'] ?? 'gh';
+const gh = resolveRealGh(process.env) ?? 'gh';
 
 const run = 'run-1';
 

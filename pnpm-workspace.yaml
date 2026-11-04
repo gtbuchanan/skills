@@ -9,6 +9,7 @@ allowBuilds:
 
 catalog:
   '@anthropic-ai/claude-agent-sdk': 0.3.226
+  '@faker-js/faker': 10.6.0
   '@gtbuchanan/cli': 1.0.0
   '@gtbuchanan/eslint-config': 0.5.1
   '@gtbuchanan/tsconfig': 0.2.0

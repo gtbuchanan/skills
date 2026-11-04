@@ -16,6 +16,7 @@
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { useGitHubOrigin } from '@gtbuchanan/git-fixtures/github-origin';
 import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import {
   type GitRunner,
@@ -70,6 +71,28 @@ export interface RepoScenarioOptions {
    * `import.meta.url` of the suite module calling this.
    */
   readonly metaUrl: string;
+  /**
+   * The repository the origin claims to be, for a suite whose gh is real and
+   * decides which repository it is in from the origin's URL. Left out, the
+   * origin is the bare repository's own path.
+   */
+  readonly remote?: SeedRemote | undefined;
+}
+
+/**
+ * A GitHub repository for the origin to be named after, and its base branch.
+ */
+export interface SeedRemote {
+  /**
+   * The branch pull requests merge into. Seeded on the origin at the first
+   * planned commit, because gh checks it out after a merge that deletes the
+   * head.
+   */
+  readonly base: string;
+  /**
+   * `<owner>/<repo>` on `github.localhost`.
+   */
+  readonly slug: string;
 }
 
 /**
@@ -140,7 +163,7 @@ export interface RepoScenarioSeeding<TScenario extends RepoScenario> {
 export const repoScenarioSeeding = <TScenario extends RepoScenario>(
   options: RepoScenarioOptions,
 ): RepoScenarioSeeding<TScenario> => {
-  const { author, metaUrl } = options;
+  const { author, metaUrl, remote } = options;
   const suite = suiteName(metaUrl);
 
   const baselinesPath = (): string => artifactPath(`${suite}.baselines.json`);
@@ -171,6 +194,7 @@ export const repoScenarioSeeding = <TScenario extends RepoScenario>(
 
   const seed: ScenarioSeeder<TScenario> = (scenario, workspace) => {
     const git = resolveRealGit();
+    const origin = artifactPath(`${suite}.${scenario.key}.origin.git`);
 
     seedHistory({
       author,
@@ -178,11 +202,19 @@ export const repoScenarioSeeding = <TScenario extends RepoScenario>(
       commits: scenario.commits,
       git,
       localIdentity: author,
-      origin: artifactPath(`${suite}.${scenario.key}.origin.git`),
+      origin,
       workspace,
     });
 
     const runner = { cwd: workspace, git };
+    if (remote !== undefined) {
+      // A scenario on the base branch has already pushed it.
+      if (remote.base !== scenario.branch) {
+        const root = captureGit(runner, ['rev-list', '--max-parents=0', 'HEAD']);
+        runGit(runner, ['push', '-q', 'origin', `${root}:refs/heads/${remote.base}`]);
+      }
+      useGitHubOrigin(runner, { bare: origin, slug: remote.slug });
+    }
     if (scenario.extra) writeExtra(runner, scenario.extra, scenario.branch, author);
 
     /* The marker is written by the hook after this returns, and committing it

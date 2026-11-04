@@ -9,10 +9,12 @@
  * the recorded tip is where commit counting starts — recorded wrongly and the
  * seeded history counts as the agent's work.
  *
- * Every case spawns several git processes, so they are tagged `slow`.
- *
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
+ *
+ * Every case spawns several git processes.
+ *
+ * @module-tag slow
  */
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -40,6 +42,15 @@ const baseCommit = {
   tree: { 'src/limiter.ts': 'export const allow = (): boolean => true;\n' },
 };
 
+const rejectCommit = {
+  date: '2026-05-06T09:00:00-05:00',
+  key: 'reject',
+  subject: 'Count a rejection against its window',
+  tree: { 'src/limiter.ts': 'export const allow = (): boolean => false;\n' },
+};
+
+const remote = { base: 'main', slug: 'acme/widgets' };
+
 /**
  * A workspace to seed into. Named for a scenario key that no other test uses,
  * because the origin and the baselines manifest are keyed by it under the
@@ -52,9 +63,7 @@ const TipsSchema = v.record(v.string(), v.string());
 const seedingFor = (): RepoScenarioSeeding<RepoScenario> =>
   repoScenarioSeeding<RepoScenario>({ author, metaUrl: fakeSuite().metaUrl });
 
-test('the history lands on the named branch, with an origin to push to', {
-  tags: ['slow'],
-}, ({ expect }) => {
+test('the history lands on the named branch, with an origin to push to', ({ expect }) => {
   const workspace = scratch();
   const seeding = seedingFor();
 
@@ -77,9 +86,7 @@ test('the history lands on the named branch, with an origin to push to', {
   );
 });
 
-test('the recorded tip is the seeded head, not what the extra commit left', {
-  tags: ['slow'],
-}, ({ expect }) => {
+test('the recorded tip is the seeded head, not what the extra commit left', ({ expect }) => {
   /*
    * Counting starts here. Record the tip after the extra commit and that
    * commit stops counting as part of the world the agent was handed.
@@ -111,7 +118,7 @@ test('the recorded tip is the seeded head, not what the extra commit left', {
   expect(tips[key]).toBe(head);
 });
 
-test('a commit marked local stays off the origin', { tags: ['slow'] }, ({ expect }) => {
+test('a commit marked local stays off the origin', ({ expect }) => {
   /*
    * This is the whole of what gives a push-watching scenario something to
    * push. Pushed here and the skill is asked to push work that is already
@@ -148,9 +155,7 @@ test('a commit marked local stays off the origin', { tags: ['slow'] }, ({ expect
   );
 });
 
-test('a teammate authors their own commit, and trailers survive onto it', {
-  tags: ['slow'],
-}, ({ expect }) => {
+test('a teammate authors their own commit, and trailers survive onto it', ({ expect }) => {
   /*
    * A squash has to credit two people it learns about differently: one named
    * by a trailer, one only by having authored a commit. Attribute this to the
@@ -185,7 +190,56 @@ test('a teammate authors their own commit, and trailers survive onto it', {
   );
 });
 
-test('the marker is excluded before it exists', { tags: ['slow'] }, ({ expect }) => {
+test('a remote names the origin on github.localhost', ({ expect }) => {
+  /*
+   * gh reads which repository it is in from this URL. A local path is no
+   * repository it knows.
+   */
+  const workspace = scratch();
+  repoScenarioSeeding<RepoScenario>({ author, metaUrl: fakeSuite().metaUrl, remote })
+    .seed({ branch: 'add-rate-limiter', commits: [baseCommit], key: 'repo-remote-url' }, workspace);
+
+  expect(captureGit({ cwd: workspace, git }, ['remote', 'get-url', 'origin']))
+    .toBe('git@github.localhost:acme/widgets.git');
+});
+
+test('a remote puts the base branch on the origin at the first commit', ({ expect }) => {
+  /*
+   * gh checks the base branch out after a merge that deletes the head, and
+   * fails where the origin has none.
+   */
+  const workspace = scratch();
+  repoScenarioSeeding<RepoScenario>({ author, metaUrl: fakeSuite().metaUrl, remote }).seed(
+    {
+      branch: 'add-rate-limiter',
+      commits: [baseCommit, rejectCommit],
+      key: 'repo-remote-base',
+    },
+    workspace,
+  );
+
+  const runner = { cwd: workspace, git };
+
+  expect(captureGit(runner, ['log', '-1', '--format=%s', 'origin/main']))
+    .toBe('Add the rate limiter');
+});
+
+test('a remote leaves the base branch at its tip when the scenario is on it', ({ expect }) => {
+  /*
+   * A scenario whose work sits on the base branch has already pushed it, and
+   * moving it back to the first commit is a push git refuses.
+   */
+  const workspace = scratch();
+  repoScenarioSeeding<RepoScenario>({ author, metaUrl: fakeSuite().metaUrl, remote }).seed(
+    { branch: 'main', commits: [baseCommit, rejectCommit], key: 'repo-remote-on-base' },
+    workspace,
+  );
+
+  expect(captureGit({ cwd: workspace, git }, ['log', '-1', '--format=%s', 'origin/main']))
+    .toBe('Count a rejection against its window');
+});
+
+test('the marker is excluded before it exists', ({ expect }) => {
   /*
    * The hook writes the marker after this returns. Excluding it here is what
    * keeps test scaffolding out of the diff the agent is reviewed on.

@@ -8,7 +8,7 @@
  * a reply it cannot read, and the suite fails a run that was correct.
  *
  * What the stub records is all these cases can reach. Whether it read at all is
- * settled in github-cli-stub's body tests, which can fail the reader for
+ * settled in github-api-fake's body tests, which can fail the reader for
  * running; a child process reaches EOF either way.
  *
  * Driven as a subprocess rather than by importing the module, because the log
@@ -123,7 +123,7 @@ test('a call naming no body records an empty one', ({ expect }) => {
    * Only that the stub looked and recorded the result. It cannot show that the
    * read was skipped: spawnSync closes the child's stdin after writing its
    * input, so an unconditional read would reach EOF and return '' too. That
-   * guarantee is pinned in github-cli-stub's body tests, where the reader
+   * guarantee is pinned in github-api-fake's body tests, where the reader
    * itself fails the case if it runs.
    */
   expect(logged(['api', 'user'])).toStrictEqual([

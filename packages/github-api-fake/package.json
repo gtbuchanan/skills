@@ -4,6 +4,7 @@
   "description": "A fake GitHub API the real gh runs against in the eval suites.",
   "type": "module",
   "exports": {
+    "./body": "./src/body.ts",
     "./caller": "./src/caller.ts",
     "./gh-env": "./src/gh-env.ts",
     "./real-gh": "./src/real-gh.ts",

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Fake `gh` for this write-path eval: logs each call and answers from canned JSON.
-import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
+import { stdinBody } from '@gtbuchanan/github-api-fake/body';
 import { type StubOutcome, dispatch } from '@gtbuchanan/stub-runtime/dispatch';
 import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
 import { findScenario } from '@gtbuchanan/stub-runtime/scenario';

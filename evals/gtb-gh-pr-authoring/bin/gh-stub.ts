@@ -26,7 +26,7 @@
  */
 import path from 'node:path';
 import { branchAt } from '@gtbuchanan/git-fixtures/checkout';
-import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
+import { stdinBody } from '@gtbuchanan/github-api-fake/body';
 import { checksAnswer } from '@gtbuchanan/github-cli-stub/checks';
 import { prRecords, toWireComment } from '@gtbuchanan/github-cli-stub/pr-records';
 import {

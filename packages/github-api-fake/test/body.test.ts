@@ -17,7 +17,7 @@
  * setup's per-test assertion count sees it.
  */
 import { test } from 'vitest';
-import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
+import { stdinBody } from '@gtbuchanan/github-api-fake/body';
 
 /**
  * What the piped-in case has waiting on standard input.

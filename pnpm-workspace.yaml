@@ -27,6 +27,7 @@ catalog:
   cross-spawn: 7.0.6
   eslint: 10.8.1
   find-up-simple: 1.0.1
+  graphql: 17.0.2
   jiti: 2.7.0
   promptfoo: 0.122.0
   skills: 1.5.22

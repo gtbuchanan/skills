@@ -1,0 +1,40 @@
+{
+  "name": "@gtbuchanan/github-api-fake",
+  "private": true,
+  "description": "A fake GitHub API the real gh runs against in the eval suites.",
+  "type": "module",
+  "exports": {
+    "./caller": "./src/caller.ts",
+    "./gh-env": "./src/gh-env.ts",
+    "./server": "./src/server.ts",
+    "./world": "./src/world.ts"
+  },
+  "scripts": {
+    "coverage:codecov:upload": "gtb task coverage:codecov:upload",
+    "coverage:vitest:merge": "gtb task coverage:vitest:merge",
+    "lint:eslint": "gtb task lint:eslint",
+    "schema:refresh": "node scripts/refresh-schema.ts",
+    "test:vitest:fast": "gtb task test:vitest:fast",
+    "test:vitest:slow": "gtb task test:vitest:slow",
+    "typecheck:ts": "gtb task typecheck:ts"
+  },
+  "dependencies": {
+    "@gtbuchanan/stub-runtime": "workspace:*",
+    "graphql": "catalog:",
+    "valibot": "catalog:"
+  },
+  "devDependencies": {
+    "@gtbuchanan/cli": "catalog:",
+    "@gtbuchanan/eslint-config": "catalog:",
+    "@gtbuchanan/tsconfig": "catalog:",
+    "@gtbuchanan/vitest-config": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

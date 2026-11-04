@@ -1,1 +1,4 @@
 * text=auto eol=lf
+
+# Vendored from GitHub and refreshed by script: collapsed in PR diffs.
+packages/github-api-fake/schema/github.graphql linguist-generated

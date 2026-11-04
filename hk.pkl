@@ -9,8 +9,16 @@ import "package://github.com/gtbuchanan/tooling/releases/download/hk-config@0.5.
 // eslint args shared by the step's check/fix; only `--fix` differs.
 local eslintArgs = "--max-warnings=0 --no-warn-ignored {{files}}"
 
+// The fake GitHub's vendored schema is text that delta-compresses, not the
+// binary the large-file check exists to catch; see its refresh script.
+local recommended = (Defaults.recommended) {
+  ["check-added-large-files"] {
+    exclude = List("packages/github-api-fake/schema/github.graphql")
+  }
+}
+
 local allSteps = new Mapping<String, Step> {
-  ...Defaults.recommended
+  ...recommended
 
   ["eslint"] {
     check = "pnpm exec eslint \(eslintArgs)"

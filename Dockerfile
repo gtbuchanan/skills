@@ -20,7 +20,7 @@
 # remember to join. This stage re-runs on any source edit and costs a copy;
 # what it emits is byte-identical unless a manifest moved, so the install layer
 # stays cached through ordinary work on a suite.
-FROM node:24-bookworm-slim AS manifests
+FROM node:26-bookworm-slim AS manifests
 
 WORKDIR /src
 
@@ -37,7 +37,7 @@ RUN find . -type f \
 # (`--no-cache-filter=runtime`) rather than at a bare `--no-cache`, which
 # re-exports every layer. Both discard the store below, so either is for
 # proving a cold build works rather than for iterating.
-FROM node:24-bookworm-slim AS runtime
+FROM node:26-bookworm-slim AS runtime
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates git \

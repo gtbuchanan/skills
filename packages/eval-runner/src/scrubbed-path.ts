@@ -546,6 +546,10 @@ export const buildEvalEnv = ({
     ...Object.fromEntries(agents.map(({ executable }) =>
       [executable.envVar, agentExecutable(executable, sourceEnv)])),
     ...realGhVar(sourceEnv),
+    /* An agent can run GH_REAL itself, past the double. Left to its default,
+       gh on Windows reads its config from APPDATA, which is passed on below,
+       and finds the developer's login there. */
+    GH_CONFIG_DIR: path.join(homeDir, '.config', 'gh'),
     HOME: homeDir,
     PATH: scrubbedPath,
     STUB_BINDIR: stubDir,

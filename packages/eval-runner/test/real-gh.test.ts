@@ -68,6 +68,24 @@ test('passes on the real gh the caller names', ({ expect }) => {
   expect(envFrom({ GH_REAL: pinned, PATH: found.dir })['GH_REAL']).toBe(pinned);
 });
 
+test('keeps the real gh away from the caller login', ({ expect }) => {
+  /*
+   * An agent can run GH_REAL itself, past the double. On Windows gh finds the
+   * developer's login under APPDATA, which the eval env passes on, so a clean
+   * HOME alone would leave it acting as the developer against the real GitHub.
+   */
+  const home = path.join(tmpdir(), 'eval-home');
+  const env = buildEvalEnv({
+    agents: [],
+    homeDir: home,
+    scrubbedPath: '',
+    sourceEnv: { GH_CONFIG_DIR: path.join(tmpdir(), 'developer', 'gh') },
+    stubDir: tmpdir(),
+  });
+
+  expect(env['GH_CONFIG_DIR']).toBe(path.join(home, '.config', 'gh'));
+});
+
 test('names no real gh where the caller has none', ({ expect }) => {
   using empty = ghDir();
   rmSync(empty.gh);

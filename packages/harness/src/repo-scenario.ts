@@ -16,6 +16,7 @@
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import {
   type GitRunner,
@@ -70,6 +71,14 @@ export interface RepoScenarioOptions {
    * `import.meta.url` of the suite module calling this.
    */
   readonly metaUrl: string;
+  /**
+   * The `<owner>/<repo>` the checkout's origin claims to be on
+   * `github.localhost`, for a suite whose gh is real and decides which
+   * repository it is in from the remote's URL. git still reaches the local
+   * bare origin, through `core.sshCommand`. Left out, the origin is the bare
+   * repository's own path.
+   */
+  readonly remote?: string | undefined;
 }
 
 /**
@@ -129,6 +138,29 @@ const writeExtra = (
 };
 
 /**
+ * A Windows path with forward slashes, as a POSIX shell reads it.
+ */
+const posix = (file: string): string => file.replaceAll('\\', '/');
+
+/**
+ * Points the checkout's origin at `github.localhost/<slug>` while git keeps
+ * reaching the local bare repository, so the real gh recognises the checkout.
+ *
+ * Forward slashes, because git runs `core.sshCommand` through a POSIX shell,
+ * where a backslash in a Windows path is an escape.
+ */
+const disguiseOrigin = (runner: GitRunner, origin: string, slug: string): void => {
+  const localSsh = fileURLToPath(import.meta.resolve('@gtbuchanan/git-fixtures/local-ssh'));
+
+  runGit(runner, ['remote', 'set-url', 'origin', `git@github.localhost:${slug}.git`]);
+  runGit(runner, [
+    'config',
+    'core.sshCommand',
+    `node "${posix(localSsh)}" "${posix(origin)}"`,
+  ]);
+};
+
+/**
  * What a suite gets back: the seeder to hand `scenarioSetup`, and where the
  * baselines it records can be read.
  */
@@ -140,7 +172,7 @@ export interface RepoScenarioSeeding<TScenario extends RepoScenario> {
 export const repoScenarioSeeding = <TScenario extends RepoScenario>(
   options: RepoScenarioOptions,
 ): RepoScenarioSeeding<TScenario> => {
-  const { author, metaUrl } = options;
+  const { author, metaUrl, remote } = options;
   const suite = suiteName(metaUrl);
 
   const baselinesPath = (): string => artifactPath(`${suite}.baselines.json`);
@@ -172,18 +204,20 @@ export const repoScenarioSeeding = <TScenario extends RepoScenario>(
   const seed: ScenarioSeeder<TScenario> = (scenario, workspace) => {
     const git = resolveRealGit();
 
+    const origin = artifactPath(`${suite}.${scenario.key}.origin.git`);
     seedHistory({
       author,
       branch: scenario.branch,
       commits: scenario.commits,
       git,
       localIdentity: author,
-      origin: artifactPath(`${suite}.${scenario.key}.origin.git`),
+      origin,
       workspace,
     });
 
     const runner = { cwd: workspace, git };
     if (scenario.extra) writeExtra(runner, scenario.extra, scenario.branch, author);
+    if (remote !== undefined) disguiseOrigin(runner, origin, remote);
 
     /* The marker is written by the hook after this returns, and committing it
        would put test scaffolding into the diff under review — so it is excluded

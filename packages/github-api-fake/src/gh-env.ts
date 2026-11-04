@@ -12,6 +12,8 @@
  * missing variable fails closed rather than falling back to a real login.
  */
 import path from 'node:path';
+import { callerToken } from './caller.ts';
+import type { Caller } from './caller.ts';
 
 export interface FakeGhEnvOptions {
   /**
@@ -20,9 +22,9 @@ export interface FakeGhEnvOptions {
   readonly dir: string;
   readonly port: number;
   /**
-   * The key of the world the call is answered from.
+   * The call, its run and the world it is answered from.
    */
-  readonly world: string;
+  readonly caller: Caller;
 }
 
 export const fakeGhEnv = (options: FakeGhEnvOptions): Record<string, string> => {
@@ -34,9 +36,9 @@ export const fakeGhEnv = (options: FakeGhEnvOptions): Record<string, string> => 
     GH_NO_EXTENSION_UPDATE_NOTIFIER: '1',
     GH_NO_UPDATE_NOTIFIER: '1',
     GH_PROMPT_DISABLED: '1',
-    /* gh sends its token verbatim, which is how the fake learns which world
-       a call is about: HTTP carries no working directory to find it from. */
-    GH_TOKEN: options.world,
+    /* gh sends its token verbatim, which is how the fake learns which call
+       a request is part of. See caller.ts. */
+    GH_TOKEN: callerToken(options.caller),
     /* Go reads either spelling, upper case first, and an empty value falls
        through to the other — so every one is set, exemptions to nothing. */
     HTTP_PROXY: proxy,

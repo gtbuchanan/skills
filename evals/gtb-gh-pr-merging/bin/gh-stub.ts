@@ -1,182 +1,81 @@
 #!/usr/bin/env node
 /*
- * Fake `gh` for this eval.
+ * `gh` for this eval: the real gh, against the fake GitHub setup.ts runs.
  *
- * It never reaches the network: it answers from the canned scenarios in
- * `src/scenarios.ts`, picking the world by walking up from the working
- * directory to the marker the seed dropped, and records every invocation to
- * the log of the run that made it, so concurrent tests never share one.
+ * Spike. This double invents nothing: it records the call, then hands it to
+ * the real gh (GH_REAL, named by the runner) with an environment pointing
+ * every request at the fake. What gh prints, and with what status, is gh's.
  *
- * The body is why this logs more than argv. A squash message goes in on
- * standard input, which keeps it out of the command line entirely — so a log
- * of argv alone could not tell a message carrying the branch's trailers and
- * its other authors from one that dropped them, which is most of what this
- * suite is asking.
+ * The scenario is found the way every double here finds it, from the marker
+ * above the working directory, and travels to the fake in the token with the
+ * call and its run, so whatever the fake refuses is recorded beside it.
  *
- * The handlers are only what a merge motivates. Opening a pull request,
- * promoting it, reading review threads and replying to them are all absent,
- * and `dispatch` refuses anything no handler claimed — so a run that wandered
- * into them fails loudly here rather than being answered. That refusal is the
- * point: a double's fall-through is an answer, and exit 0 with no output reads
- * as "there is nothing here" to an agent that will act on it.
- *
- * Reached as `gh`: the runner installs a wrapper at the front of the eval PATH.
- * The real CLI is never reachable from a suite.
+ * The environment is built from an allowlist rather than inherited, so that
+ * nothing the caller carries — a token, a host, a proxy exemption — can point
+ * gh anywhere but the fake.
  */
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { branchAt } from '@gtbuchanan/git-fixtures/checkout';
+import { hermeticGitConfig, resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
+import { fakeGhEnv } from '@gtbuchanan/github-api-fake/gh-env';
 import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
-import { checksAnswer } from '@gtbuchanan/github-cli-stub/checks';
-import { prRecords } from '@gtbuchanan/github-cli-stub/pr-records';
-import { currentHead, impliedNumber } from '@gtbuchanan/github-cli-stub/pulls';
-import { checksFor } from '@gtbuchanan/github-cli-stub/scenario-world';
-import { pick, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
-import { readState, writeState } from '@gtbuchanan/github-cli-stub/state';
-import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
-import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
+import { exitCodeFrom } from '@gtbuchanan/stub-runtime/passthrough';
+import { runVar } from '@gtbuchanan/stub-runtime/run-log';
 import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
-import { argv, emit, joined, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
-import { repoSlug } from '#src/repository.ts';
+import { argv, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
+import spawn from 'cross-spawn';
 import { scenarios } from '#src/scenarios.ts';
 
-const stdin = stdinBody(argv);
-
 const located = locateScenario(scenarios, process.cwd());
-const scenario = located.scenario;
+const stdin = stdinBody(argv);
+logCallToRun('gh', stdin);
+const run = process.env[runVar];
 
-/* Logged after the scenario is known: a `gh` call outside every workspace
-   cannot be answered at all, so locateScenario has already thrown above. */
-const log = logCallToRun('gh', stdin);
-
-/**
- * Where this scenario's workspace keeps what earlier calls did.
- */
-const statePath = path.join(located.dir, '.eval-state.json');
-const state = readState(statePath);
-
-const head = (): string =>
-  currentHead({
-    argv,
-    checkoutBranch: () => branchAt(located.dir),
-    fallback: scenario.branch,
-  });
-
-const records = prRecords({ head, repoSlug, scenario, state });
+const realGh = process.env['GH_REAL'];
+const port = Number(process.env['GITHUB_FAKE_PORT']);
+if (realGh === undefined || !Number.isSafeInteger(port) || port <= 0) {
+  process.stderr.write('gh-stub: GH_REAL and GITHUB_FAKE_PORT must both be set\n');
+  process.exit(1);
+}
 
 /**
- * The pull request number the call names — the first bare integer argument.
+ * What gh needs from this process to start, and nothing that could carry a
+ * credential or point it anywhere.
  */
-const namedNumber = (): number | undefined => {
-  const found = argv.find(arg => /^\d+$/v.test(arg));
-  return found === undefined ? undefined : Number(found);
-};
+const inherited = [
+  'HOME', 'PATH', 'Path', 'STUB_BINDIR', 'SystemRoot', 'TEMP', 'TMP', 'TMPDIR', 'USERPROFILE',
+];
 
-const flagValue = (flag: string): string | undefined => {
-  const at = argv.indexOf(flag);
-  return at === -1 ? undefined : argv[at + 1];
-};
+/* The real git first, so gh's own git calls (remotes, branches) go straight
+   to it rather than through the recording double, and are not logged as the
+   agent's. */
+const realGitDir = path.dirname(resolveRealGit());
+const inheritedPath = process.env['PATH'] ?? process.env['Path'] ?? '';
+const pathValue = [realGitDir, inheritedPath].join(path.delimiter);
 
-const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
-  {
-    matches: subcommand('repo', 'view'),
-    name: 'repo view',
-    respond: () => {
-      /* The merge rules read this one field to decide who deletes the branch,
-         and read it through `--jq`, which this double does not run. */
-      if (joined.includes('deleteBranchOnMerge') && joined.includes('--jq'))
-        return { stdout: `${String(scenario.deleteBranchOnMerge)}\n` };
+const ghDir = mkdtempSync(path.join(tmpdir(), 'gh-run-'));
+const caller = { argv, ...(run !== undefined && { run }), world: located.scenario.key };
 
-      const narrowed = pick(records.repository(), requestedFields(argv));
-      return { stdout: `${JSON.stringify(narrowed)}\n` };
-    },
-  },
-  {
-    matches: subcommand('pr', 'list'),
-    name: 'pr list',
-    respond: () => ({
-      stdout: `${JSON.stringify(
-        records.listing(argv).map(record => pick(record, requestedFields(argv))),
-      )}\n`,
+const env = {
+  ...Object.fromEntries(
+    inherited.flatMap((name) => {
+      const value = process.env[name];
+      return value === undefined ? [] : [[name, value]];
     }),
-  },
-  {
-    matches: subcommand('pr', 'checks'),
-    name: 'pr checks',
-    respond: () => checksAnswer(checksFor(scenario), { argv, branch: scenario.branch, repoSlug }),
-  },
-  {
-    matches: subcommand('pr', 'view'),
-    name: 'pr view',
-    respond: () => {
-      const viewed = pick(records.named(namedNumber()), requestedFields(argv));
-      return { stdout: `${JSON.stringify(viewed)}\n` };
-    },
-  },
-  {
-    matches: subcommand('pr', 'edit'),
-    name: 'pr edit',
-    respond: () => {
-      const base = flagValue('--base');
-      const number = namedNumber() ?? scenario.pr?.number ?? 0;
-      if (base !== undefined) {
-        writeState(statePath, {
-          ...state,
-          retargeted: { ...state.retargeted, [String(number)]: base },
-        });
-      }
+  ),
+  ...hermeticGitConfig,
+  ...fakeGhEnv({
+    dir: ghDir,
+    port,
+    caller,
+  }),
+  PATH: pathValue,
+};
 
-      return { stdout: `${records.url(number)}\n` };
-    },
-  },
-  {
-    matches: allOf(subcommand('api'), argument(/\/merge-async/v)),
-    name: 'asynchronous merge',
-    respond: () => {
-      writeState(statePath, {
-        ...state,
-        merged: [...state.merged, namedNumber() ?? scenario.pr?.number ?? 0],
-      });
-      /* The endpoint answers before the merge has happened, which is why the
-         skill polls rather than treating this as done. */
-      return { stdout: `${JSON.stringify({ status: 'pending' })}\n` };
-    },
-  },
-  {
-    matches: subcommand('pr', 'merge'),
-    name: 'pr merge',
-    respond: () => {
-      if (scenario.isStackMember === true) {
-        /* Membership is how a stack announces itself: `pr list` does not report
-           it, so this refusal is the only way the skill finds out. */
-        return {
-          code: 1,
-          stderr:
-            'pull request is part of a stack and must be merged using the ' +
-            'asynchronous merge REST API\n',
-        };
-      }
-
-      /* --auto only defers the merge while something is outstanding. This
-         world's checks decide which of those happened. */
-      const number = namedNumber() ?? impliedNumber(state, scenario, head());
-      const isDeferred = argv.includes('--auto') && scenario.checksPending === true;
-
-      /* Recorded only when the merge actually happened. Writing it while the
-         answer says the merge is deferred leaves the next process reading a
-         pull request that is merged and absent from `pr list`, which is the
-         opposite of what this scenario states and what its task asked for. */
-      if (!isDeferred)
-        writeState(statePath, { ...state, merged: [...state.merged, number] });
-
-      return isDeferred
-        ? {
-            stdout:
-              `✓ Pull request ${repoSlug}#${String(number)} will be ` +
-              'automatically merged when all requirements are met\n',
-          }
-        : { stdout: `✓ Merged pull request ${repoSlug}#${String(number)}\n` };
-    },
-  },
-]);
-
-emit(outcome, log);
+/* A body read for the log is handed on; otherwise gh reads standard input
+   itself, if it reads it at all. */
+const result = spawn.sync(realGh, argv, stdin === ''
+  ? { env, stdio: 'inherit' }
+  : { env, input: stdin, stdio: ['pipe', 'inherit', 'inherit'] });
+process.exitCode = exitCodeFrom(result.status);

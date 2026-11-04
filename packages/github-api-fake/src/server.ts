@@ -8,22 +8,39 @@
  *
  * GraphQL runs against GitHub's published schema, so a query is validated the
  * way GitHub would validate it and gh's feature detection is answered without
- * help. What a world does not define is an error naming the field or route,
- * because the alternative — a null, an empty list, a 200 with nothing in it —
- * reads to an agent as "there is nothing here", and it acts on that.
+ * help. What a world does not define is an error, because the alternative —
+ * a null, an empty list, a 200 with nothing in it — reads to an agent as
+ * "there is nothing here", and it acts on that.
  *
- * Each call names its world with the token gh sends, since HTTP carries no
- * working directory to locate a scenario from. See gh-env.ts for the other
- * half of that contract.
+ * Each call names its world, and the call itself, with the token gh sends;
+ * see caller.ts.
+ *
+ * What the fake cannot answer it refuses twice over. gh gets an error GitHub
+ * itself could send, so nothing an agent reads says it is talking to a
+ * double. The run log gets the refusal, naming the field or route, beside the
+ * call that reached it, which is where a suite reports what its doubles
+ * refused.
  */
+import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { text } from 'node:stream/consumers';
-import { schema as published } from '@octokit/graphql-schema';
-import { GraphQLError, buildSchema, graphql } from 'graphql';
+import { runLogPath } from '@gtbuchanan/stub-runtime/run-log';
+import { appendJsonl } from '@gtbuchanan/stub-runtime/stub';
+import {
+  GraphQLError,
+  OverlappingFieldsCanBeMergedRule,
+  buildSchema,
+  execute,
+  parse,
+  specifiedRules,
+  validate,
+} from 'graphql';
 import type { GraphQLFieldResolver, GraphQLSchema } from 'graphql';
 import * as v from 'valibot';
-import type { RestAnswer, World } from './world.ts';
+import { callerOf } from './caller.ts';
+import type { Caller } from './caller.ts';
+import type { RestAnswer, RestRequest, World } from './world.ts';
 
 export interface FakeGitHub {
   readonly close: () => Promise<void>;
@@ -31,6 +48,11 @@ export interface FakeGitHub {
 }
 
 export interface FakeGitHubOptions {
+  /**
+   * Where run logs are kept, read when a refusal is recorded: `STUB_LOG_DIR`
+   * unless given. Unset, refusals are recorded nowhere.
+   */
+  readonly logDir?: () => string | undefined;
   /**
    * The world a call's token names, or `undefined` for a token naming none.
    */
@@ -46,31 +68,64 @@ const apiHost = 'api.github.localhost';
  * GitHub's published schema, built once: it is large, and building it is the
  * slowest thing the fake does.
  *
+ * Vendored from docs.github.com rather than taken from a package, because gh
+ * queries fields as soon as GitHub ships them and a packaged schema lags: gh
+ * 2.103 already asks for `PullRequest.assignedActors`, which the last
+ * `@octokit/graphql-schema` release does not have.
+ *
  * Trusted rather than validated. It breaks a rule newer graphql-js enforces
  * about deprecated interface fields, and it is GitHub's schema to get wrong.
  */
 const githubSchema = ((): (() => GraphQLSchema) => {
   const cache: { schema?: GraphQLSchema } = {};
   return () => {
-    cache.schema ??= buildSchema(published.idl, { assumeValid: true, assumeValidSDL: true });
+    cache.schema ??= buildSchema(
+      readFileSync(new URL('../schema/github.graphql', import.meta.url), 'utf8'),
+      { assumeValid: true, assumeValidSDL: true },
+    );
     return cache.schema;
   };
 })();
 
 /**
+ * The validation GitHub applies, which is graphql-js's less one rule.
+ *
+ * gh's own queries select `name` from union members that type it differently
+ * (`String` on one, `String!` on another), and GitHub answers them. graphql-js
+ * refuses that by default; refusing it here would fail calls GitHub serves.
+ */
+const githubRules = specifiedRules.filter(rule => rule !== OverlappingFieldsCanBeMergedRule);
+
+/**
+ * What GitHub says when a query fails on its side.
+ */
+const githubBugMessage =
+  'Something went wrong while executing your query. This may be the result of a timeout, ' +
+  'or it could be a GitHub bug.';
+
+/**
+ * What GitHub's REST API says when it fails on its side.
+ */
+const serverError: RestAnswer = { body: { message: 'Server Error' }, status: 500 };
+
+/**
+ * The reasons a request was refused, collected while it is answered.
+ */
+type Refusals = string[];
+
+/**
  * Resolves only what a world defines: a property is the field's value and a
  * function is called with the field's arguments. Anything else is an error
- * naming the field, which gh reports with the path that reached it.
+ * GitHub could have sent, with the field recorded as refused.
  */
-const fieldResolver: GraphQLFieldResolver<unknown, unknown> = (source, args, _context, info) => {
+const fieldResolver: GraphQLFieldResolver<unknown, Refusals> = (source, args, refusals, info) => {
   if (typeof source === 'object' && source !== null && Object.hasOwn(source, info.fieldName)) {
     const value: unknown = Reflect.get(source, info.fieldName);
     return typeof value === 'function' ? Reflect.apply(value, source, [args]) : value;
   }
 
-  throw new GraphQLError(
-    `fake GitHub does not model ${info.parentType.name}.${info.fieldName}`,
-  );
+  refusals.push(`no model for GraphQL field ${info.parentType.name}.${info.fieldName}`);
+  throw new GraphQLError(githubBugMessage);
 };
 
 const send = (res: ServerResponse, answer: RestAnswer): void => {
@@ -81,11 +136,12 @@ const send = (res: ServerResponse, answer: RestAnswer): void => {
 const tokenPattern = /^token (?<token>.+)$/v;
 
 /**
- * The token gh sent, which names the world.
+ * The caller the token gh sent names, if it names one.
  */
-const tokenOf = (req: IncomingMessage): string => {
+const callerFrom = (req: IncomingMessage): Caller | undefined => {
   const match = tokenPattern.exec(req.headers.authorization ?? '');
-  return match?.groups?.['token'] ?? '';
+  const token = match?.groups?.['token'];
+  return token === undefined ? undefined : callerOf(token);
 };
 
 const VariablesSchema = v.record(v.string(), v.unknown());
@@ -95,16 +151,59 @@ const GraphqlRequestSchema = v.object({
   variables: v.optional(VariablesSchema, {}),
 });
 
+/**
+ * Answers a GraphQL request from `world`, validated as GitHub validates it.
+ */
+const answerGraphql = async (
+  body: string,
+  world: World,
+  refusals: Refusals,
+): Promise<RestAnswer> => {
+  const request = v.parse(GraphqlRequestSchema, JSON.parse(body));
+  const schema = githubSchema();
+  const document = parse(request.query);
+  const errors = validate(schema, document, githubRules);
+  if (errors.length > 0) return { body: { errors }, status: 200 };
+
+  const result = await execute({
+    contextValue: refusals,
+    document,
+    fieldResolver,
+    rootValue: world.graphql,
+    schema,
+    variableValues: request.variables,
+  });
+  return { body: result, status: 200 };
+};
+
+/**
+ * Answers a REST request from `world`.
+ *
+ * An unmodelled route is a server error rather than a 404: gh reads a 404 as
+ * an answer in places — deleting a branch that 404s counts as already deleted
+ * — so a route nobody modelled would pass for success there.
+ */
+const answerRest = (request: RestRequest, world: World, refusals: Refusals): RestAnswer => {
+  const modelled = world.rest?.(request);
+  if (modelled !== undefined) return modelled;
+  refusals.push(`no model for REST route ${request.method} ${request.path}`);
+  return serverError;
+};
+
 const answer = async (
   req: IncomingMessage,
+  caller: Caller | undefined,
   options: FakeGitHubOptions,
+  refusals: Refusals,
 ): Promise<RestAnswer> => {
   // Proxied requests arrive with an absolute URL; anything else has none.
   const url = new URL(req.url ?? '/', `http://${req.headers.host ?? apiHost}`);
-  if (url.host !== apiHost)
-    return { body: { message: `fake GitHub refuses ${url.host}` }, status: 403 };
+  if (url.host !== apiHost) {
+    refusals.push(`request to a host other than ${apiHost}: ${url.host}`);
+    return { body: { message: 'Forbidden' }, status: 403 };
+  }
 
-  const world = options.worlds(tokenOf(req));
+  const world = caller === undefined ? undefined : options.worlds(caller.world);
   if (world === undefined)
     return {
       body: { documentation_url: 'https://docs.github.com/rest', message: 'Bad credentials' },
@@ -114,38 +213,45 @@ const answer = async (
   const body = await text(req);
   const method = req.method ?? 'GET';
 
-  if (method === 'POST' && url.pathname === '/graphql') {
-    const request = v.parse(GraphqlRequestSchema, JSON.parse(body));
-    const result = await graphql({
-      fieldResolver,
-      rootValue: world.graphql,
-      schema: githubSchema(),
-      source: request.query,
-      variableValues: request.variables,
-    });
-    return { body: result, status: 200 };
-  }
+  if (method === 'POST' && url.pathname === '/graphql')
+    return answerGraphql(body, world, refusals);
 
-  return world.rest?.({ body, method, path: url.pathname }) ?? {
-    body: { message: `fake GitHub does not model ${method} ${url.pathname}` },
-    status: 404,
-  };
+  return answerRest({ body, method, path: url.pathname }, world, refusals);
 };
 
 /**
- * Answers one request. Never rejects: a fault in the fake is a 500 naming it,
- * which gh reports, rather than a dropped connection it retries.
+ * Records each refusal in the caller's run log, the way a stub records its
+ * own. A caller outside a run records nothing, as a stub outside one does.
+ */
+const recordRefusals = (
+  caller: Caller | undefined,
+  refusals: Refusals,
+  options: FakeGitHubOptions,
+): void => {
+  const logDir = (options.logDir ?? (() => process.env['STUB_LOG_DIR']))();
+  if (logDir === undefined || logDir === '' || caller?.run === undefined) return;
+  for (const refusal of refusals)
+    appendJsonl(runLogPath(logDir, caller.run), { argv: caller.argv, cmd: 'gh', refusal });
+};
+
+/**
+ * Answers one request. Never rejects: a fault in the fake is a 500, recorded
+ * as a refusal, rather than a dropped connection gh retries.
  */
 const respond = async (
   req: IncomingMessage,
   res: ServerResponse,
   options: FakeGitHubOptions,
 ): Promise<void> => {
+  const caller = callerFrom(req);
+  const refusals: Refusals = [];
   try {
-    send(res, await answer(req, options));
+    send(res, await answer(req, caller, options, refusals));
   } catch (error) {
-    send(res, { body: { message: `fake GitHub failed: ${String(error)}` }, status: 500 });
+    refusals.push(`fault answering ${req.method ?? 'GET'} ${req.url ?? '/'}: ${String(error)}`);
+    send(res, serverError);
   }
+  recordRefusals(caller, refusals, options);
 };
 
 export const startFakeGitHub = async (options: FakeGitHubOptions): Promise<FakeGitHub> => {

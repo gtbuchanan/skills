@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     "./checkout": "./src/checkout.ts",
+    "./local-ssh": "./bin/local-ssh.ts",
     "./real-git": "./src/real-git.ts",
     "./seed-repo": "./src/seed-repo.ts"
   },

@@ -15,6 +15,8 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { readRefusals } from '@gtbuchanan/stub-runtime/calls';
+import { runLogPath } from '@gtbuchanan/stub-runtime/run-log';
 import { test } from 'vitest';
 import { fakeGhEnv } from '@gtbuchanan/github-api-fake/gh-env';
 import { startFakeGitHub } from '@gtbuchanan/github-api-fake/server';
@@ -39,6 +41,7 @@ const startupEnv = (): Record<string, string> =>
   Object.fromEntries(startupVars.flatMap(startupEntry));
 
 interface Run {
+  readonly refusals: readonly string[];
   readonly status: number | undefined;
   readonly stderr: string;
   readonly stdout: string;
@@ -70,19 +73,20 @@ const worlds: Record<string, World> = {
 };
 
 /**
- * Runs gh against a fake serving {@link worlds}, as the world `world`.
+ * Runs gh against a fake serving {@link worlds}, as the world `world`, with a
+ * run log of its own for the fake to record refusals in.
  *
  * Asynchronous, because the fake answers on this process's event loop: a
  * synchronous spawn would block the very loop gh is waiting on.
  */
 const ghAgainst = async (world: string, args: readonly string[]): Promise<Run> => {
-  const fake = await startFakeGitHub({ worlds: key => worlds[key] });
   const dir = mkdtempSync(path.join(tmpdir(), 'github-api-fake-'));
+  const fake = await startFakeGitHub({ logDir: () => dir, worlds: key => worlds[key] });
   try {
     const child = spawn(gh, [...args], {
       env: {
         ...startupEnv(),
-        ...fakeGhEnv({ dir, port: fake.port, world }),
+        ...fakeGhEnv({ caller: { argv: [...args], run: 'run-1', world }, dir, port: fake.port }),
         GH_REPO: 'github.localhost/acme/widgets',
       },
     });
@@ -98,7 +102,8 @@ const ghAgainst = async (world: string, args: readonly string[]): Promise<Run> =
       child.on('close', resolve);
     });
 
-    return { status: status ?? undefined, stderr, stdout };
+    const refusals = readRefusals(runLogPath(dir, 'run-1'), 'gh').map(refused => refused.reason);
+    return { refusals, status: status ?? undefined, stderr, stdout };
   } finally {
     await fake.close();
   }
@@ -108,21 +113,39 @@ test('a field the world models is answered', { tags: ['slow'] }, async ({ expect
   const run = await ghAgainst('rate-limiter', ['pr', 'view', '7', '--json', 'title']);
 
   expect(run).toStrictEqual({
+    refusals: [],
     status: 0,
     stderr: '',
     stdout: '{"title":"Add the rate limiter"}\n',
   });
 });
 
-test('a field the world does not model fails, naming it', { tags: ['slow'] }, async ({
-  expect,
-}) => {
+test('a field the world does not model fails', { tags: ['slow'] }, async ({ expect }) => {
   /* Answering null would read to an agent as "this pull request has no
      reviews", which is an answer. */
   const run = await ghAgainst('rate-limiter', ['pr', 'view', '7', '--json', 'reviews']);
 
   expect(run.status).toBe(1);
-  expect(run.stderr).toContain('PullRequest.reviews');
+});
+
+test('a field the world does not model fails as GitHub would', { tags: ['slow'] }, async ({
+  expect,
+}) => {
+  // Nothing the agent reads may say it is talking to a double.
+  const run = await ghAgainst('rate-limiter', ['pr', 'view', '7', '--json', 'reviews']);
+
+  expect(run.stderr).toBe(
+    'GraphQL: Something went wrong while executing your query. This may be the result of a ' +
+    'timeout, or it could be a GitHub bug. (repository.pullRequest.reviews)\n',
+  );
+});
+
+test('a field the world does not model is recorded as refused', { tags: ['slow'] }, async ({
+  expect,
+}) => {
+  const run = await ghAgainst('rate-limiter', ['pr', 'view', '7', '--json', 'reviews']);
+
+  expect(run.refusals).toStrictEqual(['no model for GraphQL field PullRequest.reviews']);
 });
 
 test('the token chooses which world answers', { tags: ['slow'] }, async ({ expect }) => {
@@ -149,13 +172,26 @@ test('a REST route the world models is answered', { tags: ['slow'] }, async ({ e
   expect(run.stdout).toBe('{"status":"pending"}');
 });
 
-test('a REST route the world does not model fails, naming it', { tags: ['slow'] }, async ({
+test('a REST route the world does not model fails', { tags: ['slow'] }, async ({ expect }) => {
+  const run = await ghAgainst('rate-limiter', ['api', 'user']);
+
+  expect(run.status).toBe(1);
+});
+
+test('a REST route the world does not model fails as GitHub would', { tags: ['slow'] }, async ({
   expect,
 }) => {
   const run = await ghAgainst('rate-limiter', ['api', 'user']);
 
-  expect(run.status).toBe(1);
-  expect(run.stderr).toContain('GET /user');
+  expect(run.stderr).toBe('gh: Server Error (HTTP 500)\n');
+});
+
+test('a REST route the world does not model is recorded as refused', { tags: ['slow'] }, async ({
+  expect,
+}) => {
+  const run = await ghAgainst('rate-limiter', ['api', 'user']);
+
+  expect(run.refusals).toStrictEqual(['no model for REST route GET /user']);
 });
 
 test('github.com cannot be reached', { tags: ['slow'] }, async ({ expect }) => {

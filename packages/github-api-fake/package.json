@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./caller": "./src/caller.ts",
     "./gh-env": "./src/gh-env.ts",
     "./server": "./src/server.ts",
     "./world": "./src/world.ts"
@@ -16,6 +17,7 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
+    "@gtbuchanan/stub-runtime": "workspace:*",
     "@octokit/graphql-schema": "catalog:",
     "graphql": "catalog:",
     "valibot": "catalog:"

@@ -10,10 +10,15 @@
  */
 import path from 'node:path';
 import { test } from 'vitest';
+import { callerOf } from '@gtbuchanan/github-api-fake/caller';
 import { fakeGhEnv } from '@gtbuchanan/github-api-fake/gh-env';
 
 const dir = path.join('runs', 'run-1');
-const env = fakeGhEnv({ dir, port: 8766, world: 'merge-stacked' });
+const env = fakeGhEnv({
+  caller: { argv: ['pr', 'view'], world: 'merge-stacked' },
+  dir,
+  port: 8766,
+});
 
 test('gh is pointed at the local GitHub host', ({ expect }) => {
   /* gh speaks plain HTTP to github.localhost, which is what lets the fake
@@ -41,7 +46,7 @@ test('no host is exempt from the proxy', ({ expect }) => {
 });
 
 test('the token names the world the call is answered from', ({ expect }) => {
-  expect(env['GH_TOKEN']).toBe('merge-stacked');
+  expect(callerOf(env['GH_TOKEN'] ?? '')?.world).toBe('merge-stacked');
 });
 
 test("gh's config, cache, state and data are the call's own", ({ expect }) => {

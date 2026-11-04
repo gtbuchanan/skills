@@ -17,8 +17,10 @@
     "@gtbuchanan/agent-skills-harness": "workspace:*",
     "@gtbuchanan/eval-agents": "workspace:*",
     "@gtbuchanan/git-fixtures": "workspace:*",
+    "@gtbuchanan/github-api-fake": "workspace:*",
     "@gtbuchanan/github-cli-stub": "workspace:*",
     "@gtbuchanan/stub-runtime": "workspace:*",
+    "cross-spawn": "catalog:",
     "valibot": "catalog:"
   },
   "devDependencies": {
@@ -26,6 +28,7 @@
     "@gtbuchanan/eslint-config": "catalog:",
     "@gtbuchanan/tsconfig": "catalog:",
     "@gtbuchanan/vitest-config": "catalog:",
+    "@types/cross-spawn": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",

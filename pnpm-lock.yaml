@@ -834,6 +834,9 @@ importers:
       '@gtbuchanan/git-fixtures':
         specifier: workspace:*
         version: link:../git-fixtures
+      '@gtbuchanan/github-api-fake':
+        specifier: workspace:*
+        version: link:../github-api-fake
       cross-spawn:
         specifier: 'catalog:'
         version: 7.0.6

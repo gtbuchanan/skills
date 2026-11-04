@@ -29,6 +29,7 @@ import path from 'node:path';
 import type { EvalAgent } from '@gtbuchanan/eval-agents/eval-agent';
 import { evalAgents } from '@gtbuchanan/eval-agents/registry';
 import { hermeticGitConfig } from '@gtbuchanan/git-fixtures/real-git';
+import { resolveRealGh } from '@gtbuchanan/github-api-fake/real-gh';
 
 /*
  * Aggregator dirs re-export danger CLIs via shims; never admit them wholesale.
@@ -502,6 +503,20 @@ const networkVars = [
 const winDrivePrefixLength = 2;
 
 /**
+ * GH_REAL, naming the real gh, where the caller has one.
+ *
+ * gh stays shadowed on the scrubbed PATH, so an agent's `gh` always reaches a
+ * double. A double that hands calls on to the real gh, against a fake GitHub,
+ * finds it here instead: the first gh on the caller's PATH outside mise's
+ * shims, which is mise's pinned one wherever mise is active, unless the caller
+ * names one outright.
+ */
+const realGhVar = (sourceEnv: NodeJS.ProcessEnv): Record<string, string> => {
+  const realGh = resolveRealGh(sourceEnv);
+  return realGh === undefined ? {} : { GH_REAL: realGh };
+};
+
+/**
  * Constructs the eval env from scratch (allowlist), rather than inheriting the
  * caller's. Only OS plumbing, auth/network config, PATH/STUB_BINDIR, and a clean
  * HOME go in — so behavioral vars from the surrounding session never reach the
@@ -530,6 +545,7 @@ export const buildEvalEnv = ({
     ...hermeticGitConfig,
     ...Object.fromEntries(agents.map(({ executable }) =>
       [executable.envVar, agentExecutable(executable, sourceEnv)])),
+    ...realGhVar(sourceEnv),
     HOME: homeDir,
     PATH: scrubbedPath,
     STUB_BINDIR: stubDir,

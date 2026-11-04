@@ -33,6 +33,11 @@ includes = ["mise.tasks.toml"]
 # hk's builtins shell out to.
 [tools]
 actionlint = "1.7.12"
+# The real gh the eval suites run against a fake GitHub API. Pinned, because
+# what gh prints and how it exits is what the suites test the skills against.
+# Termux disables it by this name: gh's Linux builds cannot resolve DNS on
+# Android, so Termux's own gh package is used there.
+gh = "2.103.2"
 hk = "2.8.1"
 node = "24.21.0"
 # renovate transitively pulls `@yarnpkg/libzip`, whose latest is a manual

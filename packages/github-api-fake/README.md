@@ -2,6 +2,25 @@
 
 A fake GitHub API for the eval suites. Instead of faking the `gh` command, the suites run the real `gh` and point it at this server. `gh` does all the work of building requests and printing results, so a suite only has to describe the repository: its pull requests, checks, reviews and so on. That description is called a world.
 
+## Hosting the fake GitHub API for an eval suite
+
+A suite's setup wraps its seeder and extension hook with `hostFakeGitHub`. The fake then starts before the eval and stops after it, its port is named in `GITHUB_FAKE_PORT` for every gh call the agent makes, and each scenario's world is rebuilt whenever its workspace is seeded:
+
+```ts
+const github = hostFakeGitHub<Scenario>({
+  world: (scenario, workspace) => worldFor(scenario),
+});
+const setup = scenarioSetup({
+  metaUrl: import.meta.url,
+  scenarios,
+  seed: github.seeding(seeding.seed),
+});
+
+export const extensionHook = github.hooked(setup.extensionHook);
+```
+
+`gh` also needs a checkout it recognises as a GitHub repository. Pass `remote` to `repoScenarioSeeding` to get one.
+
 ## Running gh against the fake GitHub API
 
 Start the server with `startFakeGitHub`, giving it a way to look up a world by name. Then run `gh` with the environment variables from `fakeGhEnv`, which send its requests to the server and tell the server which world to answer from.

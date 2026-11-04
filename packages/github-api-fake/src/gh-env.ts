@@ -16,6 +16,12 @@ import path from 'node:path';
 import { callerToken } from './caller.ts';
 import type { Caller } from './caller.ts';
 
+/**
+ * Names the port the fake listens on, to the gh double. Whoever hosts the fake
+ * sets it; the double reads it.
+ */
+export const fakePortVar = 'GITHUB_FAKE_PORT';
+
 export interface FakeGhEnvOptions {
   /**
    * The call, its run and the world it is answered from.

@@ -6,6 +6,7 @@
   "exports": {
     "./caller": "./src/caller.ts",
     "./gh-env": "./src/gh-env.ts",
+    "./hosting": "./src/hosting.ts",
     "./real-gh": "./src/real-gh.ts",
     "./server": "./src/server.ts",
     "./world": "./src/world.ts"

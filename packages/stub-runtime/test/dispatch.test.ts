@@ -31,11 +31,11 @@ const call = (
 });
 
 /**
- * A handler that answers anything whose argv contains `token`.
+ * A handler that answers anything whose argv contains `view`.
  */
-const answering = (token: string, stdout: string) => ({
-  matches: ({ argv }: { argv: readonly string[] }) => argv.includes(token),
-  name: token,
+const answering = (stdout: string) => ({
+  matches: ({ argv }: { argv: readonly string[] }) => argv.includes('view'),
+  name: 'view',
   respond: () => ({ stdout }),
 });
 
@@ -66,15 +66,15 @@ test('the refusal names the CLI the double stands in for', ({ expect }) => {
 });
 
 test('a matching handler answers and succeeds', ({ expect }) => {
-  const outcome = dispatch(call('pr', 'view'), [answering('view', 'ok')]);
+  const outcome = dispatch(call('pr', 'view'), [answering('ok')]);
 
   expect(outcome).toMatchObject({ code: 0, stdout: 'ok' });
 });
 
 test('the first matching handler wins, not the last', ({ expect }) => {
   const outcome = dispatch(call('pr', 'view'), [
-    answering('view', 'first'),
-    answering('view', 'second'),
+    answering('first'),
+    answering('second'),
   ]);
 
   expect(outcome.stdout).toBe('first');

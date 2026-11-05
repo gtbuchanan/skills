@@ -27,7 +27,8 @@ const stub = path.join(import.meta.dirname, '..', 'bin', 'gh-stub.ts');
  * A throwaway checkout seeded as one scenario, its own directory per case so
  * the state one case persists never answers another.
  */
-const worldFor = (key: string): string => {
+const twoUnitsWorld = (): string => {
+  const key = 'two-units';
   const dir = mkdtempSync(path.join(tmpdir(), `gh-stub-${key}-`));
   writeFileSync(path.join(dir, markerFile), key);
   return dir;
@@ -49,7 +50,7 @@ test('a call is recorded in the log of the run that made it', ({ expect }) => {
      create recorded anywhere else is one it never sees. */
   const logDir = mkdtempSync(path.join(tmpdir(), 'gh-stub-runs-'));
   spawnSync(process.execPath, [stub, 'pr', 'create', '--draft', '--head', 'fix-parser'], {
-    cwd: worldFor('two-units'),
+    cwd: twoUnitsWorld(),
     env: { ...process.env, STUB_LOG_DIR: logDir, [runVar]: 'run-1' },
   });
 
@@ -58,7 +59,7 @@ test('a call is recorded in the log of the run that made it', ({ expect }) => {
 });
 
 test('each pull request opened gets a number of its own', ({ expect }) => {
-  const dir = worldFor('two-units');
+  const dir = twoUnitsWorld();
 
   const first = create(dir, 'fix-parser');
   const second = create(dir, 'fix-retry');

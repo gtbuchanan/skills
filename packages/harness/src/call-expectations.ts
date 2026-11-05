@@ -140,7 +140,7 @@ export const checkForbiddenOrder = (
     if (beforeIndex === -1) return [];
     const afterIndex = calls.findIndex(call => isMatch(call, after));
     return afterIndex === -1 || afterIndex > beforeIndex
-      ? [`${describe(before)} happened before ${describe(after)}`]
+      ? `${describe(before)} happened before ${describe(after)}`
       : [];
   });
 
@@ -154,11 +154,11 @@ export const checkOrder = (
   vars.requireOrder.flatMap(({ after, before }) => {
     const beforeIndex = calls.findIndex(call => isMatch(call, before));
     const afterIndex = calls.findIndex(call => isMatch(call, after));
-    if (afterIndex === -1) return [`never called: ${describe(after)}`];
-    if (beforeIndex === -1) return [`never called: ${describe(before)}`];
+    if (afterIndex === -1) return `never called: ${describe(after)}`;
+    if (beforeIndex === -1) return `never called: ${describe(before)}`;
     return beforeIndex < afterIndex
       ? []
-      : [`${describe(before)} came after ${describe(after)}, not before`];
+      : `${describe(before)} came after ${describe(after)}, not before`;
   });
 
 /**
@@ -170,7 +170,7 @@ export const checkStdin = (
 ): string[] =>
   vars.requireStdin.flatMap(({ command, includes }) => {
     const hits = calls.filter(call => isMatch(call, command));
-    if (hits.length === 0) return [`never called: ${describe(command)}`];
+    if (hits.length === 0) return `never called: ${describe(command)}`;
 
     /* No wording named: the assertion is only that a body arrived on standard
        input, which is the rule for every prose payload the skill sends. Pinning
@@ -178,7 +178,7 @@ export const checkStdin = (
     if (includes.length === 0) {
       return hits.some(hit => hit.stdin !== '')
         ? []
-        : [`${describe(command)} was handed no body on stdin`];
+        : `${describe(command)} was handed no body on stdin`;
     }
 
     /* One body has to carry all of them. Checking each needle against any hit
@@ -191,14 +191,12 @@ export const checkStdin = (
     const missing = includes.filter(
       needle => hits.every(hit => !hit.stdin.includes(needle)),
     );
-    return [
-      `no single body handed to ${describe(command)} carries all of ` +
+    return `no single body handed to ${describe(command)} carries all of ` +
       describe(includes) +
       (missing.length > 0 ? ` (never seen at all: ${describe(missing)})` : '') +
       (hits.every(hit => hit.stdin === '')
         ? ' — nothing was piped to it at all'
-        : ''),
-    ];
+        : '');
   });
 
 /*

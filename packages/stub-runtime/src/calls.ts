@@ -115,7 +115,7 @@ export interface RefusedCall {
 export const readRefusals = (logPath: string, cmd?: string): RefusedCall[] =>
   readJsonl(logPath, CallSchema).flatMap(call =>
     call.refusal !== undefined && (cmd === undefined || call.cmd === cmd)
-      ? [{ command: call.argv.join(' '), reason: call.refusal }]
+      ? { command: call.argv.join(' '), reason: call.refusal }
       : []);
 
 /**

@@ -211,7 +211,7 @@ const importedPaths = (file: string, contents: string): string[] => {
       else resolved.push(segment);
     }
 
-    return [resolved.join('/')];
+    return resolved.join('/');
   });
 };
 
@@ -261,8 +261,7 @@ const ungrounded = (
     /* The project root is a directory too, and it is where the config a unit
      * adds belongs — a reformat unit writing `.prettierrc` is naming a real
      * place, not inventing a tree. */
-    if (slash === -1) return false;
-    return !anchors.dirs.has(entry.slice(0, slash));
+    return slash !== -1 && !anchors.dirs.has(entry.slice(0, slash));
   });
 
 /**

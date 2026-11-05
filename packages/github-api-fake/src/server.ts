@@ -307,10 +307,9 @@ const answer = async (
   }
 
   const body = await text(req);
-  if (method === 'POST' && url.pathname === '/graphql')
-    return answerGraphql(body, world, refusals);
-
-  return answerRest({ body, method, path: url.pathname }, world, refusals);
+  return method === 'POST' && url.pathname === '/graphql'
+    ? answerGraphql(body, world, refusals)
+    : answerRest({ body, method, path: url.pathname }, world, refusals);
 };
 
 /**

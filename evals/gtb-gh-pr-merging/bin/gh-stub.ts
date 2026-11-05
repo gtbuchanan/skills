@@ -169,13 +169,12 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
       if (!isDeferred)
         writeState(statePath, { ...state, merged: [...state.merged, number] });
 
-      return isDeferred
-        ? {
-            stdout:
-              `✓ Pull request ${repoSlug}#${String(number)} will be ` +
-              'automatically merged when all requirements are met\n',
-          }
-        : { stdout: `✓ Merged pull request ${repoSlug}#${String(number)}\n` };
+      return {
+        stdout: isDeferred
+          ? `✓ Pull request ${repoSlug}#${String(number)} will be ` +
+          'automatically merged when all requirements are met\n'
+          : `✓ Merged pull request ${repoSlug}#${String(number)}\n`,
+      };
     },
   },
 ]);

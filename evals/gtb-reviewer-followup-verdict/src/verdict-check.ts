@@ -101,9 +101,9 @@ const parseVerdictList = (text: string): ParsedVerdicts => {
    * callers get a non-optional entry without an assertion.
    */
   const [first] = found.output;
-  if (first === undefined) return { reason: 'result is not a non-empty array' };
-
-  return { first, list: found.output };
+  return first === undefined
+    ? { reason: 'result is not a non-empty array' }
+    : { first, list: found.output };
 };
 
 /**

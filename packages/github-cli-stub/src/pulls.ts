@@ -135,7 +135,5 @@ export const impliedNumber = (
   const entry = Object.entries(state.opened).find(
     ([, opened]) => opened.headRefName === head,
   );
-  if (entry !== undefined) return Number(entry[0]);
-
-  return own?.number ?? firstPrNumber;
+  return entry === undefined ? own?.number ?? firstPrNumber : Number(entry[0]);
 };

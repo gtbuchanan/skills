@@ -73,13 +73,12 @@ const image = 'agent-skills-eval';
  * Runs a command to completion. Output is captured unless the caller asked for
  * inherited stdio, in which case it streams and `out` stays empty.
  */
-const sh = async (
-  command: string,
+const docker = async (
   commandArgs: string[],
   options: SpawnOptions = {},
 ): Promise<{ code: number; out: string }> =>
   new Promise((resolve) => {
-    const child = spawn(command, commandArgs, options);
+    const child = spawn('docker', commandArgs, options);
     let out = '';
     if (!options.stdio) {
       child.stdout?.on('data', (chunk: Buffer) => (out += String(chunk)));
@@ -91,14 +90,13 @@ const sh = async (
   });
 
 // Build the image and ensure the results server + network are up.
-const build = await sh(
-  'docker',
+const build = await docker(
   ['build', '-t', image, '-f', path.join(root, 'Dockerfile'), root],
   { stdio: 'inherit' },
 );
 if (build.code !== 0) process.exit(1);
 
-const compose = await sh('docker', ['compose', 'up', '-d'], {
+const compose = await docker(['compose', 'up', '-d'], {
   cwd: root,
   stdio: 'inherit',
 });
@@ -178,7 +176,7 @@ for (const { agent, hasKey } of auth)
 const runSkill = async (
   name: string,
 ): Promise<{ name: string; code: number; out: string }> => {
-  const result = await sh('docker', [
+  const result = await docker([
     'run',
     '--rm',
     '--network',

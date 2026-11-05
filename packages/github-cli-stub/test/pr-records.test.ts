@@ -181,6 +181,43 @@ test('a scenario whose checks are still running does not report itself mergeable
   expect(record['mergeStateStatus']).toBe('BLOCKED');
 });
 
+test('an auto-merge an earlier call enabled is reported as GitHub reports it', ({ expect }) => {
+  /*
+   * `pr merge --auto` answers with nothing from a shell that is not a terminal,
+   * so this is the only place an agent can see the request took. The shape is
+   * the one GitHub returned for a real request made without a subject or body.
+   */
+  const waiting: State = {
+    ...emptyState,
+    autoMerge: {
+      7: {
+        enabledAt: '2026-11-03T20:22:41Z',
+        enabledBy: { login: 'taylor', name: 'Taylor Buchanan' },
+        mergeMethod: 'SQUASH',
+      },
+    },
+  };
+
+  expect(recordsFor(waiting).named(7)['autoMergeRequest']).toStrictEqual({
+    /* eslint-disable unicorn/no-null --
+       gh states each of these as an explicit null when the request carried
+       none, and the key has to survive serialisation to say so. */
+    authorEmail: null,
+    commitBody: null,
+    commitHeadline: null,
+    /* eslint-enable unicorn/no-null */
+    enabledAt: '2026-11-03T20:22:41Z',
+    enabledBy: {
+      id: 'U_taylor',
+      is_bot: false,
+      login: 'taylor',
+      name: 'Taylor Buchanan',
+    },
+    mergeMethod: 'SQUASH',
+  });
+  expect(recordsFor().named(7)['autoMergeRequest']).toBeNull();
+});
+
 test('repo view reports no template as an empty list, not a missing key', ({ expect }) => {
   /*
    * A dropped key reads as "this repository has no opinion"; an empty list is

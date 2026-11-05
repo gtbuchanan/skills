@@ -37,6 +37,13 @@ test('a world nothing has happened in reads as empty', ({ expect }) => {
 test('what one call wrote, the next call reads', ({ expect }) => {
   const file = statePath();
   writeState(file, {
+    autoMerge: {
+      7: {
+        enabledAt: '2026-11-03T20:22:41Z',
+        enabledBy: { login: 'taylor', name: 'Taylor Buchanan' },
+        mergeMethod: 'SQUASH',
+      },
+    },
     merged: [7],
     opened: {
       101: {
@@ -51,6 +58,13 @@ test('what one call wrote, the next call reads', ({ expect }) => {
   });
 
   expect(readState(file)).toStrictEqual({
+    autoMerge: {
+      7: {
+        enabledAt: '2026-11-03T20:22:41Z',
+        enabledBy: { login: 'taylor', name: 'Taylor Buchanan' },
+        mergeMethod: 'SQUASH',
+      },
+    },
     merged: [7],
     opened: {
       101: {

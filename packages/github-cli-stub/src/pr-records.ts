@@ -87,6 +87,36 @@ export const prRecords = (context: PrRecordContext): PrRecords => {
   const baseOf = (number: number, fallback: string): string =>
     state.retargeted[String(number)] ?? fallback;
 
+  /* eslint-disable unicorn/no-null --
+     JSON.stringify drops a key whose value is undefined, so an agent asking
+     for one of these would read an absent field as an absent answer. gh states
+     each as an explicit null, and the difference is the whole point of
+     asking. */
+  /**
+   * The auto-merge an earlier `pr merge --auto` left waiting, in the shape
+   * GitHub returned for a real one. The account's `id` is a stand-in: GitHub's
+   * node ids are opaque, and no scenario has one to report.
+   */
+  const autoMergeRequestOf = (number: number): Record<string, unknown> | null => {
+    const request = state.autoMerge[String(number)];
+    if (request === undefined) return null;
+
+    return {
+      authorEmail: null,
+      commitBody: request.commitBody ?? null,
+      commitHeadline: request.commitHeadline ?? null,
+      enabledAt: request.enabledAt,
+      enabledBy: {
+        id: `U_${request.enabledBy.login}`,
+        is_bot: false,
+        login: request.enabledBy.login,
+        name: request.enabledBy.name,
+      },
+      mergeMethod: request.mergeMethod,
+    };
+  };
+  /* eslint-enable unicorn/no-null */
+
   /**
    * The mergeability fields a skill checks before merging. Constant because no
    * scenario turns on them — but modelled rather than refused, since a pull
@@ -94,14 +124,10 @@ export const prRecords = (context: PrRecordContext): PrRecords => {
    * when asked.
    */
   const readiness = (
+    number: number,
     reviews: readonly ReviewEntry[],
   ): Record<string, unknown> => ({
-    /* eslint-disable-next-line unicorn/no-null --
-       JSON.stringify drops a key whose value is undefined, so an agent asking
-       for this one would read an absent field as an absent answer. gh states
-       it as an explicit null, and the difference is the whole point of
-       asking. */
-    autoMergeRequest: null,
+    autoMergeRequest: autoMergeRequestOf(number),
     mergeable: 'MERGEABLE',
     mergeStateStatus: scenario.checksPending === true ? 'BLOCKED' : 'CLEAN',
     reviewDecision: reviews.some(review => review.state === 'APPROVED')
@@ -121,7 +147,7 @@ export const prRecords = (context: PrRecordContext): PrRecords => {
 
     return {
       ...own,
-      ...readiness(scenario.reviews),
+      ...readiness(own.number, scenario.reviews),
       baseRefName: baseOf(own.number, own.baseRefName),
       comments: scenario.comments,
       isDraft: own.isDraft && !state.ready.includes(own.number),
@@ -138,7 +164,7 @@ export const prRecords = (context: PrRecordContext): PrRecords => {
 
     return {
       ...opened,
-      ...readiness([]),
+      ...readiness(number, []),
       baseRefName: baseOf(number, opened.baseRefName),
       comments: [],
       isDraft: !state.ready.includes(number),
@@ -155,7 +181,7 @@ export const prRecords = (context: PrRecordContext): PrRecords => {
       throw unmodelled(`no pull request ${String(number)}`);
 
     return {
-      ...readiness([]),
+      ...readiness(dependent.number, []),
       baseRefName: baseOf(dependent.number, scenario.branch),
       body: '',
       comments: [],

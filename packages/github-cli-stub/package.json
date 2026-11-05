@@ -5,6 +5,7 @@
   "exports": {
     "./body": "./src/body.ts",
     "./checks": "./src/checks.ts",
+    "./merge": "./src/merge.ts",
     "./pr-records": "./src/pr-records.ts",
     "./pulls": "./src/pulls.ts",
     "./records": "./src/records.ts",

@@ -27,6 +27,7 @@ import path from 'node:path';
 import { branchAt } from '@gtbuchanan/git-fixtures/checkout';
 import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
 import { checksAnswer } from '@gtbuchanan/github-cli-stub/checks';
+import { mergeAnswer } from '@gtbuchanan/github-cli-stub/merge';
 import { prRecords } from '@gtbuchanan/github-cli-stub/pr-records';
 import { currentHead, impliedNumber } from '@gtbuchanan/github-cli-stub/pulls';
 import { checksFor } from '@gtbuchanan/github-cli-stub/scenario-world';
@@ -37,7 +38,7 @@ import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
 import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
 import { argv, emit, joined, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
-import { repoSlug } from '#src/repository.ts';
+import { author, repoSlug, viewer } from '#src/repository.ts';
 import { scenarios } from '#src/scenarios.ts';
 
 const stdin = stdinBody(argv);
@@ -146,36 +147,19 @@ const outcome = dispatch({ argv, cmd: 'gh', stdin }, [
     matches: subcommand('pr', 'merge'),
     name: 'pr merge',
     respond: () => {
-      if (scenario.isStackMember === true) {
-        /* Membership is how a stack announces itself: `pr list` does not report
-           it, so this refusal is the only way the skill finds out. */
-        return {
-          code: 1,
-          stderr:
-            'pull request is part of a stack and must be merged using the ' +
-            'asynchronous merge REST API\n',
-        };
-      }
-
-      /* --auto only defers the merge while something is outstanding. This
-         world's checks decide which of those happened. */
-      const number = namedNumber() ?? impliedNumber(state, scenario, head());
-      const isDeferred = argv.includes('--auto') && scenario.checksPending === true;
-
-      /* Recorded only when the merge actually happened. Writing it while the
-         answer says the merge is deferred leaves the next process reading a
-         pull request that is merged and absent from `pr list`, which is the
-         opposite of what this scenario states and what its task asked for. */
-      if (!isDeferred)
-        writeState(statePath, { ...state, merged: [...state.merged, number] });
-
-      return isDeferred
-        ? {
-            stdout:
-              `✓ Pull request ${repoSlug}#${String(number)} will be ` +
-              'automatically merged when all requirements are met\n',
-          }
-        : { stdout: `✓ Merged pull request ${repoSlug}#${String(number)}\n` };
+      const merged = mergeAnswer({
+        argv,
+        body: stdin,
+        now: () => new Date().toISOString(),
+        number: () => namedNumber() ?? impliedNumber(state, scenario, head()),
+        repoSlug,
+        scenario,
+        state,
+        viewer: { login: viewer, name: author.name },
+      });
+      // Only a merge that happened leaves anything to persist.
+      if (merged.state !== state) writeState(statePath, merged.state);
+      return merged.response;
     },
   },
 ]);

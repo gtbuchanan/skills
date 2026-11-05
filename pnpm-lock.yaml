@@ -219,8 +219,8 @@ catalogs:
       specifier: 0.122.0
       version: 0.122.0
     skills:
-      specifier: 1.5.22
-      version: 1.5.22
+      specifier: 1.7.4
+      version: 1.7.4
     skills-npm:
       specifier: 1.2.0
       version: 1.2.0
@@ -243,8 +243,6 @@ catalogs:
       specifier: 2.9.0
       version: 2.9.0
 
-pnpmfileChecksum: sha256-KkLwuMI36Am9UTEUO3tjdZ5FDw5Q8A/DznkR5dOu0H8=
-
 importers:
 
   .:
@@ -257,7 +255,7 @@ importers:
         version: link:packages/harness
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -293,7 +291,7 @@ importers:
         version: 0.122.0(@aws-sdk/credential-provider-node@3.972.67)(@smithy/signature-v4@5.6.4)(@types/json-schema@7.0.15)(@types/node@26.6.6)(pg@8.22.0)(playwright-core@1.61.1)(socks@2.8.9)(supports-color@7.2.0)
       skills:
         specifier: 'catalog:'
-        version: 1.5.22
+        version: 1.7.4
       skills-npm:
         specifier: 'catalog:'
         version: 1.2.0
@@ -328,7 +326,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -377,7 +375,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -426,7 +424,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -475,7 +473,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -527,7 +525,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -573,7 +571,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -622,7 +620,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -665,7 +663,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -696,7 +694,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -733,7 +731,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -770,7 +768,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -800,7 +798,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -855,7 +853,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -892,7 +890,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -938,7 +936,7 @@ importers:
         version: 10.6.0
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -978,7 +976,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -1027,7 +1025,7 @@ importers:
     devDependencies:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -1070,7 +1068,7 @@ importers:
         version: 10.6.0
       '@gtbuchanan/cli':
         specifier: 'catalog:'
-        version: 1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)
+        version: 1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.5.1(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.0.5)
@@ -5129,6 +5127,7 @@ packages:
   libsql@0.5.29:
     resolution: {integrity: sha512-8lMP8iMgiBzzoNbAPQ59qdVcj6UaE/Vnm+fiwX4doX4Narook0a4GPKWBEv+CR8a1OwbfkgL18uBfBjWdF0Fzg==}
     cpu: [x64, arm64, wasm32, arm]
+    os: [darwin, linux, win32]
 
   lightningcss-android-arm64@1.33.0:
     resolution: {integrity: sha512-gEpRTalKdosp4Bb8qWtc2iOgE5SeIHlpS1up9bFq2wAyYhl1UdTObYiHe98zEM9SQvSoqQZ1IQD0JNpg3Ml5pg==}
@@ -5663,6 +5662,7 @@ packages:
 
   onnxruntime-node@1.24.3:
     resolution: {integrity: sha512-JH7+czbc8ALA819vlTgcV+Q214/+VjGeBHDjX81+ZCD0PCVCIFGFNtT0V4sXG/1JXypKPgScQcB3ij/hk3YnTg==}
+    os: [win32, darwin, linux]
 
   onnxruntime-web@1.26.0-dev.20260416-b7804b056c:
     resolution: {integrity: sha512-MD6Ss4GSpQBo6zqoJzyT9LRbKYs7x/JVN23FT24EcEvlqF4VuzPOeH6X38orZPKHQDbprn7K+SBpu0/mj2CQiw==}
@@ -6262,8 +6262,8 @@ packages:
     resolution: {integrity: sha512-LY5nyBohOD026LpUEmY6cENHuJQ0pPfYnSz6h6ClTghvJA2UWfkVmbIYMyrsNYcrN9hT5Fq+gEPE/vn1N7V7Kg==}
     hasBin: true
 
-  skills@1.5.22:
-    resolution: {integrity: sha512-cHiLjwZEawWFvudIqeeMZlvZayTLbRouydMbblyrdiyH7ZLbqUrSrEEr+Tg+X265iztRlVMsyOYRwpD5JxBsvg==}
+  skills@1.7.4:
+    resolution: {integrity: sha512-lHZJksE8UImNAr+LL6unqq7jERjdFw5EJasm17srycwL7rXHGdCmgu1L1ttLxUO9i3rdH+QQig+px0icHqLmRw==}
     engines: {node: '>=22.20.0'}
     hasBin: true
 
@@ -7801,14 +7801,14 @@ snapshots:
       - supports-color
     optional: true
 
-  '@gtbuchanan/cli@1.0.0(skills-npm@1.2.0)(skills@1.5.22)(typescript@6.0.3)':
+  '@gtbuchanan/cli@1.0.0(skills-npm@1.2.0)(skills@1.7.4)(typescript@6.0.3)':
     dependencies:
       citty: 0.2.2
       cross-spawn: 7.0.6
       find-up-simple: 1.0.1
       get-tsconfig: 4.14.0
       hosted-git-info: 10.1.1
-      skills: 1.5.22
+      skills: 1.7.4
       smol-toml: 1.7.0
       typescript: 6.0.3
       valibot: 1.4.2(typescript@6.0.3)
@@ -12665,7 +12665,7 @@ snapshots:
       xdg-basedir: 5.1.0
       yaml: 2.9.0
 
-  skills@1.5.22:
+  skills@1.7.4:
     dependencies:
       tar: 7.5.22
       yaml: 2.9.0

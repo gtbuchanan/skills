@@ -32,7 +32,7 @@ catalog:
   graphql: 17.0.2
   jiti: 2.7.0
   promptfoo: 0.122.0
-  skills: 1.5.22
+  skills: 1.7.4
   skills-npm: 1.2.0
   turbo: 2.11.10
   typescript: 6.0.3

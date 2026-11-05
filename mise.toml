@@ -33,13 +33,13 @@ includes = ["mise.tasks.toml"]
 # renovate-config-validator. The rest are the linters hk's builtins shell out
 # to.
 [tools]
-actionlint = "1.7.12"
 # The real gh the eval suites run against a fake GitHub API. Pinned, because
 # what gh prints and how it exits is what the suites test the skills against.
 # Termux disables it by this name: gh's Linux builds cannot resolve DNS on
 # Android, so Termux's own gh package is used there.
 gh = "2.103.3"
 hk = "2.11.0"
+jactionlint = "v2.4.0"
 node = "26.13.0"
 # renovate transitively pulls `@yarnpkg/libzip`, whose latest is a manual
 # maintainer publish lacking the provenance its CI releases had — aube's

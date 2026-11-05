@@ -25,7 +25,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { runLogPath, runVar } from '@gtbuchanan/stub-runtime/run-log';
+import { runLogPath, runVar } from '@gtbuchanan/cli-doubles/run-log';
 import { test } from 'vitest';
 
 const stub = path.join(import.meta.dirname, '..', 'bin', 'git-stub.ts');

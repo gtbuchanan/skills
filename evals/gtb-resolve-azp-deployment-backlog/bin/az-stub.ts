@@ -18,9 +18,9 @@
  * `az pipelines list`. Its calls go to the log of the run that made them, beside
  * the script's, and are kept only for debugging.
  */
-import { dispatch, unmodelled } from '@gtbuchanan/stub-runtime/dispatch';
-import { subcommand } from '@gtbuchanan/stub-runtime/match';
-import { argv, emit, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
+import { dispatch, unmodelled } from '@gtbuchanan/cli-doubles/dispatch';
+import { subcommand } from '@gtbuchanan/cli-doubles/match';
+import { argv, emit, logCallToRun } from '@gtbuchanan/cli-doubles/stub';
 
 /**
  * The id the fake `pipelines runs update` echoes back.

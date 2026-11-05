@@ -28,9 +28,9 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { readCalls } from '@gtbuchanan/stub-runtime/calls';
-import { runLogPath, runVar } from '@gtbuchanan/stub-runtime/run-log';
-import { markerFile } from '@gtbuchanan/stub-runtime/scenario';
+import { readCalls } from '@gtbuchanan/cli-doubles/calls';
+import { runLogPath, runVar } from '@gtbuchanan/cli-doubles/run-log';
+import { markerFile } from '@gtbuchanan/cli-doubles/scenario';
 import { test } from 'vitest';
 
 const stub = path.join(import.meta.dirname, '..', 'bin', 'gh-stub.ts');

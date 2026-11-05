@@ -35,7 +35,7 @@
  * a suite supplies, which is what keeps this usable by a suite whose scenarios
  * are not repositories.
  */
-import { readCallRecords, readRefusals } from '@gtbuchanan/stub-runtime/calls';
+import { readCallRecords, readRefusals } from '@gtbuchanan/cli-doubles/calls';
 import * as v from 'valibot';
 import { fromProblems } from './assert.ts';
 import { type ReportedResult, reportRefusals } from './refusals.ts';

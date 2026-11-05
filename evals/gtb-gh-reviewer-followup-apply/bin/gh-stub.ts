@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 // Fake `gh` for this write-path eval: logs each call and answers from canned JSON.
-import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
-import { type StubOutcome, dispatch } from '@gtbuchanan/stub-runtime/dispatch';
-import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
-import { findScenario } from '@gtbuchanan/stub-runtime/scenario';
+import { type StubOutcome, dispatch } from '@gtbuchanan/cli-doubles/dispatch';
+import { allOf, argument, subcommand } from '@gtbuchanan/cli-doubles/match';
+import { findScenario } from '@gtbuchanan/cli-doubles/scenario';
 import {
   argv,
   emit,
   joined,
   logCallToRun,
   runLogInFlight,
-} from '@gtbuchanan/stub-runtime/stub';
+} from '@gtbuchanan/cli-doubles/stub';
+import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
 import { scenarios } from '#src/scenarios.ts';
 
 // Undefined for a call made outside every scenario, which is refused below.

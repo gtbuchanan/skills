@@ -23,8 +23,8 @@ import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
 import { skillsRoot } from '@gtbuchanan/agent-skills-harness/paths';
 import { type ReportedResult, reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
 import { runLog } from '@gtbuchanan/agent-skills-harness/run-log';
+import { readCallRecords, readRefusals } from '@gtbuchanan/cli-doubles/calls';
 import { readState } from '@gtbuchanan/github-cli-stub/state';
-import { readCallRecords, readRefusals } from '@gtbuchanan/stub-runtime/calls';
 import * as v from 'valibot';
 import { scenarioPath } from './setup.ts';
 

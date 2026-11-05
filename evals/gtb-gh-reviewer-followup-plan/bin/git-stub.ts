@@ -13,11 +13,11 @@
  * it must resolve the real binary explicitly rather than by name, and under an
  * environment no ambient config reaches.
  */
+import { passThrough } from '@gtbuchanan/cli-doubles/passthrough';
+import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
+import { argv, logCallToRun } from '@gtbuchanan/cli-doubles/stub';
 import { isAgentRuntimeCall } from '@gtbuchanan/eval-agents/registry';
 import { hermeticGitEnv } from '@gtbuchanan/git-fixtures/hermetic-git';
-import { passThrough } from '@gtbuchanan/stub-runtime/passthrough';
-import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
-import { argv, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
 
 // The agent runtime's own calls, such as Claude Code's at startup, are not the agent's.
 if (!isAgentRuntimeCall('git', argv)) logCallToRun('git');

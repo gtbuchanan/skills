@@ -15,8 +15,8 @@
   },
   "dependencies": {
     "@gtbuchanan/agent-skills-harness": "workspace:*",
+    "@gtbuchanan/cli-doubles": "workspace:*",
     "@gtbuchanan/github-cli-stub": "workspace:*",
-    "@gtbuchanan/stub-runtime": "workspace:*",
     "valibot": "catalog:"
   },
   "devDependencies": {

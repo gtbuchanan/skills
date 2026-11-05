@@ -26,7 +26,7 @@
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
 import { type ReportedResult, reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
 import { runLog } from '@gtbuchanan/agent-skills-harness/run-log';
-import { parseJson, readCommands, readRefusals } from '@gtbuchanan/stub-runtime/calls';
+import { parseJson, readCommands, readRefusals } from '@gtbuchanan/cli-doubles/calls';
 import * as v from 'valibot';
 import { readReviews, scenarioDir, selectLastOwnReview, viewer } from './scenario.ts';
 

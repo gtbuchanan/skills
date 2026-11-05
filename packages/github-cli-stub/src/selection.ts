@@ -13,7 +13,7 @@
  * onto the empty list would make "asked for nothing" indistinguishable from
  * "did not ask", and the whole record is what the second one returns.
  */
-import { unmodelled } from '@gtbuchanan/stub-runtime/dispatch';
+import { unmodelled } from '@gtbuchanan/cli-doubles/dispatch';
 
 /**
  * What a call asked gh to narrow to.

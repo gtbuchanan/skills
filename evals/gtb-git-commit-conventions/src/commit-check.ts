@@ -21,10 +21,10 @@ import path from 'node:path';
 import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
 import { skillsRoot } from '@gtbuchanan/agent-skills-harness/paths';
+import { parseJson } from '@gtbuchanan/cli-doubles/calls';
+import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import type { GitRunner } from '@gtbuchanan/git-fixtures/seed-repo';
 import { captureGit, probeGit } from '@gtbuchanan/git-fixtures/seed-repo';
-import { parseJson } from '@gtbuchanan/stub-runtime/calls';
-import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 import * as v from 'valibot';
 import {
   grammarProblems,

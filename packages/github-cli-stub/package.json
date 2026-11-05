@@ -21,8 +21,8 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
+    "@gtbuchanan/cli-doubles": "workspace:*",
     "@gtbuchanan/git-fixtures": "workspace:*",
-    "@gtbuchanan/stub-runtime": "workspace:*",
     "valibot": "catalog:"
   },
   "devDependencies": {

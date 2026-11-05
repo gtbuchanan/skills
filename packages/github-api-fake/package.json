@@ -19,7 +19,7 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
-    "@gtbuchanan/stub-runtime": "workspace:*",
+    "@gtbuchanan/cli-doubles": "workspace:*",
     "graphql": "catalog:",
     "valibot": "catalog:"
   },

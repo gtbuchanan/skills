@@ -10,7 +10,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
+import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import spawn from 'cross-spawn';
 import { test } from 'vitest';
 import { buildEvalEnv } from '#src/scrubbed-path.ts';

@@ -15,8 +15,8 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { readCommands } from '@gtbuchanan/stub-runtime/calls';
-import { runLogPath, runVar } from '@gtbuchanan/stub-runtime/run-log';
+import { readCommands } from '@gtbuchanan/cli-doubles/calls';
+import { runLogPath, runVar } from '@gtbuchanan/cli-doubles/run-log';
 import { test } from 'vitest';
 
 /**

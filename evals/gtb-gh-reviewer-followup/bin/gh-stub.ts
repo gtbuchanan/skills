@@ -15,9 +15,9 @@
  * of the eval PATH, that execs this file. The real gh CLI is never reachable
  * from a suite.
  */
-import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
-import { subcommand } from '@gtbuchanan/stub-runtime/match';
-import { argv, emit, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
+import { dispatch } from '@gtbuchanan/cli-doubles/dispatch';
+import { subcommand } from '@gtbuchanan/cli-doubles/match';
+import { argv, emit, logCallToRun } from '@gtbuchanan/cli-doubles/stub';
 
 /**
  * The fixture PR every canned response refers to.

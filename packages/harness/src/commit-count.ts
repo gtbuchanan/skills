@@ -13,10 +13,10 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { parseJson } from '@gtbuchanan/cli-doubles/calls';
+import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
+import { scenarioPath } from '@gtbuchanan/cli-doubles/scenario';
 import { probeGit } from '@gtbuchanan/git-fixtures/seed-repo';
-import { parseJson } from '@gtbuchanan/stub-runtime/calls';
-import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
-import { scenarioPath } from '@gtbuchanan/stub-runtime/scenario';
 import * as v from 'valibot';
 import { skillsRoot } from './paths.ts';
 

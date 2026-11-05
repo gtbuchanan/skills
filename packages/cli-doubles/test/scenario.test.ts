@@ -20,7 +20,7 @@ import {
   markerFile,
   scenarioByKey,
   scenarioPath,
-} from '@gtbuchanan/stub-runtime/scenario';
+} from '@gtbuchanan/cli-doubles/scenario';
 
 const scenarios = [{ key: 'open-draft' }, { key: 'merge-stacked' }];
 

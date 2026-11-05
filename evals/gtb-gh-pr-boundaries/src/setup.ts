@@ -13,9 +13,9 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { artifactPath, suiteName } from '@gtbuchanan/agent-skills-harness/paths';
 import { scenarioSetup } from '@gtbuchanan/agent-skills-harness/scenario-setup';
+import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
+import { markerFile } from '@gtbuchanan/cli-doubles/scenario';
 import { seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
-import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
-import { markerFile } from '@gtbuchanan/stub-runtime/scenario';
 import { author } from './repository.ts';
 import type { Scenario } from './scenarios.ts';
 import { scenarios } from './scenarios.ts';
@@ -70,4 +70,4 @@ export const extensionHook = setup.extensionHook;
 /* Re-exported so the checker resolves a scenario's workspace through the same
    call the seed wrote it with, rather than spelling the layout a second time
    and agreeing with the seed only by coincidence. */
-export { scenarioPath } from '@gtbuchanan/stub-runtime/scenario';
+export { scenarioPath } from '@gtbuchanan/cli-doubles/scenario';

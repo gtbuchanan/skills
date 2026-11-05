@@ -12,7 +12,7 @@
  * Only a checker whose log is its own test's can report them: a refusal read
  * from a log several tests share cannot be pinned on the one that made it.
  */
-import type { RefusedCall } from '@gtbuchanan/stub-runtime/calls';
+import type { RefusedCall } from '@gtbuchanan/cli-doubles/calls';
 import type { AssertionResult } from './assert.ts';
 
 /**

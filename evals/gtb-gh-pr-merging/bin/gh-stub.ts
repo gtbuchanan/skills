@@ -24,6 +24,11 @@
  * The real CLI is never reachable from a suite.
  */
 import path from 'node:path';
+import { dispatch } from '@gtbuchanan/cli-doubles/dispatch';
+import { allOf, argument, subcommand } from '@gtbuchanan/cli-doubles/match';
+import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
+import { locateScenario } from '@gtbuchanan/cli-doubles/scenario';
+import { argv, emit, joined, logCallToRun } from '@gtbuchanan/cli-doubles/stub';
 import { branchAt } from '@gtbuchanan/git-fixtures/checkout';
 import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
 import { checksAnswer } from '@gtbuchanan/github-cli-stub/checks';
@@ -32,11 +37,6 @@ import { currentHead, impliedNumber } from '@gtbuchanan/github-cli-stub/pulls';
 import { checksFor } from '@gtbuchanan/github-cli-stub/scenario-world';
 import { pick, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { readState, writeState } from '@gtbuchanan/github-cli-stub/state';
-import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
-import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
-import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
-import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
-import { argv, emit, joined, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
 import { repoSlug } from '#src/repository.ts';
 import { scenarios } from '#src/scenarios.ts';
 

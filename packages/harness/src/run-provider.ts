@@ -10,15 +10,15 @@
  *         agentConfig: { ... }
  *
  * Each call mints a run id, hands it to the agent's commands as $STUB_RUN so
- * the doubles they reach log to that run's file (see stub-runtime's run-log),
+ * the doubles they reach log to that run's file (see run-log in cli-doubles),
  * and returns it in the response metadata, where a checker reads it back as
  * `context.metadata` (see run-log.ts here). Concurrent tests then never share
  * a log, whichever world or command their calls came from.
  */
 import { randomUUID } from 'node:crypto';
+import { runVar } from '@gtbuchanan/cli-doubles/run-log';
 import type { EvalAgent } from '@gtbuchanan/eval-agents/eval-agent';
 import { evalAgentNamed } from '@gtbuchanan/eval-agents/registry';
-import { runVar } from '@gtbuchanan/stub-runtime/run-log';
 import {
   type ApiProvider,
   type CallApiContextParams,

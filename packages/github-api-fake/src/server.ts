@@ -23,8 +23,8 @@ import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { text } from 'node:stream/consumers';
-import { runLogPath } from '@gtbuchanan/stub-runtime/run-log';
-import { appendJsonl } from '@gtbuchanan/stub-runtime/stub';
+import { runLogPath } from '@gtbuchanan/cli-doubles/run-log';
+import { appendJsonl } from '@gtbuchanan/cli-doubles/stub';
 import {
   GraphQLError,
   OverlappingFieldsCanBeMergedRule,

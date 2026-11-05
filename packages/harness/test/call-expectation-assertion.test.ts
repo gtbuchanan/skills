@@ -18,10 +18,10 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
+import { runLogPath } from '@gtbuchanan/cli-doubles/run-log';
+import { scenarioPath } from '@gtbuchanan/cli-doubles/scenario';
 import { captureGit, runGit, seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
-import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
-import { runLogPath } from '@gtbuchanan/stub-runtime/run-log';
-import { scenarioPath } from '@gtbuchanan/stub-runtime/scenario';
 import { test } from 'vitest';
 import { fakeSuite } from './fake-suite.ts';
 import { callExpectationAssertion } from '@gtbuchanan/agent-skills-harness/call-expectations';

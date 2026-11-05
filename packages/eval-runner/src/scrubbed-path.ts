@@ -26,10 +26,10 @@ import type { SpawnSyncOptions, SpawnSyncReturns } from 'node:child_process';
 import { chmodSync, existsSync, readdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { resolveRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import type { EvalAgent } from '@gtbuchanan/eval-agents/eval-agent';
 import { evalAgents } from '@gtbuchanan/eval-agents/registry';
 import { hermeticGitConfig } from '@gtbuchanan/git-fixtures/hermetic-git';
-import { resolveRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 
 /*
  * Aggregator dirs re-export danger CLIs via shims; never admit them wholesale.

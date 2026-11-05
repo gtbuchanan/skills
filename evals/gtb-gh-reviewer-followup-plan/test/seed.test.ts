@@ -14,7 +14,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
+import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import { test, vi } from 'vitest';
 import { author, user, viewer } from '#src/scenario.ts';
 import { commitPlan, seedRepository } from '#src/seed.ts';

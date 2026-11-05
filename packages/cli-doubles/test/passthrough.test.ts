@@ -18,7 +18,7 @@ import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { exitCodeFrom, passThrough } from '@gtbuchanan/stub-runtime/passthrough';
+import { exitCodeFrom, passThrough } from '@gtbuchanan/cli-doubles/passthrough';
 
 /**
  * A node script, as the `-e` argument that runs it.

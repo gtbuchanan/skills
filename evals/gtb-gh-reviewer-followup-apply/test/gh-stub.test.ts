@@ -28,9 +28,9 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { parseJson } from '@gtbuchanan/stub-runtime/calls';
-import { runLogPath, runVar } from '@gtbuchanan/stub-runtime/run-log';
-import { markerFile, scenarioPath } from '@gtbuchanan/stub-runtime/scenario';
+import { parseJson } from '@gtbuchanan/cli-doubles/calls';
+import { runLogPath, runVar } from '@gtbuchanan/cli-doubles/run-log';
+import { markerFile, scenarioPath } from '@gtbuchanan/cli-doubles/scenario';
 import { test } from 'vitest';
 
 const stub = path.join(import.meta.dirname, '..', 'bin', 'gh-stub.ts');

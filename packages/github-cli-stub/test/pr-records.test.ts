@@ -12,7 +12,7 @@
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
  */
-import { UnmodelledCall } from '@gtbuchanan/stub-runtime/dispatch';
+import { UnmodelledCall } from '@gtbuchanan/cli-doubles/dispatch';
 import { test } from 'vitest';
 import { prRecords, toWireComment } from '@gtbuchanan/github-cli-stub/pr-records';
 import type { Scenario } from '@gtbuchanan/github-cli-stub/scenario-world';

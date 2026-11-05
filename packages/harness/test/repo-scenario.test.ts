@@ -19,9 +19,9 @@
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
+import { markerFile } from '@gtbuchanan/cli-doubles/scenario';
 import { captureGit } from '@gtbuchanan/git-fixtures/seed-repo';
-import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
-import { markerFile } from '@gtbuchanan/stub-runtime/scenario';
 import * as v from 'valibot';
 import { test } from 'vitest';
 import { fakeSuite } from './fake-suite.ts';

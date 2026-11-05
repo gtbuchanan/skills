@@ -351,6 +351,9 @@ importers:
       '@gtbuchanan/agent-skills-harness':
         specifier: workspace:*
         version: link:../../packages/harness
+      '@gtbuchanan/cli-doubles':
+        specifier: workspace:*
+        version: link:../../packages/cli-doubles
       '@gtbuchanan/eval-agents':
         specifier: workspace:*
         version: link:../../packages/eval-agents
@@ -360,9 +363,6 @@ importers:
       '@gtbuchanan/github-cli-stub':
         specifier: workspace:*
         version: link:../../packages/github-cli-stub
-      '@gtbuchanan/stub-runtime':
-        specifier: workspace:*
-        version: link:../../packages/stub-runtime
       valibot:
         specifier: 'catalog:'
         version: 1.5.0(typescript@6.0.3)
@@ -400,6 +400,9 @@ importers:
       '@gtbuchanan/agent-skills-harness':
         specifier: workspace:*
         version: link:../../packages/harness
+      '@gtbuchanan/cli-doubles':
+        specifier: workspace:*
+        version: link:../../packages/cli-doubles
       '@gtbuchanan/eval-agents':
         specifier: workspace:*
         version: link:../../packages/eval-agents
@@ -409,9 +412,6 @@ importers:
       '@gtbuchanan/github-cli-stub':
         specifier: workspace:*
         version: link:../../packages/github-cli-stub
-      '@gtbuchanan/stub-runtime':
-        specifier: workspace:*
-        version: link:../../packages/stub-runtime
       valibot:
         specifier: 'catalog:'
         version: 1.5.0(typescript@6.0.3)
@@ -449,6 +449,9 @@ importers:
       '@gtbuchanan/agent-skills-harness':
         specifier: workspace:*
         version: link:../../packages/harness
+      '@gtbuchanan/cli-doubles':
+        specifier: workspace:*
+        version: link:../../packages/cli-doubles
       '@gtbuchanan/eval-agents':
         specifier: workspace:*
         version: link:../../packages/eval-agents
@@ -458,9 +461,6 @@ importers:
       '@gtbuchanan/github-cli-stub':
         specifier: workspace:*
         version: link:../../packages/github-cli-stub
-      '@gtbuchanan/stub-runtime':
-        specifier: workspace:*
-        version: link:../../packages/stub-runtime
       valibot:
         specifier: 'catalog:'
         version: 1.5.0(typescript@6.0.3)
@@ -498,6 +498,9 @@ importers:
       '@gtbuchanan/agent-skills-harness':
         specifier: workspace:*
         version: link:../../packages/harness
+      '@gtbuchanan/cli-doubles':
+        specifier: workspace:*
+        version: link:../../packages/cli-doubles
       '@gtbuchanan/eval-agents':
         specifier: workspace:*
         version: link:../../packages/eval-agents
@@ -507,9 +510,6 @@ importers:
       '@gtbuchanan/github-cli-stub':
         specifier: workspace:*
         version: link:../../packages/github-cli-stub
-      '@gtbuchanan/stub-runtime':
-        specifier: workspace:*
-        version: link:../../packages/stub-runtime
       cross-spawn:
         specifier: 'catalog:'
         version: 7.0.6
@@ -553,12 +553,12 @@ importers:
       '@gtbuchanan/agent-skills-harness':
         specifier: workspace:*
         version: link:../../packages/harness
+      '@gtbuchanan/cli-doubles':
+        specifier: workspace:*
+        version: link:../../packages/cli-doubles
       '@gtbuchanan/github-cli-stub':
         specifier: workspace:*
         version: link:../../packages/github-cli-stub
-      '@gtbuchanan/stub-runtime':
-        specifier: workspace:*
-        version: link:../../packages/stub-runtime
       valibot:
         specifier: 'catalog:'
         version: 1.5.0(typescript@6.0.3)
@@ -596,6 +596,9 @@ importers:
       '@gtbuchanan/agent-skills-harness':
         specifier: workspace:*
         version: link:../../packages/harness
+      '@gtbuchanan/cli-doubles':
+        specifier: workspace:*
+        version: link:../../packages/cli-doubles
       '@gtbuchanan/eval-agents':
         specifier: workspace:*
         version: link:../../packages/eval-agents
@@ -605,9 +608,6 @@ importers:
       '@gtbuchanan/github-cli-stub':
         specifier: workspace:*
         version: link:../../packages/github-cli-stub
-      '@gtbuchanan/stub-runtime':
-        specifier: workspace:*
-        version: link:../../packages/stub-runtime
       valibot:
         specifier: 'catalog:'
         version: 1.5.0(typescript@6.0.3)
@@ -645,12 +645,12 @@ importers:
       '@gtbuchanan/agent-skills-harness':
         specifier: workspace:*
         version: link:../../packages/harness
+      '@gtbuchanan/cli-doubles':
+        specifier: workspace:*
+        version: link:../../packages/cli-doubles
       '@gtbuchanan/git-fixtures':
         specifier: workspace:*
         version: link:../../packages/git-fixtures
-      '@gtbuchanan/stub-runtime':
-        specifier: workspace:*
-        version: link:../../packages/stub-runtime
       valibot:
         specifier: 'catalog:'
         version: 1.5.0(typescript@6.0.3)
@@ -679,9 +679,9 @@ importers:
       '@gtbuchanan/agent-skills-harness':
         specifier: workspace:*
         version: link:../../packages/harness
-      '@gtbuchanan/stub-runtime':
+      '@gtbuchanan/cli-doubles':
         specifier: workspace:*
-        version: link:../../packages/stub-runtime
+        version: link:../../packages/cli-doubles
       valibot:
         specifier: 'catalog:'
         version: 1.5.0(typescript@6.0.3)
@@ -788,6 +788,55 @@ importers:
         specifier: 'catalog:'
         version: 5.1.0(@opentelemetry/api@1.9.1)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(vite@8.2.1(@types/node@26.6.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
+  packages/cli-doubles:
+    dependencies:
+      cross-spawn:
+        specifier: 'catalog:'
+        version: 7.0.6
+      valibot:
+        specifier: 'catalog:'
+        version: 1.5.0(typescript@6.0.3)
+      which:
+        specifier: 'catalog:'
+        version: 7.0.0
+    devDependencies:
+      '@faker-js/faker':
+        specifier: 'catalog:'
+        version: 10.6.0
+      '@gtbuchanan/cli':
+        specifier: 'catalog:'
+        version: 2.0.0(skills-npm@4.1.0)(skills@1.7.4)(turbo@2.11.10)(typescript@6.0.3)
+      '@gtbuchanan/eslint-config':
+        specifier: 'catalog:'
+        version: 0.6.0(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.1.0)
+      '@gtbuchanan/tsconfig':
+        specifier: 'catalog:'
+        version: 0.2.0(typescript@6.0.3)
+      '@gtbuchanan/vitest-config':
+        specifier: 'catalog:'
+        version: 0.3.0(vitest@5.1.0)
+      '@types/cross-spawn':
+        specifier: 'catalog:'
+        version: 6.0.6
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      '@types/which':
+        specifier: 'catalog:'
+        version: 3.0.4
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 5.1.0(vitest@5.1.0)
+      eslint:
+        specifier: 'catalog:'
+        version: 10.14.0(jiti@2.7.0)(supports-color@7.2.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.0(@opentelemetry/api@1.9.1)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(vite@8.2.1(@types/node@26.6.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+
   packages/eval-agents:
     devDependencies:
       '@gtbuchanan/cli':
@@ -826,15 +875,15 @@ importers:
       '@gtbuchanan/agent-skills-harness':
         specifier: workspace:*
         version: link:../harness
+      '@gtbuchanan/cli-doubles':
+        specifier: workspace:*
+        version: link:../cli-doubles
       '@gtbuchanan/eval-agents':
         specifier: workspace:*
         version: link:../eval-agents
       '@gtbuchanan/git-fixtures':
         specifier: workspace:*
         version: link:../git-fixtures
-      '@gtbuchanan/stub-runtime':
-        specifier: workspace:*
-        version: link:../stub-runtime
       cross-spawn:
         specifier: 'catalog:'
         version: 7.0.6
@@ -915,9 +964,9 @@ importers:
 
   packages/github-api-fake:
     dependencies:
-      '@gtbuchanan/stub-runtime':
+      '@gtbuchanan/cli-doubles':
         specifier: workspace:*
-        version: link:../stub-runtime
+        version: link:../cli-doubles
       graphql:
         specifier: 'catalog:'
         version: 17.0.2
@@ -958,12 +1007,12 @@ importers:
 
   packages/github-cli-stub:
     dependencies:
+      '@gtbuchanan/cli-doubles':
+        specifier: workspace:*
+        version: link:../cli-doubles
       '@gtbuchanan/git-fixtures':
         specifier: workspace:*
         version: link:../git-fixtures
-      '@gtbuchanan/stub-runtime':
-        specifier: workspace:*
-        version: link:../stub-runtime
       valibot:
         specifier: 'catalog:'
         version: 1.5.0(typescript@6.0.3)
@@ -998,15 +1047,15 @@ importers:
 
   packages/harness:
     dependencies:
+      '@gtbuchanan/cli-doubles':
+        specifier: workspace:*
+        version: link:../cli-doubles
       '@gtbuchanan/eval-agents':
         specifier: workspace:*
         version: link:../eval-agents
       '@gtbuchanan/git-fixtures':
         specifier: workspace:*
         version: link:../git-fixtures
-      '@gtbuchanan/stub-runtime':
-        specifier: workspace:*
-        version: link:../stub-runtime
       find-up-simple:
         specifier: 'catalog:'
         version: 1.0.1
@@ -1032,55 +1081,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
-      '@vitest/coverage-v8':
-        specifier: 'catalog:'
-        version: 5.1.0(vitest@5.1.0)
-      eslint:
-        specifier: 'catalog:'
-        version: 10.14.0(jiti@2.7.0)(supports-color@7.2.0)
-      typescript:
-        specifier: 'catalog:'
-        version: 6.0.3
-      vitest:
-        specifier: 'catalog:'
-        version: 5.1.0(@opentelemetry/api@1.9.1)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(vite@8.2.1(@types/node@26.6.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
-
-  packages/stub-runtime:
-    dependencies:
-      cross-spawn:
-        specifier: 'catalog:'
-        version: 7.0.6
-      valibot:
-        specifier: 'catalog:'
-        version: 1.5.0(typescript@6.0.3)
-      which:
-        specifier: 'catalog:'
-        version: 7.0.0
-    devDependencies:
-      '@faker-js/faker':
-        specifier: 'catalog:'
-        version: 10.6.0
-      '@gtbuchanan/cli':
-        specifier: 'catalog:'
-        version: 2.0.0(skills-npm@4.1.0)(skills@1.7.4)(turbo@2.11.10)(typescript@6.0.3)
-      '@gtbuchanan/eslint-config':
-        specifier: 'catalog:'
-        version: 0.6.0(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.65.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.1.0)
-      '@gtbuchanan/tsconfig':
-        specifier: 'catalog:'
-        version: 0.2.0(typescript@6.0.3)
-      '@gtbuchanan/vitest-config':
-        specifier: 'catalog:'
-        version: 0.3.0(vitest@5.1.0)
-      '@types/cross-spawn':
-        specifier: 'catalog:'
-        version: 6.0.6
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      '@types/which':
-        specifier: 'catalog:'
-        version: 3.0.4
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.1.0(vitest@5.1.0)

@@ -1,4 +1,4 @@
-import type { Keyed } from '@gtbuchanan/stub-runtime/scenario';
+import type { Keyed } from '@gtbuchanan/cli-doubles/scenario';
 
 /**
  * One scenario per action-list fixture, keyed by its directory name.

@@ -12,7 +12,7 @@
  * setup's per-test assertion count sees it.
  */
 import { test } from 'vitest';
-import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
+import { allOf, argument, subcommand } from '@gtbuchanan/cli-doubles/match';
 
 /**
  * A call to some double. `gh` stands in for a CLI in the cases where which one

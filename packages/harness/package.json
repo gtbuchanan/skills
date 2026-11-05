@@ -25,9 +25,9 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
+    "@gtbuchanan/cli-doubles": "workspace:*",
     "@gtbuchanan/eval-agents": "workspace:*",
     "@gtbuchanan/git-fixtures": "workspace:*",
-    "@gtbuchanan/stub-runtime": "workspace:*",
     "find-up-simple": "catalog:",
     "promptfoo": "catalog:",
     "valibot": "catalog:"

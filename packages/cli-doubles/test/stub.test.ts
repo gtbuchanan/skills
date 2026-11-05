@@ -26,14 +26,14 @@ import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { parseJson } from '@gtbuchanan/stub-runtime/calls';
-import type { StubAnswer } from '@gtbuchanan/stub-runtime/dispatch';
-import { runLogPath } from '@gtbuchanan/stub-runtime/run-log';
+import { parseJson } from '@gtbuchanan/cli-doubles/calls';
+import type { StubAnswer } from '@gtbuchanan/cli-doubles/dispatch';
+import { runLogPath } from '@gtbuchanan/cli-doubles/run-log';
 import {
   logCallToRun,
   recordOutcome,
   runLogInFlight,
-} from '@gtbuchanan/stub-runtime/stub';
+} from '@gtbuchanan/cli-doubles/stub';
 
 /**
  * A run in flight: $STUB_LOG_DIR and $STUB_RUN set as the run provider sets

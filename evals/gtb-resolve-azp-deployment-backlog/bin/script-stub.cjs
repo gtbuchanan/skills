@@ -113,7 +113,7 @@ for (let index = 0; index < argv.length; index += 1) {
 
 /*
  * The log of the run that made this call: `<STUB_RUN>.jsonl` under
- * $STUB_LOG_DIR, the path stub-runtime's run-log.ts names. Spelled out rather
+ * $STUB_LOG_DIR, the path run-log.ts in cli-doubles names. Spelled out rather
  * than imported, since this file runs from the skill copy, where no package
  * resolves.
  */

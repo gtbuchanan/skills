@@ -18,8 +18,8 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { artifactPath, skillsRoot, suiteName } from '@gtbuchanan/agent-skills-harness/paths';
 import { requireHarness } from '@gtbuchanan/agent-skills-harness/setup';
+import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import { captureGit, seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
-import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 import { author, branch, committer, scenarioPath, scenarios } from './scenarios.ts';
 
 /**

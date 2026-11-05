@@ -23,7 +23,7 @@ import {
   readCalls,
   readCommands,
   readRefusals,
-} from '@gtbuchanan/stub-runtime/calls';
+} from '@gtbuchanan/cli-doubles/calls';
 
 /**
  * A log holding `lines`, each already a JSON object.

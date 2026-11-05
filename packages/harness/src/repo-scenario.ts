@@ -16,6 +16,9 @@
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { parseJson } from '@gtbuchanan/cli-doubles/calls';
+import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
+import { markerFile } from '@gtbuchanan/cli-doubles/scenario';
 import { useGitHubOrigin } from '@gtbuchanan/git-fixtures/github-origin';
 import {
   type GitRunner,
@@ -25,9 +28,6 @@ import {
   runGit,
   seedHistory,
 } from '@gtbuchanan/git-fixtures/seed-repo';
-import { parseJson } from '@gtbuchanan/stub-runtime/calls';
-import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
-import { markerFile } from '@gtbuchanan/stub-runtime/scenario';
 import * as v from 'valibot';
 import { artifactPath, suiteName } from './paths.ts';
 import type { ScenarioSeeder } from './scenario-setup.ts';

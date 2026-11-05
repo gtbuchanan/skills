@@ -2,7 +2,7 @@
  * The checker's end of a run (see run-provider.ts): the log its test's calls
  * were recorded in.
  */
-import { runLogPath } from '@gtbuchanan/stub-runtime/run-log';
+import { runLogPath } from '@gtbuchanan/cli-doubles/run-log';
 import * as v from 'valibot';
 import { suiteRunDir } from './paths.ts';
 

@@ -13,8 +13,8 @@
 import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
 import { type ReportedResult, reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
 import { runLog } from '@gtbuchanan/agent-skills-harness/run-log';
-import type { LoggedCall } from '@gtbuchanan/stub-runtime/calls';
-import { readCalls, readRefusals } from '@gtbuchanan/stub-runtime/calls';
+import type { LoggedCall } from '@gtbuchanan/cli-doubles/calls';
+import { readCalls, readRefusals } from '@gtbuchanan/cli-doubles/calls';
 import * as v from 'valibot';
 
 const StringListSchema = v.array(v.string());

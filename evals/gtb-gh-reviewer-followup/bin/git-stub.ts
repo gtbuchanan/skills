@@ -7,7 +7,7 @@
  * prompt tells the agent it is already in the PR's checkout and not to run git.
  * So there is no world here for a git call to be true against, and nothing to
  * pass one through to either — which is what separates this from the doubles
- * built on `@gtbuchanan/stub-runtime/passthrough`, whose suites seed a real
+ * built on `@gtbuchanan/cli-doubles/passthrough`, whose suites seed a real
  * checkout precisely so the real git can answer.
  *
  * That leaves only what to say when a call arrives, and success is the one
@@ -21,11 +21,11 @@
  *
  * Installed as `git` at the front of the eval PATH by the runner.
  */
+import { passThrough } from '@gtbuchanan/cli-doubles/passthrough';
+import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
+import { argv, emit, joined, logCallToRun } from '@gtbuchanan/cli-doubles/stub';
 import { isAgentRuntimeCall } from '@gtbuchanan/eval-agents/registry';
 import { hermeticGitEnv } from '@gtbuchanan/git-fixtures/hermetic-git';
-import { passThrough } from '@gtbuchanan/stub-runtime/passthrough';
-import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
-import { argv, emit, joined, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
 
 /* The agent runtime's own git calls, such as Claude Code's at startup. They
    are not the agent's, so the real git answers them and nothing records them;

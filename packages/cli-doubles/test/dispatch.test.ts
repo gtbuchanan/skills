@@ -16,7 +16,7 @@
  * setup's per-test assertion count sees it.
  */
 import { test } from 'vitest';
-import { dispatch, unmodelled } from '@gtbuchanan/stub-runtime/dispatch';
+import { dispatch, unmodelled } from '@gtbuchanan/cli-doubles/dispatch';
 
 /**
  * A call to some double. `gh` stands in for a CLI in the cases where which one

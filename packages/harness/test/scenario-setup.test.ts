@@ -17,7 +17,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { markerFile, scenarioPath } from '@gtbuchanan/stub-runtime/scenario';
+import { markerFile, scenarioPath } from '@gtbuchanan/cli-doubles/scenario';
 import { test } from 'vitest';
 import { fakeSuite } from './fake-suite.ts';
 import { scenarioSetup } from '@gtbuchanan/agent-skills-harness/scenario-setup';

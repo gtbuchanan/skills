@@ -13,7 +13,7 @@
  * Loaded by stubs running under plain `node`, whose type stripping only erases
  * annotations, so everything here stays erasable syntax.
  */
-import type { StubResponse } from '@gtbuchanan/stub-runtime/dispatch';
+import type { StubResponse } from '@gtbuchanan/cli-doubles/dispatch';
 import { pick, requestedFields } from './selection.ts';
 
 /**

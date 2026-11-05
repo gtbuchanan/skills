@@ -26,7 +26,7 @@ import {
   markerFile,
   scenarioByKey,
   scenarioPath,
-} from '@gtbuchanan/stub-runtime/scenario';
+} from '@gtbuchanan/cli-doubles/scenario';
 import * as v from 'valibot';
 import { skillsRoot, suiteRunDir } from './paths.ts';
 import { requireHarness, resetRunDir } from './setup.ts';

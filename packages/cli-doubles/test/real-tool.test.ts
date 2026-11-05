@@ -19,7 +19,7 @@ import {
   pathWithout,
   requireRealTool,
   resolveRealTool,
-} from '@gtbuchanan/stub-runtime/real-tool';
+} from '@gtbuchanan/cli-doubles/real-tool';
 
 const windowsLocalAppData = path.win32.join(
   String.raw`C:\Users`,

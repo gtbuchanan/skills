@@ -23,7 +23,7 @@ import {
   suiteRunDir,
 } from '@gtbuchanan/agent-skills-harness/paths';
 import { resetRunDir } from '@gtbuchanan/agent-skills-harness/setup';
-import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
+import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import { readTemplate, resolveShas } from './scenario.ts';
 import { seedRepository } from './seed.ts';
 

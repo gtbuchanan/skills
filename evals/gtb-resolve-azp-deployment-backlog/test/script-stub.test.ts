@@ -15,8 +15,8 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { readJsonl } from '@gtbuchanan/stub-runtime/calls';
-import { runLogPath, runVar } from '@gtbuchanan/stub-runtime/run-log';
+import { readJsonl } from '@gtbuchanan/cli-doubles/calls';
+import { runLogPath, runVar } from '@gtbuchanan/cli-doubles/run-log';
 import * as v from 'valibot';
 import { test } from 'vitest';
 

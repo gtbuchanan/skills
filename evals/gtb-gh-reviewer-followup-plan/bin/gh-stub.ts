@@ -26,9 +26,9 @@
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
-import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
-import { argv, emit, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
+import { dispatch } from '@gtbuchanan/cli-doubles/dispatch';
+import { allOf, argument, subcommand } from '@gtbuchanan/cli-doubles/match';
+import { argv, emit, logCallToRun } from '@gtbuchanan/cli-doubles/stub';
 import {
   readReviews,
   repo,

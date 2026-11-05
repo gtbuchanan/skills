@@ -3,7 +3,7 @@ import { copyFileSync } from 'node:fs';
 import path from 'node:path';
 import { suiteDir } from '@gtbuchanan/agent-skills-harness/paths';
 import { scenarioSetup } from '@gtbuchanan/agent-skills-harness/scenario-setup';
-import type { Keyed } from '@gtbuchanan/stub-runtime/scenario';
+import type { Keyed } from '@gtbuchanan/cli-doubles/scenario';
 import { scenarios } from './scenarios.ts';
 
 /**

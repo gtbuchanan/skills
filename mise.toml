@@ -37,7 +37,7 @@ actionlint = "1.7.12"
 # what gh prints and how it exits is what the suites test the skills against.
 # Termux disables it by this name: gh's Linux builds cannot resolve DNS on
 # Android, so Termux's own gh package is used there.
-gh = "2.103.2"
+gh = "2.103.3"
 hk = "2.8.1"
 node = "24.21.0"
 # renovate transitively pulls `@yarnpkg/libzip`, whose latest is a manual

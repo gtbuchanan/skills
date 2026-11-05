@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- [mise](https://mise.jdx.dev) — pins every tool this repo needs (node, hk, pkl, actionlint, shellcheck, shfmt) and installs the git hooks.
+- [mise](https://mise.jdx.dev) — pins every tool this repo needs and installs the git hooks.
 - Docker (Docker Desktop) — for `pnpm eval:docker` and the results server. Not needed for `pnpm eval`.
 - A logged-in Claude Code session for keyless eval auth (`~/.claude/.credentials.json`), or an `ANTHROPIC_API_KEY`.
 

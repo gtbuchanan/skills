@@ -13,7 +13,7 @@ catalog:
   '@gtbuchanan/cli': 1.0.0
   '@gtbuchanan/eslint-config': 0.5.1
   '@gtbuchanan/tsconfig': 0.2.0
-  '@gtbuchanan/vitest-config': 0.1.3
+  '@gtbuchanan/vitest-config': 0.3.0
   # libsql ships prebuilt bindings for darwin/linux/win32 only, so promptfoo
   # cannot open its eval database on Termux — the whole run dies before the
   # first test. Aliasing the binding libsql looks for on this target to a

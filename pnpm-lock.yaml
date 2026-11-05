@@ -180,8 +180,8 @@ catalogs:
       specifier: 0.2.0
       version: 0.2.0
     '@gtbuchanan/vitest-config':
-      specifier: 0.1.3
-      version: 0.1.3
+      specifier: 0.3.0
+      version: 0.3.0
     '@libsql/android-arm64':
       specifier: npm:@gtbuchanan/libsql-termux-shim@0.1.1
       version: 0.1.1
@@ -243,8 +243,6 @@ catalogs:
       specifier: 2.9.0
       version: 2.9.0
 
-pnpmfileChecksum: sha256-KkLwuMI36Am9UTEUO3tjdZ5FDw5Q8A/DznkR5dOu0H8=
-
 importers:
 
   .:
@@ -266,7 +264,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@pnpm/lockfile.types':
         specifier: 'catalog:'
         version: 1100.1.6
@@ -337,7 +335,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -386,7 +384,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -435,7 +433,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -484,7 +482,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -536,7 +534,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/cross-spawn':
         specifier: 'catalog:'
         version: 6.0.6
@@ -582,7 +580,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -631,7 +629,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -705,7 +703,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -742,7 +740,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -779,7 +777,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -809,7 +807,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -864,7 +862,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/cross-spawn':
         specifier: 'catalog:'
         version: 6.0.6
@@ -901,7 +899,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/cross-spawn':
         specifier: 'catalog:'
         version: 6.0.6
@@ -947,7 +945,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -987,7 +985,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -1036,7 +1034,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -1079,7 +1077,7 @@ importers:
         version: 0.2.0(typescript@6.0.3)
       '@gtbuchanan/vitest-config':
         specifier: 'catalog:'
-        version: 0.1.3(vitest@4.1.10)
+        version: 0.3.0(vitest@4.1.10)
       '@types/cross-spawn':
         specifier: 'catalog:'
         version: 6.0.6
@@ -1821,11 +1819,11 @@ packages:
     peerDependencies:
       typescript: '>=6.0.0'
 
-  '@gtbuchanan/vitest-config@0.1.3':
-    resolution: {integrity: sha512-YvwC1tJUz/ARkvLBZREu6RC1HMH3umUIxdglZkd9dtde9AqIoyd2fLWLCxrpMVLNAS2sNQEWQeN7F8rQrixJcA==}
+  '@gtbuchanan/vitest-config@0.3.0':
+    resolution: {integrity: sha512-x84w95YsGam1YCfTB70BPsYdgA9dTgDBwiJwY9U+5NCzZxko/yy7yPvg0r+HX825gYQxjnI+vyz07ezfBQu0ag==}
     engines: {node: '>=24.0.0'}
     peerDependencies:
-      vitest: ^4.0.0
+      vitest: ^4.0.0 || ^5.0.0
 
   '@hono/node-server@2.0.12':
     resolution: {integrity: sha512-eWpQYr67tqJLeaSUl0Q+TquuYfUdTibpOJlUMV2FfUP7+KqCC5TufnwnlXL6mobZBJbGAYRd7ZvEBDCbLInjhg==}
@@ -5144,6 +5142,7 @@ packages:
   libsql@0.5.29:
     resolution: {integrity: sha512-8lMP8iMgiBzzoNbAPQ59qdVcj6UaE/Vnm+fiwX4doX4Narook0a4GPKWBEv+CR8a1OwbfkgL18uBfBjWdF0Fzg==}
     cpu: [x64, arm64, wasm32, arm]
+    os: [darwin, linux, win32]
 
   lightningcss-android-arm64@1.33.0:
     resolution: {integrity: sha512-gEpRTalKdosp4Bb8qWtc2iOgE5SeIHlpS1up9bFq2wAyYhl1UdTObYiHe98zEM9SQvSoqQZ1IQD0JNpg3Ml5pg==}
@@ -5682,6 +5681,7 @@ packages:
 
   onnxruntime-node@1.24.3:
     resolution: {integrity: sha512-JH7+czbc8ALA819vlTgcV+Q214/+VjGeBHDjX81+ZCD0PCVCIFGFNtT0V4sXG/1JXypKPgScQcB3ij/hk3YnTg==}
+    os: [win32, darwin, linux]
 
   onnxruntime-web@1.26.0-dev.20260416-b7804b056c:
     resolution: {integrity: sha512-MD6Ss4GSpQBo6zqoJzyT9LRbKYs7x/JVN23FT24EcEvlqF4VuzPOeH6X38orZPKHQDbprn7K+SBpu0/mj2CQiw==}
@@ -7901,7 +7901,7 @@ snapshots:
     dependencies:
       typescript: 6.0.3
 
-  '@gtbuchanan/vitest-config@0.1.3(vitest@4.1.10)':
+  '@gtbuchanan/vitest-config@0.3.0(vitest@4.1.10)':
     dependencies:
       console-fail-test: 0.6.1
       find-up-simple: 1.0.1

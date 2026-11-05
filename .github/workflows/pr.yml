@@ -25,7 +25,7 @@ jobs:
     # no e2e/ directory or vitest.config.e2e.ts for that job to run.
     # `check` covers the fast tier only, so the slow tier needs its own flag to
     # reach the gate at all.
-    uses: gtbuchanan/tooling/.github/workflows/ci.yml@main
+    uses: gtbuchanan/tooling/.github/workflows/ci.yml@v1.0.0
     with:
       run-e2e: false
       run-slow-tests: true
@@ -38,7 +38,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: gtbuchanan/tooling/.github/workflows/dependency-review.yml@main
+    uses: gtbuchanan/tooling/.github/workflows/dependency-review.yml@v1.0.0
 
   eval-image:
     name: Eval Image
@@ -67,7 +67,7 @@ jobs:
   pre-commit:
     name: Pre-Commit
     # The eslint step shells out to `pnpm exec`, so it needs node_modules.
-    uses: gtbuchanan/tooling/.github/workflows/pre-commit.yml@main
+    uses: gtbuchanan/tooling/.github/workflows/pre-commit.yml@v1.0.0
     with:
       use-pnpm: true
 

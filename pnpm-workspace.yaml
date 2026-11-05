@@ -35,7 +35,7 @@ catalog:
   skills-npm: 1.2.0
   turbo: 2.11.10
   typescript: 6.0.3
-  valibot: 1.4.2
+  valibot: 1.5.0
   vitest: 5.1.0
   which: 7.0.0
   yaml: 2.9.0

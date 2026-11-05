@@ -32,7 +32,7 @@ catalog:
   jiti: 2.7.0
   promptfoo: 0.125.1
   skills: 1.7.4
-  skills-npm: 1.2.0
+  skills-npm: 4.1.0
   turbo: 2.11.10
   typescript: 6.0.3
   valibot: 1.5.0

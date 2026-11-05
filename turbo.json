@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "agentGuidance": false,
   "globalDependencies": [
     "mise.lock",
     "mise.toml"
@@ -16,6 +17,9 @@
       "outputs": []
     },
     "//#lint:eslint": {
+      "dependsOn": [
+        "^transit"
+      ],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!evals/*/**",
@@ -26,6 +30,9 @@
       ]
     },
     "//#typecheck:ts": {
+      "dependsOn": [
+        "^transit"
+      ],
       "inputs": [
         "tsconfig.base.json",
         "bin/**",
@@ -99,8 +106,8 @@
     },
     "lint": {
       "dependsOn": [
-        "lint:eslint",
-        "//#lint:eslint"
+        "//#lint:eslint",
+        "lint:eslint"
       ]
     },
     "lint:eslint": {
@@ -174,8 +181,8 @@
     },
     "typecheck": {
       "dependsOn": [
-        "typecheck:ts",
-        "//#typecheck:ts"
+        "//#typecheck:ts",
+        "typecheck:ts"
       ]
     },
     "typecheck:ts": {

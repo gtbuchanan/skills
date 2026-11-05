@@ -126,7 +126,7 @@ test("finds this repo's own workspace packages", ({ expect }) => {
     existsSync(path.join(repoRoot, dir, 'package.json')),
   );
 
-  expect(dirs).toContain('packages/eval-runner');
+  expect(dirs).toContain('packages/promptfoo-agent-runner');
   expect(withManifest).toStrictEqual(dirs);
 });
 

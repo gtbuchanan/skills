@@ -185,7 +185,7 @@ const runSkill = async (
     ...env,
     image,
     'sh',
-    '/work/packages/eval-runner/bin/docker-entrypoint.sh',
+    '/work/packages/promptfoo-agent-runner/bin/docker-entrypoint.sh',
     name,
     '--share',
     ...passthrough,

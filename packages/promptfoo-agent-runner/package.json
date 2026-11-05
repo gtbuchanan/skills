@@ -1,5 +1,5 @@
 {
-  "name": "@gtbuchanan/agent-skills-eval-runner",
+  "name": "@gtbuchanan/promptfoo-agent-runner",
   "private": true,
   "type": "module",
   "imports": {

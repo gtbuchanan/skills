@@ -82,11 +82,11 @@ test('a stateful pattern claims the same call every time', ({ expect }) => {
      the next, so a matcher built on it answers the second identical call from
      wherever the first one stopped. A handler that quietly stops claiming its
      command is the failure this whole table exists to prevent. */
-  const matches = argument(/user/gv);
+  const isUser = argument(/user/gv);
   const call = { argv: ['user'], cmd: 'gh', stdin: '' };
 
-  expect(matches(call)).toBe(true);
-  expect(matches(call)).toBe(true);
+  expect(isUser(call)).toBe(true);
+  expect(isUser(call)).toBe(true);
 });
 
 test('matching leaves the pattern as it was handed over', ({ expect }) => {
@@ -103,8 +103,8 @@ test('matching leaves the pattern as it was handed over', ({ expect }) => {
 });
 
 test('all of them have to claim the call', ({ expect }) => {
-  const endpoint = allOf(subcommand('api'), argument(/^user$/v));
+  const isUserLookup = allOf(subcommand('api'), argument(/^user$/v));
 
-  expect(endpoint(call('api', 'user', '--jq', '.login'))).toBe(true);
-  expect(endpoint(call('pr', 'edit', '--add-assignee', 'user'))).toBe(false);
+  expect(isUserLookup(call('api', 'user', '--jq', '.login'))).toBe(true);
+  expect(isUserLookup(call('pr', 'edit', '--add-assignee', 'user'))).toBe(false);
 });

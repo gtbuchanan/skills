@@ -113,10 +113,8 @@ const disjointProblems = (
       .filter(files => files.length > 0);
 
     return hit.length > 1
-      ? [
-          `${label(commit)}: spans ${String(hit.length)} unrelated groups ` +
-          `(${hit.map(files => files.join(', ')).join(' | ')})`,
-        ]
+      ? `${label(commit)}: spans ${String(hit.length)} unrelated groups ` +
+      `(${hit.map(files => files.join(', ')).join(' | ')})`
       : [];
   });
 
@@ -141,12 +139,9 @@ const parsedTrailers = (runner: GitRunner, message: string): string[] => {
 const hasTrailer = (lines: readonly string[], want: Trailer): boolean =>
   lines.some((line) => {
     const at = line.indexOf(':');
-    if (at === -1) return false;
-
-    return (
+    return at !== -1 &&
       line.slice(0, at).toLowerCase() === want.key.toLowerCase() &&
-      line.slice(at + 1).trim() === want.value
-    );
+      line.slice(at + 1).trim() === want.value;
   });
 
 const trailerProblems = (
@@ -235,11 +230,11 @@ const pendingProblems = (runner: GitRunner, scenario: string): string[] => {
 
   return Object.entries(seeded.pending).flatMap(([relative, contents]) => {
     const shown = probeGit(runner, ['show', `HEAD:${relative}`]);
-    if (shown.status !== 0) return [`${relative} never reached the history`];
+    if (shown.status !== 0) return `${relative} never reached the history`;
 
     return shown.stdout === contents
       ? []
-      : [`${relative} at HEAD does not match the work the scenario staged`];
+      : `${relative} at HEAD does not match the work the scenario staged`;
   });
 };
 

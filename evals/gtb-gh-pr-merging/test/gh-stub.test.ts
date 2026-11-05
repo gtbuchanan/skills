@@ -55,11 +55,11 @@ const worldFor = (key: string): string => {
   return dir;
 };
 
-const gh = (dir: string, args: readonly string[], input = ''): Run => {
+const gh = (dir: string, args: readonly string[]): Run => {
   const result = spawnSync(process.execPath, [stub, ...args], {
     cwd: dir,
     encoding: 'utf8',
-    input,
+    input: '',
   });
 
   return {

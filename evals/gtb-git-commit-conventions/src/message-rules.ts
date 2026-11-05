@@ -137,9 +137,9 @@ export const shapeProblems = (commit: NewCommit): string[] => {
   const first = subject.split(' ', 1)[0] ?? '';
 
   return [
-    ...(subject !== '' && initial !== initial.toUpperCase()
-      ? [`${label(commit)}: subject is not capitalized`]
-      : []),
+    ...(subject === '' || initial === initial.toUpperCase()
+      ? []
+      : [`${label(commit)}: subject is not capitalized`]),
     ...(subject.endsWith('.')
       ? [`${label(commit)}: subject ends with a period`]
       : []),

@@ -53,7 +53,7 @@ export const pathWithout = (
     const resolved = paths.resolve(dir);
     return isWindows ? resolved.toLowerCase() : resolved;
   };
-  const skipped = new Set(dirs.flatMap(dir => (dir === undefined ? [] : [key(dir)])));
+  const skipped = new Set(dirs.flatMap(dir => (dir === undefined ? [] : key(dir))));
 
   return pathValue
     .split(paths.delimiter)

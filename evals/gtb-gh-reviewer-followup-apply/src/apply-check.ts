@@ -65,7 +65,7 @@ const checkResolves = (
         call.command.includes('resolveReviewThread') &&
         call.command.includes(`threadId=${threadId}`),
     );
-    return isHit ? [] : [`missing resolve for ${threadId}`];
+    return isHit ? [] : `missing resolve for ${threadId}`;
   });
 
 /*
@@ -112,17 +112,15 @@ export const checkReplies = (
     const hits = calls.filter(call =>
       call.command.includes(`comments/${String(reply.id)}/replies`),
     );
-    if (hits.length === 0) return [`missing reply to ${String(reply.id)}`];
+    if (hits.length === 0) return `missing reply to ${String(reply.id)}`;
     if (hits.some(hit => inlineBody.test(hit.command))) {
-      return [
-        `reply to ${String(reply.id)} passed its body as an argument — ` +
-        'it goes in on standard input',
-      ];
+      return `reply to ${String(reply.id)} passed its body as an argument — ` +
+        'it goes in on standard input';
     }
 
     return hits.some(hit => hit.stdin?.includes(reply.bodyIncludes) ?? false)
       ? []
-      : [`reply to ${String(reply.id)} did not carry "${reply.bodyIncludes}"`];
+      : `reply to ${String(reply.id)} did not carry "${reply.bodyIncludes}"`;
   });
 
 /**
@@ -141,7 +139,7 @@ const checkAcks = (
     );
     return isHit
       ? []
-      : [`missing 🚀 ack reaction on comment ${String(rootCommentId)}`];
+      : `missing 🚀 ack reaction on comment ${String(rootCommentId)}`;
   });
 
 /**
@@ -162,13 +160,13 @@ const checkReopens = (
         call.command.includes(`threadId=${threadId}`),
     );
     if (unresolveIndex === -1) {
-      return [`missing unresolve (reopen) for ${threadId}`];
+      return `missing unresolve (reopen) for ${threadId}`;
     }
     if (replyIndex === -1) {
-      return [`reopen ${threadId} posted no reply before unresolving`];
+      return `reopen ${threadId} posted no reply before unresolving`;
     }
     if (replyIndex > unresolveIndex) {
-      return [`reopen ${threadId} unresolved before replying — reply must come first`];
+      return `reopen ${threadId} unresolved before replying — reply must come first`;
     }
     return [];
   });

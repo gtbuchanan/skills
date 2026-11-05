@@ -14,8 +14,6 @@ import { ghAgainst, proxied } from './fixtures.ts';
    The request under test is plain HTTP to a host other than the fake's. */
 const foreignUrl = 'http://example.com/';
 
-/* eslint-disable-next-line unicorn/prefer-https --
-   gh speaks plain HTTP to github.localhost, and this stands in for gh. */
 const graphqlUrl = 'http://api.github.localhost/graphql';
 
 const viewer = '{"data":{"viewer":{"login":"taylor"}}}';

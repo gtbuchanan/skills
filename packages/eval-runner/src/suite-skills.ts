@@ -118,7 +118,7 @@ const agentOf = (provider: unknown): string | undefined => {
 export const agentsUsedBy = (configs: readonly unknown[]): EvalAgent[] => {
   const names = new Set(configs.flatMap(providersIn).flatMap((provider) => {
     const agent = agentOf(provider);
-    return agent === undefined ? [] : [agent];
+    return agent ?? [];
   }));
   return evalAgents.filter(agent => names.has(agent.name));
 };

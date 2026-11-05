@@ -50,10 +50,16 @@ turbo would resolve `pnpm check` back to the script that invoked it and abort on
 its recursion guard. Dispatch them through `gtb turbo run` instead — `gtb verify`
 fails if a root script shadows an aggregate again.
 
-On Termux, changing the dependency graph needs `pnpm install --force` once —
-pnpm re-checks platform support from the lockfile before `.pnpmfile.cjs` gets a
-chance to ungate the two android-blocked packages in promptfoo's tree. Plain
-`pnpm install` works on every other host and on any later run.
+On Termux, install with linux accepted as a supported platform:
+
+```sh
+export pnpm_config_supported_architectures='{"os":["current","linux"]}'
+```
+
+Two packages deep in promptfoo's tree, libsql and onnxruntime-node, list
+every OS but android, and `engineStrict` turns that into a failed install. The
+setting stays out of `pnpm-workspace.yaml` because there it would also make
+macOS and Windows fetch linux binaries they never load.
 
 ## Authoring a skill
 

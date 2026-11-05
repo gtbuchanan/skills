@@ -26,7 +26,6 @@
     "@gtbuchanan/eslint-config": "catalog:",
     "@gtbuchanan/tsconfig": "catalog:",
     "@gtbuchanan/vitest-config": "catalog:",
-    "@pnpm/lockfile.types": "catalog:",
     "@types/cross-spawn": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",

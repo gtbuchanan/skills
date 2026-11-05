@@ -29,7 +29,6 @@ RUN find . -type f \
       ! -name package.json \
       ! -name pnpm-workspace.yaml \
       ! -name pnpm-lock.yaml \
-      ! -name .pnpmfile.cjs \
       -delete \
   && find . -mindepth 1 -type d -empty -delete
 
@@ -46,9 +45,7 @@ RUN apt-get update \
 WORKDIR /work
 
 # Bake deps (Linux build → pulls the SDK's linux-x64 binary). --no-frozen-lockfile
-# lets the Windows-authored lockfile resolve linux-only optional deps. The
-# pnpmfile ships too: it is a no-op here (its os-ungating only matters on
-# Android) but pnpm warns when a lockfile was built with hooks that are absent.
+# lets the Windows-authored lockfile resolve linux-only optional deps.
 #
 # Every workspace package's manifest comes too, and must: pnpm-workspace.yaml
 # declares them, the root depends on the harness as `workspace:*`, and an

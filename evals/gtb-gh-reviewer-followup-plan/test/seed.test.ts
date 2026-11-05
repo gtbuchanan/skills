@@ -233,7 +233,7 @@ test('the checkout is clean, despite what shares the workspace', seedTimeout, ({
   writeFileSync(path.join(workspace, '.claude', 'skills', 'SKILL.md'), 'installed\n');
   mkdirSync(path.join(workspace, 'node_modules', 'left-pad'), { recursive: true });
   writeFileSync(path.join(workspace, 'node_modules', 'left-pad', 'index.js'), 'x\n');
-  for (const file of ['package.json', 'pnpm-lock.yaml', '.pnpmfile.cjs'])
+  for (const file of ['package.json', 'pnpm-lock.yaml'])
     writeFileSync(path.join(workspace, file), '{}\n');
 
   expect(inRepo(workspace, 'status', '--porcelain')).toBe('');

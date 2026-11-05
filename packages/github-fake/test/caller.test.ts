@@ -8,7 +8,7 @@
  * setup's per-test assertion count sees it.
  */
 import { test } from 'vitest';
-import { callerOf, callerToken } from '@gtbuchanan/github-api-fake/caller';
+import { callerOf, callerToken } from '@gtbuchanan/github-fake/caller';
 
 const tokenFor = (payload: unknown): string =>
   Buffer.from(JSON.stringify(payload)).toString('base64url');

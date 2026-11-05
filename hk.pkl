@@ -13,7 +13,7 @@ local eslintArgs = "--max-warnings=0 --no-warn-ignored {{files}}"
 // binary the large-file check exists to catch; see its refresh script.
 local recommended = (Defaults.recommended) {
   ["check-added-large-files"] {
-    exclude = List("packages/github-api-fake/schema/github.graphql")
+    exclude = List("packages/github-fake/schema/github.graphql")
   }
 }
 

@@ -10,7 +10,7 @@
  * than fetched at install: two installs a day apart would validate against
  * different schemas.
  *
- * Usage: pnpm -C packages/github-api-fake run schema:refresh
+ * Usage: pnpm -C packages/github-fake run schema:refresh
  */
 
 /* v8 ignore file -- One fetch and one write, run by hand. A test would only

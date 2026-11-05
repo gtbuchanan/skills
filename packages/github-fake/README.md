@@ -1,4 +1,4 @@
-# @gtbuchanan/github-api-fake
+# @gtbuchanan/github-fake
 
 A fake GitHub API for the eval suites. Instead of faking the `gh` command, the suites run the real `gh` and point it at this server. `gh` does all the work of building requests and printing results, so a suite only has to describe the repository: its pull requests, checks, reviews and so on. That description is called a world.
 
@@ -59,7 +59,7 @@ The server can only write to the log when the command ran as part of a test run,
 The server checks every GraphQL request against GitHub's schema, saved in `schema/github.graphql`. Update it whenever you upgrade `gh`, because newer versions of `gh` ask for fields that older schemas don't have:
 
 ```sh
-pnpm -C packages/github-api-fake run schema:refresh
+pnpm -C packages/github-fake run schema:refresh
 ```
 
 Look over the diff before committing it: it shows what GitHub changed. The schema is saved in the repository rather than downloaded during install because GitHub only publishes the current version, so two installs a day apart could get different schemas.

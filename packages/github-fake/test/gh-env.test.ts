@@ -11,8 +11,8 @@
  */
 import path from 'node:path';
 import { test } from 'vitest';
-import { callerOf } from '@gtbuchanan/github-api-fake/caller';
-import { fakeGhEnv } from '@gtbuchanan/github-api-fake/gh-env';
+import { callerOf } from '@gtbuchanan/github-fake/caller';
+import { fakeGhEnv } from '@gtbuchanan/github-fake/gh-env';
 
 const dir = path.join('runs', 'run-1');
 const caller = { argv: ['pr', 'view', '7'], run: 'run-1', world: 'merge-stacked' };

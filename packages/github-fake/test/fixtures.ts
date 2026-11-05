@@ -14,11 +14,11 @@ import { readRefusals } from '@gtbuchanan/cli-doubles/calls';
 import { resolveRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import { runLogPath } from '@gtbuchanan/cli-doubles/run-log';
 import { vi } from 'vitest';
-import { callerToken } from '@gtbuchanan/github-api-fake/caller';
-import { fakeGhEnv } from '@gtbuchanan/github-api-fake/gh-env';
-import { startFakeGitHub } from '@gtbuchanan/github-api-fake/server';
-import { GitHubError } from '@gtbuchanan/github-api-fake/world';
-import type { World } from '@gtbuchanan/github-api-fake/world';
+import { callerToken } from '@gtbuchanan/github-fake/caller';
+import { fakeGhEnv } from '@gtbuchanan/github-fake/gh-env';
+import { startFakeGitHub } from '@gtbuchanan/github-fake/server';
+import { GitHubError } from '@gtbuchanan/github-fake/world';
+import type { World } from '@gtbuchanan/github-fake/world';
 
 const gh = process.env['GH_REAL'] ?? resolveRealTool('gh') ?? 'gh';
 
@@ -179,7 +179,7 @@ export const ghAgainst = async ({
   logDirFrom = 'options',
   world,
 }: Against): Promise<Run> => {
-  const dir = mkdtempSync(path.join(tmpdir(), 'github-api-fake-'));
+  const dir = mkdtempSync(path.join(tmpdir(), 'github-fake-'));
   if (logDirFrom === 'environment') vi.stubEnv('STUB_LOG_DIR', dir);
   const fake = await startFakeGitHub(logDirFrom === 'environment'
     ? { worlds: key => worlds[key] }
@@ -242,7 +242,7 @@ export const proxied = async ({
   signed = true,
   url,
 }: Proxied): Promise<ProxiedReply> => {
-  const dir = mkdtempSync(path.join(tmpdir(), 'github-api-fake-'));
+  const dir = mkdtempSync(path.join(tmpdir(), 'github-fake-'));
   const fake = await startFakeGitHub({ logDir: () => dir, worlds: key => worlds[key] });
   const token = callerToken({ argv: ['api'], run, world: 'rate-limiter' });
   try {

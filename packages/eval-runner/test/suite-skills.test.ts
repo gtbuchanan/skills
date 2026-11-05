@@ -11,7 +11,7 @@ import { test } from 'vitest';
 import { agentsUsedBy, readSuiteConfigs, skillsByAgent } from '#src/suite-skills.ts';
 
 const sdkProvider = 'anthropic:claude-agent-sdk';
-const runProvider = 'file://node_modules/@gtbuchanan/agent-skills-harness/src/run-provider.ts';
+const runProvider = 'file://node_modules/@gtbuchanan/promptfoo-agent/src/run-provider.ts';
 
 test('installs an agent provider\'s skills for the agent it runs', ({ expect }) => {
   const config = { providers: [{ config: { skills: ['a', 'b'] }, id: sdkProvider }] };

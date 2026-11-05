@@ -13,8 +13,8 @@ import {
   writeFileSync,
 } from 'node:fs';
 import path from 'node:path';
-import { repoRoot as root } from '@gtbuchanan/agent-skills-harness/paths';
 import { evalAgents } from '@gtbuchanan/eval-agents/registry';
+import { repoRoot as root } from '@gtbuchanan/promptfoo-agent/paths';
 import spawn from 'cross-spawn';
 
 /**

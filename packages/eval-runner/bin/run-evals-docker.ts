@@ -25,7 +25,7 @@ import { existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import { repoRoot as root } from '@gtbuchanan/agent-skills-harness/paths';
+import { repoRoot as root } from '@gtbuchanan/promptfoo-agent/paths';
 import spawn from 'cross-spawn';
 import { agentAuth, authProblem, credentialsIn } from '#src/agent-setup.ts';
 import { agentsUsedBy, readSuiteConfigs } from '#src/suite-skills.ts';

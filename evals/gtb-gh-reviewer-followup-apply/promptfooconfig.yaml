@@ -66,7 +66,7 @@ providers:
         setting_sources: ['project']
         skills: ['gtb-gh-reviewer-followup-apply']
         working_dir: '{{ env.EVAL_WORKSPACE }}'
-    id: file://node_modules/@gtbuchanan/agent-skills-harness/src/run-provider.ts
+    id: file://node_modules/@gtbuchanan/promptfoo-agent/src/run-provider.ts
     label: gtb-gh-reviewer-followup-apply
 tests:
   - description: mixed — resolve an exact-fix thread and reply on a partial one

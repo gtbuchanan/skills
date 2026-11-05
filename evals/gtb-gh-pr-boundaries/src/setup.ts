@@ -11,11 +11,11 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { artifactPath, suiteName } from '@gtbuchanan/agent-skills-harness/paths';
-import { scenarioSetup } from '@gtbuchanan/agent-skills-harness/scenario-setup';
 import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import { markerFile } from '@gtbuchanan/cli-doubles/scenario';
 import { seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
+import { artifactPath, suiteName } from '@gtbuchanan/promptfoo-agent/paths';
+import { scenarioSetup } from '@gtbuchanan/promptfoo-agent/scenario-setup';
 import { author } from './repository.ts';
 import type { Scenario } from './scenarios.ts';
 import { scenarios } from './scenarios.ts';

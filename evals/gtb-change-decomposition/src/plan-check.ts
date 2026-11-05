@@ -14,8 +14,8 @@
  * and would score well on every structural check while being about a codebase
  * that does not exist.
  */
-import { type AssertionResult, fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { findJsonArray } from '@gtbuchanan/agent-skills-harness/json-scan';
+import { type AssertionResult, fromProblems } from '@gtbuchanan/promptfoo-agent/assert';
+import { findJsonArray } from '@gtbuchanan/promptfoo-agent/json-scan';
 import * as v from 'valibot';
 import { scenarios } from './trees.ts';
 

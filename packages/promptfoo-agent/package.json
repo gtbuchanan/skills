@@ -1,5 +1,5 @@
 {
-  "name": "@gtbuchanan/agent-skills-harness",
+  "name": "@gtbuchanan/promptfoo-agent",
   "private": true,
   "type": "module",
   "exports": {

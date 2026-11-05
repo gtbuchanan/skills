@@ -10,8 +10,8 @@
  *   - Multiple threads: `expectedVerdicts` is an { threadId: verdict } map; every
  *     thread is matched by its echoed `threadId` and scored as a fraction.
  */
-import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
-import { findJsonArray } from '@gtbuchanan/agent-skills-harness/json-scan';
+import type { AssertionResult } from '@gtbuchanan/promptfoo-agent/assert';
+import { findJsonArray } from '@gtbuchanan/promptfoo-agent/json-scan';
 import * as v from 'valibot';
 
 /**

@@ -10,7 +10,7 @@
  * setup's per-test assertion count sees it.
  */
 import { test } from 'vitest';
-import { reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
+import { reportRefusals } from '@gtbuchanan/promptfoo-agent/refusals';
 
 const passed = { pass: true, reason: 'ok', score: 1 };
 

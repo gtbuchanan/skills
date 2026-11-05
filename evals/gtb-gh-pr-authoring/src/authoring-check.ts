@@ -1,7 +1,7 @@
 /*
  * promptfoo javascript assertion for this suite.
  *
- * The matching itself is `@gtbuchanan/agent-skills-harness/call-expectations`: each
+ * The matching itself is `@gtbuchanan/promptfoo-agent/call-expectations`: each
  * test states its rule as vars — which calls must appear, which must not, which
  * must precede which, what body was piped in — and the shared engine reads the
  * test's call log and judges them.
@@ -16,8 +16,8 @@
  * harness and read a log that does not exist — which a checker reports as a
  * pile of missing calls rather than as a missing log.
  */
-import { callExpectationAssertion } from '@gtbuchanan/agent-skills-harness/call-expectations';
-import { commitCountCheck } from '@gtbuchanan/agent-skills-harness/commit-count';
+import { callExpectationAssertion } from '@gtbuchanan/promptfoo-agent/call-expectations';
+import { commitCountCheck } from '@gtbuchanan/promptfoo-agent/commit-count';
 import { baselinesPath } from './setup.ts';
 
 export default callExpectationAssertion({

@@ -23,10 +23,10 @@
  * thread the author resolved but whose file the diff never touches → unaddressed
  * → reply + reopen).
  */
-import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { type ReportedResult, reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
-import { runLog } from '@gtbuchanan/agent-skills-harness/run-log';
 import { parseJson, readCommands, readRefusals } from '@gtbuchanan/cli-doubles/calls';
+import { fromProblems } from '@gtbuchanan/promptfoo-agent/assert';
+import { type ReportedResult, reportRefusals } from '@gtbuchanan/promptfoo-agent/refusals';
+import { runLog } from '@gtbuchanan/promptfoo-agent/run-log';
 import * as v from 'valibot';
 import { readReviews, scenarioDir, selectLastOwnReview, viewer } from './scenario.ts';
 

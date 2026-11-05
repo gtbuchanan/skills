@@ -20,7 +20,7 @@ import path from 'node:path';
 import { markerFile, scenarioPath } from '@gtbuchanan/cli-doubles/scenario';
 import { test } from 'vitest';
 import { fakeSuite } from './fake-suite.ts';
-import { scenarioSetup } from '@gtbuchanan/agent-skills-harness/scenario-setup';
+import { scenarioSetup } from '@gtbuchanan/promptfoo-agent/scenario-setup';
 
 interface Fixture {
   readonly key: string;

@@ -14,10 +14,10 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
-    "@gtbuchanan/agent-skills-harness": "workspace:*",
     "@gtbuchanan/cli-doubles": "workspace:*",
     "@gtbuchanan/eval-agents": "workspace:*",
     "@gtbuchanan/git-fixtures": "workspace:*",
+    "@gtbuchanan/promptfoo-agent": "workspace:*",
     "cross-spawn": "catalog:",
     "valibot": "catalog:",
     "yaml": "catalog:"

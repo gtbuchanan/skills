@@ -3,7 +3,7 @@
  *
  * `suiteName` and `suiteRunDir` walk up for a promptfoo config and take the
  * containing directory's name, so a directory is a suite by having that file.
- * A test file here is not one — nothing above `packages/harness/test` has a
+ * A test file here is not one — nothing above `packages/promptfoo-agent/test` has a
  * config — which is why passing its own `import.meta.url` fails rather than
  * quietly naming the wrong suite.
  *

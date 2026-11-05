@@ -22,7 +22,7 @@ import {
   checkOrder,
   checkStdin,
   checkStdinLength,
-} from '@gtbuchanan/agent-skills-harness/call-expectations';
+} from '@gtbuchanan/promptfoo-agent/call-expectations';
 
 interface Call {
   readonly command: string;

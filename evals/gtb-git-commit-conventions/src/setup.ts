@@ -16,10 +16,10 @@
  */
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { artifactPath, skillsRoot, suiteName } from '@gtbuchanan/agent-skills-harness/paths';
-import { requireHarness } from '@gtbuchanan/agent-skills-harness/setup';
 import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import { captureGit, seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
+import { artifactPath, skillsRoot, suiteName } from '@gtbuchanan/promptfoo-agent/paths';
+import { requireHarness } from '@gtbuchanan/promptfoo-agent/setup';
 import { author, branch, committer, scenarioPath, scenarios } from './scenarios.ts';
 
 /**

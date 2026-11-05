@@ -21,9 +21,9 @@
  * of PATH, put there by the runner, so this suite runs only under the harness.
  */
 import path from 'node:path';
-import { skillsRoot, suiteDir, suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
-import { requireHarness, resetRunDir } from '@gtbuchanan/agent-skills-harness/setup';
-import { resolveSkillsCli } from '@gtbuchanan/agent-skills-harness/skills-cli';
+import { skillsRoot, suiteDir, suiteRunDir } from '@gtbuchanan/promptfoo-agent/paths';
+import { requireHarness, resetRunDir } from '@gtbuchanan/promptfoo-agent/setup';
+import { resolveSkillsCli } from '@gtbuchanan/promptfoo-agent/skills-cli';
 import spawn from 'cross-spawn';
 
 /**

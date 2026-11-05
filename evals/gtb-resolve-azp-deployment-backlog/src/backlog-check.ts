@@ -36,10 +36,10 @@
  * with the expected id is itself proof the agent resolved the name via
  * `az pipelines list` (it could not have guessed the id).
  */
-import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { type ReportedResult, reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
-import { runLog } from '@gtbuchanan/agent-skills-harness/run-log';
 import { readJsonl, readRefusals } from '@gtbuchanan/cli-doubles/calls';
+import { fromProblems } from '@gtbuchanan/promptfoo-agent/assert';
+import { type ReportedResult, reportRefusals } from '@gtbuchanan/promptfoo-agent/refusals';
+import { runLog } from '@gtbuchanan/promptfoo-agent/run-log';
 import * as v from 'valibot';
 
 /**

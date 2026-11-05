@@ -66,7 +66,7 @@ providers:
         setting_sources: ['project']
         skills: ['gtb-gh-pr-boundaries', 'gtb-change-decomposition']
         working_dir: '{{ env.EVAL_WORKSPACE }}'
-    id: file://node_modules/@gtbuchanan/agent-skills-harness/src/run-provider.ts
+    id: file://node_modules/@gtbuchanan/promptfoo-agent/src/run-provider.ts
     label: gtb-gh-pr-boundaries
 tests:
   - description: two unrelated fixes are two units, so two pull requests off the trunk

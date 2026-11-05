@@ -1,9 +1,9 @@
 // promptfoo beforeAll/beforeEach extension: one workspace per test.
 import { copyFileSync } from 'node:fs';
 import path from 'node:path';
-import { suiteDir } from '@gtbuchanan/agent-skills-harness/paths';
-import { scenarioSetup } from '@gtbuchanan/agent-skills-harness/scenario-setup';
 import type { Keyed } from '@gtbuchanan/cli-doubles/scenario';
+import { suiteDir } from '@gtbuchanan/promptfoo-agent/paths';
+import { scenarioSetup } from '@gtbuchanan/promptfoo-agent/scenario-setup';
 import { scenarios } from './scenarios.ts';
 
 /**

@@ -10,9 +10,9 @@
  * suites even though nothing here counts commits — a merge scenario asks what
  * the branch became, not how many commits reached it.
  */
-import { repoScenarioSeeding } from '@gtbuchanan/agent-skills-harness/repo-scenario';
-import { scenarioSetup } from '@gtbuchanan/agent-skills-harness/scenario-setup';
 import type { Scenario } from '@gtbuchanan/github-cli-stub/scenario-world';
+import { repoScenarioSeeding } from '@gtbuchanan/promptfoo-agent/repo-scenario';
+import { scenarioSetup } from '@gtbuchanan/promptfoo-agent/scenario-setup';
 import { author } from './repository.ts';
 import { scenarios } from './scenarios.ts';
 

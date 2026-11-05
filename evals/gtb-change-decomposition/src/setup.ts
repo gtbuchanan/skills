@@ -18,8 +18,8 @@
  */
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { skillsRoot } from '@gtbuchanan/agent-skills-harness/paths';
-import { requireHarness } from '@gtbuchanan/agent-skills-harness/setup';
+import { skillsRoot } from '@gtbuchanan/promptfoo-agent/paths';
+import { requireHarness } from '@gtbuchanan/promptfoo-agent/setup';
 import { scenarioPath, scenarios } from './trees.ts';
 
 const seedAll = (): void => {

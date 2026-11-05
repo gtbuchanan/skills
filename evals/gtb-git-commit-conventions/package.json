@@ -10,9 +10,9 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
-    "@gtbuchanan/agent-skills-harness": "workspace:*",
     "@gtbuchanan/cli-doubles": "workspace:*",
     "@gtbuchanan/git-fixtures": "workspace:*",
+    "@gtbuchanan/promptfoo-agent": "workspace:*",
     "valibot": "catalog:"
   },
   "devDependencies": {

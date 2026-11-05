@@ -29,7 +29,7 @@ import {
   type RepoScenario,
   type RepoScenarioSeeding,
   repoScenarioSeeding,
-} from '@gtbuchanan/agent-skills-harness/repo-scenario';
+} from '@gtbuchanan/promptfoo-agent/repo-scenario';
 
 const git = requireRealTool('git');
 

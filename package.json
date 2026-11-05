@@ -21,9 +21,9 @@
   },
   "devDependencies": {
     "@anthropic-ai/claude-agent-sdk": "catalog:",
-    "@gtbuchanan/agent-skills-harness": "workspace:*",
     "@gtbuchanan/cli": "catalog:",
     "@gtbuchanan/eslint-config": "catalog:",
+    "@gtbuchanan/promptfoo-agent": "workspace:*",
     "@gtbuchanan/tsconfig": "catalog:",
     "@gtbuchanan/vitest-config": "catalog:",
     "@types/cross-spawn": "catalog:",

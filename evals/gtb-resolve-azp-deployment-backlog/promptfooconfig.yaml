@@ -81,7 +81,7 @@ providers:
         setting_sources: ['project']
         skills: ['gtb-resolve-azp-deployment-backlog']
         working_dir: '{{ env.EVAL_WORKSPACE }}'
-    id: file://node_modules/@gtbuchanan/agent-skills-harness/src/run-provider.ts
+    id: file://node_modules/@gtbuchanan/promptfoo-agent/src/run-provider.ts
     label: gtb-resolve-azp-deployment-backlog
 tests:
   - description: named pipeline, approve the newest — resolve web-frontend→900001, dry-run, then live -ApproveLatest

@@ -14,7 +14,7 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
-    "@gtbuchanan/agent-skills-harness": "workspace:*",
+    "@gtbuchanan/promptfoo-agent": "workspace:*",
     "valibot": "catalog:"
   },
   "devDependencies": {

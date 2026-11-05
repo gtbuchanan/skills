@@ -10,7 +10,7 @@
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { repoRoot } from '@gtbuchanan/agent-skills-harness/paths';
+import { repoRoot } from '@gtbuchanan/promptfoo-agent/paths';
 import { test } from 'vitest';
 import {
   nodeModulesShadows,
@@ -131,9 +131,9 @@ test("finds this repo's own workspace packages", ({ expect }) => {
 });
 
 test('shadows a package with an anonymous volume', ({ expect }) => {
-  expect(nodeModulesShadows('/work', ['packages/harness'])).toStrictEqual([
+  expect(nodeModulesShadows('/work', ['packages/promptfoo-agent'])).toStrictEqual([
     '-v',
-    '/work/packages/harness/node_modules',
+    '/work/packages/promptfoo-agent/node_modules',
   ]);
 });
 

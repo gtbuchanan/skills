@@ -24,9 +24,9 @@ import { scenarioPath } from '@gtbuchanan/cli-doubles/scenario';
 import { captureGit, runGit, seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
 import { test } from 'vitest';
 import { fakeSuite } from './fake-suite.ts';
-import { callExpectationAssertion } from '@gtbuchanan/agent-skills-harness/call-expectations';
-import { commitCountCheck } from '@gtbuchanan/agent-skills-harness/commit-count';
-import { suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
+import { callExpectationAssertion } from '@gtbuchanan/promptfoo-agent/call-expectations';
+import { commitCountCheck } from '@gtbuchanan/promptfoo-agent/commit-count';
+import { suiteRunDir } from '@gtbuchanan/promptfoo-agent/paths';
 
 const git = requireRealTool('git');
 

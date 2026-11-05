@@ -20,7 +20,7 @@ import {
   skillsRoot,
   suiteDir,
   suiteName,
-} from '@gtbuchanan/agent-skills-harness/paths';
+} from '@gtbuchanan/promptfoo-agent/paths';
 
 const workspaceVar = 'EVAL_WORKSPACE';
 

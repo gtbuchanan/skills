@@ -7,8 +7,8 @@
 import path from 'node:path';
 import { test } from 'vitest';
 import { fakeSuite } from './fake-suite.ts';
-import { suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
-import { runLog } from '@gtbuchanan/agent-skills-harness/run-log';
+import { suiteRunDir } from '@gtbuchanan/promptfoo-agent/paths';
+import { runLog } from '@gtbuchanan/promptfoo-agent/run-log';
 
 test('names the log of the run the response came from', ({ expect }) => {
   const { metaUrl } = fakeSuite();

@@ -18,13 +18,13 @@
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
-import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { skillsRoot } from '@gtbuchanan/agent-skills-harness/paths';
 import { parseJson } from '@gtbuchanan/cli-doubles/calls';
 import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import type { GitRunner } from '@gtbuchanan/git-fixtures/seed-repo';
 import { captureGit, probeGit } from '@gtbuchanan/git-fixtures/seed-repo';
+import { fromProblems } from '@gtbuchanan/promptfoo-agent/assert';
+import type { AssertionResult } from '@gtbuchanan/promptfoo-agent/assert';
+import { skillsRoot } from '@gtbuchanan/promptfoo-agent/paths';
 import * as v from 'valibot';
 import {
   grammarProblems,

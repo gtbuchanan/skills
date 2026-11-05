@@ -19,12 +19,12 @@
  *                went rather than deciding the division at the end.
  */
 import path from 'node:path';
-import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { skillsRoot } from '@gtbuchanan/agent-skills-harness/paths';
-import { type ReportedResult, reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
-import { runLog } from '@gtbuchanan/agent-skills-harness/run-log';
 import { readCallRecords, readRefusals } from '@gtbuchanan/cli-doubles/calls';
 import { readState } from '@gtbuchanan/github-cli-stub/state';
+import { fromProblems } from '@gtbuchanan/promptfoo-agent/assert';
+import { skillsRoot } from '@gtbuchanan/promptfoo-agent/paths';
+import { type ReportedResult, reportRefusals } from '@gtbuchanan/promptfoo-agent/refusals';
+import { runLog } from '@gtbuchanan/promptfoo-agent/run-log';
 import * as v from 'valibot';
 import { scenarioPath } from './setup.ts';
 

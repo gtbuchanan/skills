@@ -25,8 +25,8 @@ import {
   suiteDir,
   suiteName,
   suiteRunDir,
-} from '@gtbuchanan/agent-skills-harness/paths';
-import { requireHarness, resetRunDir } from '@gtbuchanan/agent-skills-harness/setup';
+} from '@gtbuchanan/promptfoo-agent/paths';
+import { requireHarness, resetRunDir } from '@gtbuchanan/promptfoo-agent/setup';
 
 /**
  * rwxr-xr-x — the agent invokes the overlaid script directly.

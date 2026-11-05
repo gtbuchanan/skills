@@ -26,7 +26,7 @@
  * fixture cannot leave a stale number behind in the config.
  */
 import { readFileSync } from 'node:fs';
-import type { AssertionResult } from '@gtbuchanan/agent-skills-harness/assert';
+import type { AssertionResult } from '@gtbuchanan/promptfoo-agent/assert';
 import * as v from 'valibot';
 
 const StringArraySchema = v.array(v.string());

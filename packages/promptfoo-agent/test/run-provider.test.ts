@@ -15,7 +15,7 @@ import { test } from 'vitest';
 import RunProvider, {
   type RunDeps,
   callAsRun,
-} from '@gtbuchanan/agent-skills-harness/run-provider';
+} from '@gtbuchanan/promptfoo-agent/run-provider';
 
 /**
  * An agent whose provider takes env under `injected`, so a test sees exactly

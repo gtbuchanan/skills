@@ -4,7 +4,7 @@
  * A suite names it as its provider and nests the agent's own config under it:
  *
  *   providers:
- *     - id: file://node_modules/@gtbuchanan/agent-skills-harness/src/run-provider.ts
+ *     - id: file://node_modules/@gtbuchanan/promptfoo-agent/src/run-provider.ts
  *       config:
  *         agent: claude-code
  *         agentConfig: { ... }

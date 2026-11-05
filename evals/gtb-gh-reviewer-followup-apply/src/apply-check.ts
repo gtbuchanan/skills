@@ -10,11 +10,11 @@
  *   expectAbsent   — ids that must NEVER appear (the reviewer withheld approval)
  *   expectFailure  — the agent's own report must acknowledge a failure
  */
-import { fromProblems } from '@gtbuchanan/agent-skills-harness/assert';
-import { type ReportedResult, reportRefusals } from '@gtbuchanan/agent-skills-harness/refusals';
-import { runLog } from '@gtbuchanan/agent-skills-harness/run-log';
 import type { LoggedCall } from '@gtbuchanan/cli-doubles/calls';
 import { readCalls, readRefusals } from '@gtbuchanan/cli-doubles/calls';
+import { fromProblems } from '@gtbuchanan/promptfoo-agent/assert';
+import { type ReportedResult, reportRefusals } from '@gtbuchanan/promptfoo-agent/refusals';
+import { runLog } from '@gtbuchanan/promptfoo-agent/run-log';
 import * as v from 'valibot';
 
 const StringListSchema = v.array(v.string());

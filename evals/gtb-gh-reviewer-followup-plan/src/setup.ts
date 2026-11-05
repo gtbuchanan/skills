@@ -15,15 +15,15 @@
  */
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import {
   artifactPath,
   skillsRoot,
   suiteDir,
   suiteName,
   suiteRunDir,
-} from '@gtbuchanan/agent-skills-harness/paths';
-import { resetRunDir } from '@gtbuchanan/agent-skills-harness/setup';
-import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
+} from '@gtbuchanan/promptfoo-agent/paths';
+import { resetRunDir } from '@gtbuchanan/promptfoo-agent/setup';
 import { readTemplate, resolveShas } from './scenario.ts';
 import { seedRepository } from './seed.ts';
 

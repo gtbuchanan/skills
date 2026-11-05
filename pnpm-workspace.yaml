@@ -30,7 +30,7 @@ catalog:
   find-up-simple: 1.0.1
   graphql: 17.0.2
   jiti: 2.7.0
-  promptfoo: 0.122.0
+  promptfoo: 0.125.1
   skills: 1.7.4
   skills-npm: 1.2.0
   turbo: 2.11.10

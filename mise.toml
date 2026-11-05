@@ -39,7 +39,7 @@ actionlint = "1.7.12"
 # Android, so Termux's own gh package is used there.
 gh = "2.103.2"
 hk = "2.8.1"
-node = "24.21.0"
+node = "26.13.0"
 # renovate transitively pulls `@yarnpkg/libzip`, whose latest is a manual
 # maintainer publish lacking the provenance its CI releases had — aube's
 # no-downgrade policy fails the install. Verified benign on npmjs.org (same

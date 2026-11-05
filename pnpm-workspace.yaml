@@ -23,7 +23,7 @@ catalog:
   '@libsql/android-arm64': npm:@gtbuchanan/libsql-termux-shim@0.1.1
   '@pnpm/lockfile.types': 1100.1.6
   '@types/cross-spawn': 6.0.6
-  '@types/node': 26.2.0
+  '@types/node': 26.6.6
   '@types/which': 3.0.4
   '@vitest/coverage-v8': 4.1.10
   cross-spawn: 7.0.6

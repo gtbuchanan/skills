@@ -29,12 +29,10 @@ export const evalPolicy: IsolationPolicy = {
    */
   dangerTools: ['az', 'gh', 'powershell', 'pwsh'],
   /*
-   * The agent's shell is Git Bash, which needs the coreutils alongside it;
-   * corepack backs pnpm, and the harness drives pnpm and git directly.
+   * The agent's shell is Git Bash, which needs the coreutils alongside it,
+   * and the harness drives pnpm and git directly.
    */
-  neededTools: [
-    'bash', 'cat', 'corepack', 'env', 'git', 'ls', 'node', 'pnpm', 'sh',
-  ],
+  neededTools: ['bash', 'cat', 'env', 'git', 'ls', 'node', 'pnpm', 'sh'],
   shadowHint: 'stub it in evals/<suite>/bin/',
 };
 

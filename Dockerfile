@@ -20,7 +20,7 @@
 # remember to join. This stage re-runs on any source edit and costs a copy;
 # what it emits is byte-identical unless a manifest moved, so the install layer
 # stays cached through ordinary work on a suite.
-FROM node:24-bookworm-slim AS manifests
+FROM node:26-bookworm-slim AS manifests
 
 WORKDIR /src
 
@@ -37,12 +37,11 @@ RUN find . -type f \
 # (`--no-cache-filter=runtime`) rather than at a bare `--no-cache`, which
 # re-exports every layer. Both discard the store below, so either is for
 # proving a cold build works rather than for iterating.
-FROM node:24-bookworm-slim AS runtime
+FROM node:26-bookworm-slim AS runtime
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates git \
-  && rm -rf /var/lib/apt/lists/* \
-  && corepack enable
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /work
 
@@ -57,6 +56,12 @@ WORKDIR /work
 # only — the sources are bind-mounted at run time so a host edit is what the
 # container executes, rather than whatever was baked into the image.
 COPY --from=manifests /src ./
+# Node 25 stopped bundling corepack, so pnpm comes from npm instead, at the
+# release `packageManager` pins. Reading the pin rather than restating it keeps
+# Renovate's pnpm bump to the one place it already edits. npm skips install
+# scripts it has not been told to trust, and pnpm's are what set it up.
+RUN npm install --global --allow-scripts=pnpm \
+  "$(node -p 'require("./package.json").packageManager')"
 # `prepare` deploys authored skills to the agent directories on the machine,
 # and an image has none — so skills-npm finds skills it cannot place and exits
 # non-zero, failing the build. It was silent before this became a workspace:

@@ -39,7 +39,7 @@ actionlint = "1.7.12"
 # Termux disables it by this name: gh's Linux builds cannot resolve DNS on
 # Android, so Termux's own gh package is used there.
 gh = "2.103.3"
-hk = "2.8.1"
+hk = "2.11.0"
 node = "26.13.0"
 # renovate transitively pulls `@yarnpkg/libzip`, whose latest is a manual
 # maintainer publish lacking the provenance its CI releases had — aube's

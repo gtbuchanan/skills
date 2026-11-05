@@ -58,7 +58,7 @@ packages:
 peerDependencyRules:
   allowedVersions:
     # Transitive mismatches in promptfoo's tree for features we don't exercise.
-    mongodb>gcp-metadata: '8'
+    mongodb>gcp-metadata: '8 || 9'
     nunjucks>chokidar: '5'
 
 strictPeerDependencies: true

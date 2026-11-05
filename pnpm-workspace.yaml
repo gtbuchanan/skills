@@ -24,7 +24,7 @@ catalog:
   '@types/cross-spawn': 6.0.6
   '@types/node': 26.6.6
   '@types/which': 3.0.4
-  '@vitest/coverage-v8': 5.0.5
+  '@vitest/coverage-v8': 5.1.0
   cross-spawn: 7.0.6
   eslint: 10.14.0
   find-up-simple: 1.0.1
@@ -36,7 +36,7 @@ catalog:
   turbo: 2.11.10
   typescript: 6.0.3
   valibot: 1.4.2
-  vitest: 5.0.5
+  vitest: 5.1.0
   which: 7.0.0
   yaml: 2.9.0
 

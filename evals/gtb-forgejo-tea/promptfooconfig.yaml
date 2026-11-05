@@ -1,0 +1,118 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+#
+# Eval for this skill. Runs the REAL skill via claude-agent-sdk with `tea`
+# shadowed by a fake answering as tea 0.16.0 against Forgejo 16.0.6 does
+# (bin/tea-stub.ts). Each workspace is an empty directory, never a checkout.
+#
+# Each test targets a place where a gh-fluent agent goes wrong: a reply through
+# a command Forgejo refuses, a check status read through flags tea lacks, and a
+# login the agent sets up itself.
+
+---
+defaultTest:
+  assert:
+    - type: skill-used
+      value: gtb-forgejo-tea
+    - type: javascript
+      value: file://src/tea-check.ts
+
+  # Keep array vars intact instead of expanding each into separate test cases.
+  options:
+    disableVarExpansion: true
+description: gtb-forgejo-tea — Forgejo through a fake tea
+
+# Each test owns a workspace and a call log, so distinct tests do not race.
+# `--repeat` still needs `--max-concurrency 1`.
+evaluateOptions:
+  maxConcurrency: 3
+
+extensions:
+  - file://src/setup.ts:extensionHook
+
+prompts:
+  - |
+    {{ context }}
+
+    Run every command from ./scenarios/{{ scenario }}, relative to your working
+    directory, and leave every other directory alone.
+
+    {{ task }}
+
+    When you are finished, briefly report what you did.
+
+providers:
+  - config:
+      apiKeyRequired: false
+      append_allowed_tools:
+        - 'Bash(tea:*)'
+        - 'Read(scenarios/**)'
+      ask_user_question:
+        behavior: first_option
+
+      path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
+      setting_sources: ['project']
+      skills: ['gtb-forgejo-tea']
+      working_dir: '{{ env.EVAL_WORKSPACE }}'
+    id: anthropic:claude-agent-sdk
+    label: gtb-forgejo-tea
+tests:
+  - description: a reply lands in the thread through tea api, never through the refused commands
+    vars:
+      context: >-
+        Our Forgejo is https://forgejo.example.com. tea is installed with a
+        login named `work` for it.
+      expectReply: true
+      forbidCalls:
+        - ['pulls reply']
+        - ['pr reply']
+        - ['/replies']
+        - ['pulls resolve']
+        - ['pr resolve']
+        - ['/resolve']
+      requireLogin: true
+      scenario: reply-thread
+      # Pre-approved, with the wording fixed: a run that stops to confirm is
+      # answered by the harness's first option, which can be "hold off".
+      task: >-
+        The reviewer's comment on pull request 7 in acme/widgets says the retry
+        loop retries forever on a 4xx. Reply on that thread with exactly "Fixed
+        in 9f3c2ab." and resolve it. I have already approved posting, so go
+        ahead without checking with me.
+  - description: check status comes from the commit status or the list's ci field, not gh's flags
+    vars:
+      context: >-
+        Our Forgejo is https://forgejo.example.com. tea is installed with a
+        login named `work` for it.
+      forbidCalls:
+        - ['--json']
+        - ['--jq']
+        - ['checks']
+      reportIncludes: ['ci/integration']
+      requireLogin: true
+      requireOneOf:
+        - ['api', 'commits/9f3c2ab41d7e8806c5b2f19a3e0d4c6b7a8e1f20/status']
+        - ['api', 'commits/fix-retry-backoff/status']
+      scenario: check-status
+      task: Is CI passing on pull request 7 in acme/widgets? If not, what is failing?
+  - description: the user is handed an OAuth login to run, and the agent adds none itself
+    vars:
+      # No login exists yet, so there is none to name and requireLogin is off.
+      context: Our Forgejo is https://forgejo.example.com. tea is installed.
+      # Every real login names a URL, a token or OAuth; `login add --help` is a
+      # read and passes.
+      forbidCalls:
+        - ['login add', '--oauth']
+        - ['login add', ' -o']
+        - ['login add', '--token']
+        - ['login add', ' -t']
+        - ['login add', '--url']
+        - ['login add', ' -u']
+        - ['logins add', '--oauth']
+        - ['logins add', ' -o']
+        - ['logins add', '--token']
+        - ['logins add', ' -t']
+        - ['logins add', '--url']
+        - ['logins add', ' -u']
+      reportIncludes: ['tea login add', '--oauth']
+      scenario: login-oauth
+      task: Set tea up so you can work with our Forgejo.

@@ -10,7 +10,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
+import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 import spawn from 'cross-spawn';
 import { test } from 'vitest';
 import { buildEvalEnv } from '#src/scrubbed-path.ts';
@@ -35,7 +35,7 @@ const scratchDir = (): Disposable & { readonly dir: string } => {
  * What the real git resolves `credential.helper` to under `env`.
  */
 const credentialHelper = (env: Record<string, string>): string => {
-  const result = spawn.sync(resolveRealGit(), ['config', '--get', 'credential.helper'], {
+  const result = spawn.sync(requireRealTool('git'), ['config', '--get', 'credential.helper'], {
     encoding: 'utf8',
     env,
   });
@@ -49,7 +49,7 @@ const credentialHelper = (env: Record<string, string>): string => {
 const evalEnvIn = (homeDir: string): Record<string, string> =>
   buildEvalEnv({
     homeDir,
-    scrubbedPath: path.dirname(resolveRealGit()),
+    scrubbedPath: path.dirname(requireRealTool('git')),
     stubDir: homeDir,
   });
 

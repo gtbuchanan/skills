@@ -78,3 +78,22 @@ export const resolveRealTool = (
 
   return found ?? undefined;
 };
+
+/**
+ * The real binary for `name`, or a thrown error naming why there isn't one, for
+ * a caller with no fallback: running the double instead would record the
+ * caller's own calls as the code under test's, or do nothing at all.
+ */
+export const requireRealTool = (
+  name: string,
+  env: NodeJS.ProcessEnv = process.env,
+): string => {
+  const found = resolveRealTool(name, env);
+  if (found === undefined)
+    throw new Error(
+      `no real ${name} on PATH outside STUB_BINDIR and mise's shims: running ` +
+      'the double instead would answer nothing real.',
+    );
+
+  return found;
+};

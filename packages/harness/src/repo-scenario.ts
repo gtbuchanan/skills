@@ -17,7 +17,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { useGitHubOrigin } from '@gtbuchanan/git-fixtures/github-origin';
-import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import {
   type GitRunner,
   type SeedCommit,
@@ -27,6 +26,7 @@ import {
   seedHistory,
 } from '@gtbuchanan/git-fixtures/seed-repo';
 import { parseJson } from '@gtbuchanan/stub-runtime/calls';
+import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 import { markerFile } from '@gtbuchanan/stub-runtime/scenario';
 import * as v from 'valibot';
 import { artifactPath, suiteName } from './paths.ts';
@@ -193,7 +193,7 @@ export const repoScenarioSeeding = <TScenario extends RepoScenario>(
   };
 
   const seed: ScenarioSeeder<TScenario> = (scenario, workspace) => {
-    const git = resolveRealGit();
+    const git = requireRealTool('git');
     const origin = artifactPath(`${suite}.${scenario.key}.origin.git`);
 
     seedHistory({

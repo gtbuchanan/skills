@@ -5,15 +5,14 @@
  * it before it lived here. It is separate from seeding because it is the one
  * question asked of a repository somebody else seeded.
  *
- * Resolved through the real git binary rather than the name on PATH: where a
- * recorder is shadowing `git`, asking by name would log this as though the code
- * under test had run it, and a question the double asked on its own behalf has
- * no business in that record.
+ * Asked through the git binary the caller names rather than the name on PATH:
+ * where a recorder is shadowing `git`, asking by name would log this as though
+ * the code under test had run it, and a question the double asked on its own
+ * behalf has no business in that record.
  *
  * Loaded by stubs under plain `node`, whose type stripping only erases
  * annotations, so everything here stays erasable syntax.
  */
-import { resolveRealGit } from './real-git.ts';
 import { probeGit } from './seed-repo.ts';
 
 /**
@@ -27,9 +26,9 @@ import { probeGit } from './seed-repo.ts';
  * string for the same reason — neither names a branch, so neither is something
  * a caller should put in front of the code under test.
  */
-export const branchAt = (dir: string): string => {
+export const branchAt = (dir: string, git: string): string => {
   const result = probeGit(
-    { cwd: dir, git: resolveRealGit() },
+    { cwd: dir, git },
     ['rev-parse', '--abbrev-ref', 'HEAD'],
   );
   if (result.status !== 0) return '';

@@ -23,6 +23,7 @@ import { pick, requestedFields } from '@gtbuchanan/github-cli-stub/selection';
 import { readState, writeState } from '@gtbuchanan/github-cli-stub/state';
 import { dispatch } from '@gtbuchanan/stub-runtime/dispatch';
 import { allOf, argument, subcommand } from '@gtbuchanan/stub-runtime/match';
+import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 import { locateScenario } from '@gtbuchanan/stub-runtime/scenario';
 import { argv, emit, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
 import { baseBranch, repoSlug, viewer } from '#src/repository.ts';
@@ -47,7 +48,7 @@ const world = { dependents: [] };
 const head = (): string =>
   currentHead({
     argv,
-    checkoutBranch: () => branchAt(located.dir),
+    checkoutBranch: () => branchAt(located.dir, requireRealTool('git')),
     fallback: scenario.branch,
   });
 

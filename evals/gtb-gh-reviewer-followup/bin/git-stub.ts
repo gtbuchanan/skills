@@ -22,15 +22,16 @@
  * Installed as `git` at the front of the eval PATH by the runner.
  */
 import { isAgentRuntimeCall } from '@gtbuchanan/eval-agents/registry';
-import { hermeticGitEnv, resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
+import { hermeticGitEnv } from '@gtbuchanan/git-fixtures/hermetic-git';
 import { passThrough } from '@gtbuchanan/stub-runtime/passthrough';
+import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 import { argv, emit, joined, logCallToRun } from '@gtbuchanan/stub-runtime/stub';
 
 /* The agent runtime's own git calls, such as Claude Code's at startup. They
    are not the agent's, so the real git answers them and nothing records them;
    refused, every run would count a gap the agent never reached. */
 if (isAgentRuntimeCall('git', argv))
-  process.exit(passThrough({ argv, binary: resolveRealGit(), env: hermeticGitEnv() }));
+  process.exit(passThrough({ argv, binary: requireRealTool('git'), env: hermeticGitEnv() }));
 
 /**
  * Exit status for a call the double cannot answer. Any non-zero would do; 1 is

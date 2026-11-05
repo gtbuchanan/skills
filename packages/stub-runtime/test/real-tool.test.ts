@@ -14,7 +14,12 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { faker } from '@faker-js/faker';
 import { test } from 'vitest';
-import { miseShimsDir, pathWithout, resolveRealTool } from '@gtbuchanan/stub-runtime/real-tool';
+import {
+  miseShimsDir,
+  pathWithout,
+  requireRealTool,
+  resolveRealTool,
+} from '@gtbuchanan/stub-runtime/real-tool';
 
 const windowsLocalAppData = path.win32.join(
   String.raw`C:\Users`,
@@ -138,6 +143,23 @@ test('finds nothing when only the double has the tool', ({ expect }) => {
   const env = { PATH: host.dir('stubs'), STUB_BINDIR: host.dir('stubs') };
 
   expect(resolveRealTool(tool, env)).toBeUndefined();
+});
+
+test('requires a real tool where the caller has no fallback', ({ expect }) => {
+  using host = hostOnDisk(['stubs', 'bin']);
+  const env = {
+    PATH: [host.dir('stubs'), host.dir('bin')].join(path.delimiter),
+    STUB_BINDIR: host.dir('stubs'),
+  };
+
+  expect(path.dirname(requireRealTool(tool, env))).toBe(host.dir('bin'));
+});
+
+test('stops where only the double has the tool', ({ expect }) => {
+  using host = hostOnDisk(['stubs']);
+  const env = { PATH: host.dir('stubs'), STUB_BINDIR: host.dir('stubs') };
+
+  expect(() => requireRealTool(tool, env)).toThrow(`no real ${tool}`);
 });
 
 test.runIf(process.platform === 'win32')(

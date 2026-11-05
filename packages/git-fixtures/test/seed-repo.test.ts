@@ -12,11 +12,11 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import type { SeedCommit } from '@gtbuchanan/git-fixtures/seed-repo';
 import { captureGit, runGit, writeCommit } from '@gtbuchanan/git-fixtures/seed-repo';
 
-const git = resolveRealGit();
+// Nothing shadows git while these run, so it is reached by name.
+const git = 'git';
 
 const author = { email: 'author@example.com', name: 'author' };
 

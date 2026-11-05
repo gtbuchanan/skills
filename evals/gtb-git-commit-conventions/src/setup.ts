@@ -18,8 +18,8 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { artifactPath, skillsRoot, suiteName } from '@gtbuchanan/agent-skills-harness/paths';
 import { requireHarness } from '@gtbuchanan/agent-skills-harness/setup';
-import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { captureGit, seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
+import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 import { author, branch, committer, scenarioPath, scenarios } from './scenarios.ts';
 
 /**
@@ -47,7 +47,7 @@ export const baselinesPath = (): string =>
   artifactPath(`${suiteName(import.meta.url)}.baselines.json`);
 
 const seedAll = (): Record<string, Baseline> => {
-  const git = resolveRealGit();
+  const git = requireRealTool('git');
   const root = skillsRoot();
   const baselines: Record<string, Baseline> = {};
 

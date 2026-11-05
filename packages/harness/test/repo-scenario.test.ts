@@ -19,8 +19,8 @@
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { captureGit } from '@gtbuchanan/git-fixtures/seed-repo';
+import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 import { markerFile } from '@gtbuchanan/stub-runtime/scenario';
 import * as v from 'valibot';
 import { test } from 'vitest';
@@ -31,7 +31,7 @@ import {
   repoScenarioSeeding,
 } from '@gtbuchanan/agent-skills-harness/repo-scenario';
 
-const git = resolveRealGit();
+const git = requireRealTool('git');
 
 const author = { email: 'taylor@example.com', name: 'Taylor Buchanan' };
 

@@ -14,8 +14,8 @@
  *
  * Nothing here is particular to git: it is "run the real binary at this path,
  * under exactly this environment". The binary and the environment are the
- * caller's business — for git they are `@gtbuchanan/git-fixtures/real-git`,
- * which resolves past the double and shuts out ambient config.
+ * caller's business: for git, `requireRealTool` resolves past the double and
+ * `@gtbuchanan/git-fixtures/hermetic-git` shuts out ambient config.
  *
  * Loaded by stubs under plain `node`, whose type stripping only erases
  * annotations, so everything here stays erasable syntax.

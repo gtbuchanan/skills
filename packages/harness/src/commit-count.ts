@@ -13,9 +13,9 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { probeGit } from '@gtbuchanan/git-fixtures/seed-repo';
 import { parseJson } from '@gtbuchanan/stub-runtime/calls';
+import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 import { scenarioPath } from '@gtbuchanan/stub-runtime/scenario';
 import * as v from 'valibot';
 import { skillsRoot } from './paths.ts';
@@ -74,7 +74,7 @@ export const commitCountCheck = (
     if (tip === undefined) return [`no recorded baseline for ${vars.scenario}`];
 
     const cwd = path.join(skillsRoot(), ...scenarioPath(vars.scenario).split('/'));
-    const result = probeGit({ cwd, git: resolveRealGit() }, [
+    const result = probeGit({ cwd, git: requireRealTool('git') }, [
       'rev-list',
       '--count',
       `${tip}..HEAD`,

@@ -14,12 +14,12 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
+import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 import { test, vi } from 'vitest';
 import { author, user, viewer } from '#src/scenario.ts';
 import { commitPlan, seedRepository } from '#src/seed.ts';
 
-const git = resolveRealGit();
+const git = requireRealTool('git');
 
 /**
  * A seeded checkout in a throwaway directory, with its own bare origin.

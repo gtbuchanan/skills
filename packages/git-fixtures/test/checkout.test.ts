@@ -14,10 +14,10 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
 import { branchAt } from '@gtbuchanan/git-fixtures/checkout';
-import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { runGit, seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
 
-const git = resolveRealGit();
+// Nothing shadows git while these run, so it is reached by name.
+const git = 'git';
 
 const identity = { email: 'taylor@example.com', name: 'Taylor Buchanan' };
 
@@ -43,7 +43,7 @@ test('a seeded checkout reports the branch its history is on', { tags: ['slow'] 
     workspace,
   });
 
-  expect(branchAt(workspace)).toBe('fix-retry-backoff');
+  expect(branchAt(workspace, git)).toBe('fix-retry-backoff');
 });
 
 test('a branch with no commits yet answers empty', ({ expect }) => {
@@ -57,7 +57,7 @@ test('a branch with no commits yet answers empty', ({ expect }) => {
   const workspace = scratch();
   runGit({ cwd: workspace, git }, ['init', '-q', '-b', 'fix-retry-backoff']);
 
-  expect(branchAt(workspace)).toBe('');
+  expect(branchAt(workspace, git)).toBe('');
 });
 
 test('a detached checkout answers empty rather than naming HEAD', {
@@ -87,7 +87,7 @@ test('a detached checkout answers empty rather than naming HEAD', {
   });
   runGit({ cwd: workspace, git }, ['checkout', '-q', '--detach']);
 
-  expect(branchAt(workspace)).toBe('');
+  expect(branchAt(workspace, git)).toBe('');
 });
 
 test('a directory that is not a repository answers empty rather than throwing', ({ expect }) => {
@@ -96,5 +96,5 @@ test('a directory that is not a repository answers empty rather than throwing', 
    * double asking this on its own behalf has a fallback ready. Failing here
    * would turn a question the double asked itself into the caller's error.
    */
-  expect(branchAt(scratch())).toBe('');
+  expect(branchAt(scratch(), git)).toBe('');
 });

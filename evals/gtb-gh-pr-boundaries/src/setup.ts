@@ -13,8 +13,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { artifactPath, suiteName } from '@gtbuchanan/agent-skills-harness/paths';
 import { scenarioSetup } from '@gtbuchanan/agent-skills-harness/scenario-setup';
-import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
+import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 import { markerFile } from '@gtbuchanan/stub-runtime/scenario';
 import { author } from './repository.ts';
 import type { Scenario } from './scenarios.ts';
@@ -47,7 +47,7 @@ const seed = (scenario: Scenario, workspace: string): void => {
         tree: scenario.committed,
       },
     ],
-    git: resolveRealGit(),
+    git: requireRealTool('git'),
     localIdentity: author,
     origin: artifactPath(`${suite}.${scenario.key}.origin.git`),
     workspace,

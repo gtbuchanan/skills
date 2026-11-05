@@ -24,21 +24,22 @@ const localSsh = fileURLToPath(new URL('../bin/local-ssh.ts', import.meta.url));
 const posix = (file: string): string => file.replaceAll('\\', '/');
 
 /**
- * The git service local-ssh will run, as git's subcommand, and the bare
- * repository to run it in.
+ * The git service local-ssh will run, as git's subcommand, the bare repository
+ * to run it in, and the git to run it with.
  */
 export interface LocalSshCall {
   readonly bare: string;
+  readonly git: string;
   readonly service: 'receive-pack' | 'upload-archive' | 'upload-pack';
 }
 
 /**
  * What local-ssh was asked for, from its arguments as git passes them:
- * `<bare> [ssh options] <host> "<service> '<path>'"`. `undefined` when the
+ * `<git> <bare> [ssh options] <host> "<service> '<path>'"`. `undefined` when the
  * last one is no git service.
  */
 export const localSshCall = (args: readonly string[]): LocalSshCall | undefined => {
-  const [bare = '', ...sshArgs] = args;
+  const [git = '', bare = '', ...sshArgs] = args;
   const service = /^git-(?<service>receive-pack|upload-archive|upload-pack) /v
     .exec(sshArgs.at(-1) ?? '')?.groups?.['service'];
 
@@ -46,7 +47,7 @@ export const localSshCall = (args: readonly string[]): LocalSshCall | undefined 
     case 'receive-pack':
     case 'upload-archive':
     case 'upload-pack': {
-      return { bare, service };
+      return { bare, git, service };
     }
     default: {
       return undefined;
@@ -66,7 +67,7 @@ export const useGitHubOrigin = (
   runGit(runner, [
     'config',
     'core.sshCommand',
-    [process.execPath, localSsh, options.bare].map(arg => `"${posix(arg)}"`).join(' '),
+    [process.execPath, localSsh, runner.git, options.bare].map(arg => `"${posix(arg)}"`).join(' '),
   ]);
   /* Otherwise git runs the command once with -G to find out which ssh it is,
      and local-ssh refuses that on stderr before every fetch and push. */

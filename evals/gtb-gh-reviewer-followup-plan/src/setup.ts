@@ -23,7 +23,7 @@ import {
   suiteRunDir,
 } from '@gtbuchanan/agent-skills-harness/paths';
 import { resetRunDir } from '@gtbuchanan/agent-skills-harness/setup';
-import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
+import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 import { readTemplate, resolveShas } from './scenario.ts';
 import { seedRepository } from './seed.ts';
 
@@ -57,7 +57,7 @@ export const extensionHook = (hookName: string): void => {
 
   resetRunDir(suiteRunDir(import.meta.url));
   const shas = seedRepository({
-    git: resolveRealGit(),
+    git: requireRealTool('git'),
     origin: artifactPath(`${suite}.origin.git`),
     workspace: skillsRoot(),
   });

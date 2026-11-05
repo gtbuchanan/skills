@@ -18,8 +18,8 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import { captureGit, runGit, seedHistory } from '@gtbuchanan/git-fixtures/seed-repo';
+import { requireRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 import { runLogPath } from '@gtbuchanan/stub-runtime/run-log';
 import { scenarioPath } from '@gtbuchanan/stub-runtime/scenario';
 import { test } from 'vitest';
@@ -28,7 +28,7 @@ import { callExpectationAssertion } from '@gtbuchanan/agent-skills-harness/call-
 import { commitCountCheck } from '@gtbuchanan/agent-skills-harness/commit-count';
 import { suiteRunDir } from '@gtbuchanan/agent-skills-harness/paths';
 
-const git = resolveRealGit();
+const git = requireRealTool('git');
 
 const identity = { email: 'taylor@example.com', name: 'Taylor Buchanan' };
 

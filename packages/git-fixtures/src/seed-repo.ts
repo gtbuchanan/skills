@@ -23,11 +23,11 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import spawn from 'cross-spawn';
-import { hermeticGitEnv } from './real-git.ts';
+import { hermeticGitEnv } from './hermetic-git.ts';
 
 /**
- * Where to run git, and which git to run — the real one, resolved past any
- * double the caller has installed ({@link resolveRealGit}).
+ * Where to run git, and which git to run: the real one, past any double the
+ * caller has installed.
  */
 export interface GitRunner {
   readonly cwd: string;
@@ -90,8 +90,8 @@ export const probeGit = (
 
   /* `status` is null when the process could not be spawned at all, which is a
    * failure like any other to every caller here — hence a sentinel rather than
-   * a separate case. `resolveRealGit` has already established the binary
-   * exists, so this is the unreachable-in-practice branch. */
+   * a separate case. The caller resolved the binary before handing it over,
+   * so this is the unreachable-in-practice branch. */
   return {
     status: result.status ?? -1,
     stderr: result.stderr,

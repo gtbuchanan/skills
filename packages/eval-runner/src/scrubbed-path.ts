@@ -28,7 +28,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import type { EvalAgent } from '@gtbuchanan/eval-agents/eval-agent';
 import { evalAgents } from '@gtbuchanan/eval-agents/registry';
-import { hermeticGitConfig } from '@gtbuchanan/git-fixtures/real-git';
+import { hermeticGitConfig } from '@gtbuchanan/git-fixtures/hermetic-git';
 import { resolveRealTool } from '@gtbuchanan/stub-runtime/real-tool';
 
 /*

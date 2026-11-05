@@ -5,7 +5,7 @@
   "exports": {
     "./checkout": "./src/checkout.ts",
     "./github-origin": "./src/github-origin.ts",
-    "./real-git": "./src/real-git.ts",
+    "./hermetic-git": "./src/hermetic-git.ts",
     "./seed-repo": "./src/seed-repo.ts"
   },
   "scripts": {

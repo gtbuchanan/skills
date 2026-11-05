@@ -17,7 +17,6 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
 import { useGitHubOrigin } from '@gtbuchanan/git-fixtures/github-origin';
-import { resolveRealGit } from '@gtbuchanan/git-fixtures/real-git';
 import {
   type GitRunner,
   captureGit,
@@ -26,7 +25,8 @@ import {
   writeCommit,
 } from '@gtbuchanan/git-fixtures/seed-repo';
 
-const git = resolveRealGit();
+// Nothing shadows git while these run, so it is reached by name.
+const git = 'git';
 
 const identity = { email: 'taylor@example.com', name: 'Taylor Buchanan' };
 

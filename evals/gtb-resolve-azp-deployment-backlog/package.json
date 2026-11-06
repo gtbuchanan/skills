@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@gtbuchanan/cli-doubles": "workspace:*",
+    "@gtbuchanan/eval-agents": "workspace:*",
     "@gtbuchanan/promptfoo-agent": "workspace:*",
     "valibot": "catalog:"
   },

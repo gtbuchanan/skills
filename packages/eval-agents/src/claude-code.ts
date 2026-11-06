@@ -1,5 +1,5 @@
+import type { EvalAgent } from '@gtbuchanan/promptfoo-agent/eval-agent';
 import { workspaceInstructionExcludes } from './claude-md-excludes.ts';
-import type { EvalAgent } from './eval-agent.ts';
 
 const providerId = 'anthropic:claude-agent-sdk';
 
@@ -35,6 +35,7 @@ export const claudeCode: EvalAgent = {
       (argv.length === 1 && argv[0] === '--exec-path')),
   name: 'claude-code',
   providerId,
+  runProviderId: 'file://node_modules/@gtbuchanan/eval-agents/src/run-provider.ts',
   runsProvider: id => id.startsWith(providerId),
   withEnv: (config, env) => ({ ...config, env: { ...envOf(config), ...env } }),
   /*

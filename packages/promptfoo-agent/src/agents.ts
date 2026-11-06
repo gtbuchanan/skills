@@ -1,10 +1,9 @@
-import { claudeCode } from './claude-code.ts';
-import type { EvalAgent } from './eval-agent.ts';
-
-/**
- * Every agent the runners can drive.
+/*
+ * Lookups over the agents a caller drives. The caller passes the list, so this
+ * package knows no agent: each agent lives in a package of its own, and the
+ * runner and the doubles name the ones they use.
  */
-export const evalAgents: readonly EvalAgent[] = [claudeCode];
+import type { EvalAgent } from './eval-agent.ts';
 
 /**
  * The agent among `agents` that a promptfoo provider runs, so a suite never
@@ -19,15 +18,6 @@ export const evalAgentForProvider = (
     : agents.find(candidate => candidate.runsProvider(providerId));
   if (agent === undefined)
     throw new Error(`no agent runs provider '${String(providerId)}'`);
-  return agent;
-};
-
-/**
- * The agent among `agents` that a suite names in its run provider's config.
- */
-export const evalAgentNamed = (agents: readonly EvalAgent[], name: string): EvalAgent => {
-  const agent = agents.find(candidate => candidate.name === name);
-  if (agent === undefined) throw new Error(`no agent named '${name}'`);
   return agent;
 };
 

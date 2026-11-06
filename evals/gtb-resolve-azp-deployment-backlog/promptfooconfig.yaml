@@ -64,7 +64,6 @@ prompts:
 # the agent named here, with agentConfig as that agent's provider config.
 providers:
   - config:
-      agent: claude-code
       agentConfig:
         # Authenticate via the local Claude Code session instead of an API key.
         apiKeyRequired: false
@@ -81,7 +80,7 @@ providers:
         setting_sources: ['project']
         skills: ['gtb-resolve-azp-deployment-backlog']
         working_dir: '{{ env.EVAL_WORKSPACE }}'
-    id: file://node_modules/@gtbuchanan/promptfoo-agent/src/run-provider.ts
+    id: file://node_modules/@gtbuchanan/eval-agents/src/run-provider.ts
     label: gtb-resolve-azp-deployment-backlog
 tests:
   - description: named pipeline, approve the newest — resolve web-frontend→900001, dry-run, then live -ApproveLatest

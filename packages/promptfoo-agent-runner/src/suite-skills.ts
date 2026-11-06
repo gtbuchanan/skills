@@ -5,10 +5,10 @@
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import type { EvalAgent } from '@gtbuchanan/eval-agents/eval-agent';
-import { evalAgentNamed, evalAgents } from '@gtbuchanan/eval-agents/registry';
+import type { EvalAgent } from '@gtbuchanan/promptfoo-agent/eval-agent';
 import * as v from 'valibot';
 import { parse as parseYaml } from 'yaml';
+import { evalAgents } from './agents.ts';
 
 /* Just the slice of a promptfoo config the runner needs, split into named
  * sub-schemas so the nesting stays readable. Parsed through valibot so a
@@ -16,15 +16,11 @@ import { parse as parseYaml } from 'yaml';
  * keys are ignored.
  *
  * A provider declares skills one of two ways. The agent's own provider takes
- * them in its config and is known by its id; the run provider names its agent
- * and nests the agent's config under `agentConfig`. An agent's own provider is
- * checked first, since the Claude provider takes an `agent` key too, naming a
- * subagent; the run provider is whatever names an agent and no agent runs. */
+ * them in its config, and the run provider an agent's package exports nests
+ * the agent's config under `agentConfig`. Each is known by its id. */
 const skillsSchema = v.optional(v.array(v.string()));
 const agentConfigSchema = v.optional(v.object({ skills: skillsSchema }));
-const agentSchema = v.optional(v.string());
 const providerConfigSchema = v.optional(v.object({
-  agent: agentSchema,
   agentConfig: agentConfigSchema,
   skills: skillsSchema,
 }));
@@ -45,11 +41,9 @@ type ProviderObject = v.InferOutput<typeof providerObjectSchema>;
 const declaredBy = ({ config, id }: ProviderObject): { agent: string; skills: string[] } => {
   const own = evalAgents.find(agent => id !== undefined && agent.runsProvider(id));
   if (own !== undefined) return { agent: own.name, skills: config?.skills ?? [] };
-  if (config?.agent === undefined) throw new Error(`no agent runs provider '${String(id)}'`);
-  return {
-    agent: evalAgentNamed(evalAgents, config.agent).name,
-    skills: config.agentConfig?.skills ?? [],
-  };
+  const run = evalAgents.find(agent => agent.runProviderId === id);
+  if (run === undefined) throw new Error(`no agent runs provider '${String(id)}'`);
+  return { agent: run.name, skills: config?.agentConfig?.skills ?? [] };
 };
 
 /**
@@ -109,10 +103,8 @@ const agentOf = (provider: unknown): string | undefined => {
   if (!parsed.success) return undefined;
   const { output } = parsed;
   const id = typeof output === 'string' ? output : output.id;
-  const own = evalAgents.find(agent => id !== undefined && agent.runsProvider(id));
-  if (own !== undefined) return own.name;
-  const named = typeof output === 'string' ? undefined : output.config?.agent;
-  return evalAgents.find(agent => agent.name === named)?.name;
+  return evalAgents.find(agent =>
+    id !== undefined && (agent.runsProvider(id) || agent.runProviderId === id))?.name;
 };
 
 /**

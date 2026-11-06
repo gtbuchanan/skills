@@ -16,6 +16,12 @@ export interface EvalAgent {
    */
   readonly providerId: string;
   /**
+   * The id a suite gives the run provider the agent's package exports, built
+   * with `runProviderFor`. A provider with this id runs the agent, and takes
+   * the agent's own config under `agentConfig`.
+   */
+  readonly runProviderId: string;
+  /**
    * Whether a promptfoo provider id runs this agent.
    */
   readonly runsProvider: (providerId: string) => boolean;

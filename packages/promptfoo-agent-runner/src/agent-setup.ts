@@ -3,7 +3,7 @@
  * refuse to start without one, and lay out the files its workspace needs.
  */
 import path from 'node:path';
-import type { EvalAgent } from '@gtbuchanan/eval-agents/eval-agent';
+import type { EvalAgent } from '@gtbuchanan/promptfoo-agent/eval-agent';
 
 /**
  * How one agent will authenticate.

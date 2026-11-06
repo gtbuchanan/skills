@@ -3,9 +3,11 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./agents": "./src/agents.ts",
     "./assert": "./src/assert.ts",
     "./call-expectations": "./src/call-expectations.ts",
     "./commit-count": "./src/commit-count.ts",
+    "./eval-agent": "./src/eval-agent.ts",
     "./json-scan": "./src/json-scan.ts",
     "./paths": "./src/paths.ts",
     "./refusals": "./src/refusals.ts",
@@ -26,7 +28,6 @@
   },
   "dependencies": {
     "@gtbuchanan/cli-doubles": "workspace:*",
-    "@gtbuchanan/eval-agents": "workspace:*",
     "@gtbuchanan/git-fixtures": "workspace:*",
     "find-up-simple": "catalog:",
     "promptfoo": "catalog:",

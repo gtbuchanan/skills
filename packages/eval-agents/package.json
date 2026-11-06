@@ -5,8 +5,7 @@
   "exports": {
     "./claude-code": "./src/claude-code.ts",
     "./claude-md-excludes": "./src/claude-md-excludes.ts",
-    "./eval-agent": "./src/eval-agent.ts",
-    "./registry": "./src/registry.ts"
+    "./run-provider": "./src/run-provider.ts"
   },
   "scripts": {
     "coverage:codecov:upload": "gtb task coverage:codecov:upload",
@@ -15,6 +14,9 @@
     "test:vitest:fast": "gtb task test:vitest:fast",
     "test:vitest:slow": "gtb task test:vitest:slow",
     "typecheck:ts": "gtb task typecheck:ts"
+  },
+  "dependencies": {
+    "@gtbuchanan/promptfoo-agent": "workspace:*"
   },
   "devDependencies": {
     "@gtbuchanan/cli": "catalog:",

@@ -11,7 +11,8 @@ import { test } from 'vitest';
 import { agentsUsedBy, readSuiteConfigs, skillsByAgent } from '#src/suite-skills.ts';
 
 const sdkProvider = 'anthropic:claude-agent-sdk';
-const runProvider = 'file://node_modules/@gtbuchanan/promptfoo-agent/src/run-provider.ts';
+const runProvider = 'file://node_modules/@gtbuchanan/eval-agents/src/run-provider.ts';
+const foreignRunProvider = 'file://node_modules/@acme/codex/src/run-provider.ts';
 
 test('installs an agent provider\'s skills for the agent it runs', ({ expect }) => {
   const config = { providers: [{ config: { skills: ['a', 'b'] }, id: sdkProvider }] };
@@ -19,10 +20,10 @@ test('installs an agent provider\'s skills for the agent it runs', ({ expect }) 
   expect(skillsByAgent(config)).toStrictEqual(new Map([['claude-code', new Set(['a', 'b'])]]));
 });
 
-test('installs a run provider\'s skills for the agent it names', ({ expect }) => {
+test('installs a run provider\'s skills for the agent it runs', ({ expect }) => {
   const config = {
     providers: [
-      { config: { agent: 'claude-code', agentConfig: { skills: ['a'] } }, id: runProvider },
+      { config: { agentConfig: { skills: ['a'] } }, id: runProvider },
     ],
   };
 
@@ -33,7 +34,7 @@ test('merges what several providers declare for one agent', ({ expect }) => {
   const config = {
     providers: [
       { config: { skills: ['a'] }, id: sdkProvider },
-      { config: { agent: 'claude-code', agentConfig: { skills: ['b'] } }, id: runProvider },
+      { config: { agentConfig: { skills: ['b'] } }, id: runProvider },
     ],
   };
 
@@ -51,10 +52,12 @@ test('reads an agent provider\'s own agent option as that agent\'s, not a run', 
   expect(skillsByAgent(config)).toStrictEqual(new Map([['claude-code', new Set(['a'])]]));
 });
 
-test('refuses a run provider naming no agent it can drive', ({ expect }) => {
-  const config = { providers: [{ config: { agent: 'codex' }, id: runProvider }] };
+test('refuses a run provider no agent it can drive exports', ({ expect }) => {
+  const config = {
+    providers: [{ config: { agentConfig: { skills: ['a'] } }, id: foreignRunProvider }],
+  };
 
-  expect(() => skillsByAgent(config)).toThrow("no agent named 'codex'");
+  expect(() => skillsByAgent(config)).toThrow(`no agent runs provider '${foreignRunProvider}'`);
 });
 
 test('refuses skills declared for a provider no agent runs', ({ expect }) => {
@@ -84,8 +87,8 @@ test('a suite needs the agent its own provider runs', ({ expect }) => {
     .toStrictEqual(['claude-code']);
 });
 
-test('a suite needs the agent its run provider names', ({ expect }) => {
-  expect(agentNames({ providers: [{ config: { agent: 'claude-code' }, id: runProvider }] }))
+test('a suite needs the agent its run provider runs', ({ expect }) => {
+  expect(agentNames({ providers: [{ config: {}, id: runProvider }] }))
     .toStrictEqual(['claude-code']);
 });
 
@@ -106,8 +109,8 @@ test('a config that cannot be read adds no agent and stops no other suite', ({ e
     .toStrictEqual(['claude-code']);
 });
 
-test('a run provider naming no agent this runner drives adds none', ({ expect }) => {
-  expect(agentNames({ providers: [{ config: { agent: 'codex' }, id: runProvider }] }))
+test('a run provider no agent this runner drives exports adds none', ({ expect }) => {
+  expect(agentNames({ providers: [{ config: {}, id: foreignRunProvider }] }))
     .toStrictEqual([]);
 });
 

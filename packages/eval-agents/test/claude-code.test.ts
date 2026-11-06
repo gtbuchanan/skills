@@ -88,3 +88,15 @@ test('leaves the git calls the agent chose to make', ({ expect }) => {
 test('claims nothing another command was called with', ({ expect }) => {
   expect(claudeCode.isOwnCall('gh', [...startupFlags, 'pr', 'view'])).toBe(false);
 });
+
+test('runs the agent SDK provider', ({ expect }) => {
+  expect(claudeCode.runsProvider('anthropic:claude-agent-sdk')).toBe(true);
+});
+
+test('runs the agent SDK provider with a model suffix', ({ expect }) => {
+  expect(claudeCode.runsProvider('anthropic:claude-agent-sdk:claude-haiku-4-5')).toBe(true);
+});
+
+test('runs no other provider', ({ expect }) => {
+  expect(claudeCode.runsProvider('openai:gpt-5')).toBe(false);
+});

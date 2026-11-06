@@ -1,12 +1,12 @@
 /*
  * A promptfoo provider that gives every call to the agent a run of its own.
  *
- * A suite names it as its provider and nests the agent's own config under it:
+ * An agent's package exports one built by `runProviderFor`, and a suite names
+ * that as its provider and nests the agent's own config under it:
  *
  *   providers:
- *     - id: file://node_modules/@gtbuchanan/promptfoo-agent/src/run-provider.ts
+ *     - id: file://node_modules/@gtbuchanan/eval-agents/src/run-provider.ts
  *       config:
- *         agent: claude-code
  *         agentConfig: { ... }
  *
  * Each call mints a run id, hands it to the agent's commands as $STUB_RUN so
@@ -17,8 +17,6 @@
  */
 import { randomUUID } from 'node:crypto';
 import { runVar } from '@gtbuchanan/cli-doubles/run-log';
-import type { EvalAgent } from '@gtbuchanan/eval-agents/eval-agent';
-import { evalAgentNamed, evalAgents } from '@gtbuchanan/eval-agents/registry';
 import {
   type ApiProvider,
   type CallApiContextParams,
@@ -28,10 +26,10 @@ import {
   loadApiProvider,
 } from 'promptfoo';
 import * as v from 'valibot';
+import type { EvalAgent } from './eval-agent.ts';
 
 const AgentConfigSchema = v.record(v.string(), v.unknown());
 const RunConfigSchema = v.object({
-  agent: v.string(),
   agentConfig: v.optional(AgentConfigSchema, {}),
 });
 
@@ -74,32 +72,42 @@ const defaultDeps: RunDeps = {
   mintRunId: randomUUID,
 };
 
-export default class RunProvider implements ApiProvider {
-  private readonly agent: EvalAgent;
-  private readonly providerLabel: string | undefined;
-  public readonly config: v.InferOutput<typeof RunConfigSchema>;
+/**
+ * A run provider, as promptfoo constructs it from a suite's config.
+ */
+export type RunProviderClass = new (options: ProviderOptions, deps?: RunDeps) => ApiProvider;
 
-  public constructor(options: ProviderOptions) {
-    this.config = v.parse(RunConfigSchema, options.config);
-    this.agent = evalAgentNamed(evalAgents, this.config.agent);
-    this.providerLabel = options.label;
-  }
+/**
+ * The run provider for `agent`, which its package exports as the default of a
+ * module for suites to name.
+ */
+export const runProviderFor = (agent: EvalAgent): RunProviderClass =>
+  class RunProvider implements ApiProvider {
+    private readonly deps: RunDeps;
+    private readonly providerLabel: string | undefined;
+    public readonly config: v.InferOutput<typeof RunConfigSchema>;
 
-  public id(): string {
-    return this.providerLabel ?? `run:${this.agent.name}`;
-  }
+    public constructor(options: ProviderOptions, deps: RunDeps = defaultDeps) {
+      this.config = v.parse(RunConfigSchema, options.config);
+      this.deps = deps;
+      this.providerLabel = options.label;
+    }
 
-  public async callApi(
-    prompt: string,
-    context?: CallApiContextParams,
-    callOptions?: CallApiOptionsParams,
-  ): Promise<ProviderResponse> {
-    return callAsRun({
-      agent: this.agent,
-      agentConfig: this.config.agentConfig,
-      callOptions,
-      context,
-      prompt,
-    }, defaultDeps);
-  }
-}
+    public id(): string {
+      return this.providerLabel ?? `run:${agent.name}`;
+    }
+
+    public async callApi(
+      prompt: string,
+      context?: CallApiContextParams,
+      callOptions?: CallApiOptionsParams,
+    ): Promise<ProviderResponse> {
+      return callAsRun({
+        agent,
+        agentConfig: this.config.agentConfig,
+        callOptions,
+        context,
+        prompt,
+      }, this.deps);
+    }
+  };

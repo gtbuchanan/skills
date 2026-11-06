@@ -50,7 +50,6 @@ prompts:
 # the agent named here, with agentConfig as that agent's provider config.
 providers:
   - config:
-      agent: claude-code
       agentConfig:
         apiKeyRequired: false
         append_allowed_tools:
@@ -68,7 +67,7 @@ providers:
         # The runner's workspace, like the other suites; setup.ts overlays the
         # mock plan/apply onto the real skills already installed there.
         working_dir: '{{ env.EVAL_WORKSPACE }}'
-    id: file://node_modules/@gtbuchanan/promptfoo-agent/src/run-provider.ts
+    id: file://node_modules/@gtbuchanan/eval-agents/src/run-provider.ts
     label: gtb-gh-reviewer-followup
 tests:
   - description: happy path — all exact-fix, review fully addressed → approve + squash-merge

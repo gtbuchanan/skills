@@ -8,31 +8,17 @@
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
  */
-import type { EvalAgent } from '@gtbuchanan/eval-agents/eval-agent';
 import type { ApiProvider, CallApiContextParams } from 'promptfoo';
 import * as v from 'valibot';
 import { test } from 'vitest';
-import RunProvider, {
+import { fakeAgent } from './fake-agent.ts';
+import {
   type RunDeps,
   callAsRun,
+  runProviderFor,
 } from '@gtbuchanan/promptfoo-agent/run-provider';
 
-/**
- * An agent whose provider takes env under `injected`, so a test sees exactly
- * what reached it.
- */
-const agent: EvalAgent = {
-  auth: { apiKeyVar: 'FAKE_KEY', credentialsFile: '.fake/login.json', envVars: [] },
-  displayName: 'Fake',
-  executable: { command: 'fake', envVar: 'FAKE_EXE', sdkPackage: 'fake-sdk' },
-  gitBashVar: 'FAKE_BASH',
-  name: 'fake',
-  providerId: 'fake:provider',
-  runsProvider: () => false,
-  isOwnCall: () => false,
-  withEnv: (config, env) => ({ ...config, injected: env }),
-  workspaceFiles: () => ({}),
-};
+const agent = fakeAgent('fake');
 
 const RunMetadataSchema = v.object({ runId: v.string() });
 
@@ -123,16 +109,25 @@ test('gives every call a run of its own', async ({ expect }) => {
 });
 
 test('names itself by the suite\'s label', ({ expect }) => {
-  const provider = new RunProvider({ config: { agent: 'claude-code' }, label: 'followup' });
+  const RunProvider = runProviderFor(agent);
 
-  expect(provider.id()).toBe('followup');
+  expect(new RunProvider({ config: {}, label: 'followup' }).id()).toBe('followup');
 });
 
 test('names itself by its agent when the suite gives no label', ({ expect }) => {
-  expect(new RunProvider({ config: { agent: 'claude-code' } }).id()).toBe('run:claude-code');
+  const RunProvider = runProviderFor(agent);
+
+  expect(new RunProvider({ config: {} }).id()).toBe('run:fake');
 });
 
-test('refuses a config naming no agent it can drive', ({ expect }) => {
-  expect(() => new RunProvider({ config: { agent: 'codex' } }))
-    .toThrow("no agent named 'codex'");
+test('calls its agent\'s own provider', async ({ expect }) => {
+  const RunProvider = runProviderFor(agent);
+  const deps = fakeDeps(['run-1']);
+
+  await new RunProvider({ config: { agentConfig: { skills: ['a'] } } }, deps).callApi('go');
+
+  expect(deps.loaded).toMatchObject([{
+    config: { injected: { STUB_RUN: 'run-1' }, skills: ['a'] },
+    providerId: 'fake:provider',
+  }]);
 });

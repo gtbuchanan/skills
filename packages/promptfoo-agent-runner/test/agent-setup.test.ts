@@ -1,5 +1,5 @@
 import path from 'node:path';
-import type { EvalAgent } from '@gtbuchanan/eval-agents/eval-agent';
+import type { EvalAgent } from '@gtbuchanan/promptfoo-agent/eval-agent';
 import { test } from 'vitest';
 import {
   agentAuth,
@@ -24,6 +24,7 @@ const fakeAgent = (name: string): EvalAgent => ({
   isOwnCall: () => false,
   name,
   providerId: `${name}:provider`,
+  runProviderId: `file://${name}/run-provider.ts`,
   runsProvider: () => false,
   withEnv: config => ({ ...config }),
   workspaceFiles: workspace => ({

@@ -59,7 +59,6 @@ prompts:
 # the agent named here, with agentConfig as that agent's provider config.
 providers:
   - config:
-      agent: claude-code
       agentConfig:
         apiKeyRequired: false
         append_allowed_tools:
@@ -75,7 +74,7 @@ providers:
         setting_sources: ['project']
         skills: ['gtb-gh-pr-authoring', 'gtb-git-commit-conventions']
         working_dir: '{{ env.EVAL_WORKSPACE }}'
-    id: file://node_modules/@gtbuchanan/promptfoo-agent/src/run-provider.ts
+    id: file://node_modules/@gtbuchanan/eval-agents/src/run-provider.ts
     label: gtb-gh-pr-authoring
 tests:
   - description: opening — a draft PR whose body is the repository's template, filled in and piped

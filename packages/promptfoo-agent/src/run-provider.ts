@@ -18,7 +18,7 @@
 import { randomUUID } from 'node:crypto';
 import { runVar } from '@gtbuchanan/cli-doubles/run-log';
 import type { EvalAgent } from '@gtbuchanan/eval-agents/eval-agent';
-import { evalAgentNamed } from '@gtbuchanan/eval-agents/registry';
+import { evalAgentNamed, evalAgents } from '@gtbuchanan/eval-agents/registry';
 import {
   type ApiProvider,
   type CallApiContextParams,
@@ -81,7 +81,7 @@ export default class RunProvider implements ApiProvider {
 
   public constructor(options: ProviderOptions) {
     this.config = v.parse(RunConfigSchema, options.config);
-    this.agent = evalAgentNamed(this.config.agent);
+    this.agent = evalAgentNamed(evalAgents, this.config.agent);
     this.providerLabel = options.label;
   }
 

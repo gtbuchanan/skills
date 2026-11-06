@@ -46,7 +46,10 @@ const declaredBy = ({ config, id }: ProviderObject): { agent: string; skills: st
   const own = evalAgents.find(agent => id !== undefined && agent.runsProvider(id));
   if (own !== undefined) return { agent: own.name, skills: config?.skills ?? [] };
   if (config?.agent === undefined) throw new Error(`no agent runs provider '${String(id)}'`);
-  return { agent: evalAgentNamed(config.agent).name, skills: config.agentConfig?.skills ?? [] };
+  return {
+    agent: evalAgentNamed(evalAgents, config.agent).name,
+    skills: config.agentConfig?.skills ?? [],
+  };
 };
 
 /**

@@ -24,13 +24,13 @@
 import { passThrough } from '@gtbuchanan/cli-doubles/passthrough';
 import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import { argv, emit, joined, logCallToRun } from '@gtbuchanan/cli-doubles/stub';
-import { isAgentRuntimeCall } from '@gtbuchanan/eval-agents/registry';
+import { evalAgents, isAgentRuntimeCall } from '@gtbuchanan/eval-agents/registry';
 import { hermeticGitEnv } from '@gtbuchanan/git-fixtures/hermetic-git';
 
 /* The agent runtime's own git calls, such as Claude Code's at startup. They
    are not the agent's, so the real git answers them and nothing records them;
    refused, every run would count a gap the agent never reached. */
-if (isAgentRuntimeCall('git', argv))
+if (isAgentRuntimeCall(evalAgents, 'git', argv))
   process.exit(passThrough({ argv, binary: requireRealTool('git'), env: hermeticGitEnv() }));
 
 /**

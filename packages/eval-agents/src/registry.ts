@@ -7,30 +7,38 @@ import type { EvalAgent } from './eval-agent.ts';
 export const evalAgents: readonly EvalAgent[] = [claudeCode];
 
 /**
- * The agent a promptfoo provider runs, so a suite never names one twice.
+ * The agent among `agents` that a promptfoo provider runs, so a suite never
+ * names one twice.
  */
-export const evalAgentForProvider = (providerId: string | undefined): EvalAgent => {
+export const evalAgentForProvider = (
+  agents: readonly EvalAgent[],
+  providerId: string | undefined,
+): EvalAgent => {
   const agent = providerId === undefined
     ? undefined
-    : evalAgents.find(candidate => candidate.runsProvider(providerId));
+    : agents.find(candidate => candidate.runsProvider(providerId));
   if (agent === undefined)
     throw new Error(`no agent runs provider '${String(providerId)}'`);
   return agent;
 };
 
 /**
- * The agent a suite names in its run provider's config.
+ * The agent among `agents` that a suite names in its run provider's config.
  */
-export const evalAgentNamed = (name: string): EvalAgent => {
-  const agent = evalAgents.find(candidate => candidate.name === name);
+export const evalAgentNamed = (agents: readonly EvalAgent[], name: string): EvalAgent => {
+  const agent = agents.find(candidate => candidate.name === name);
   if (agent === undefined) throw new Error(`no agent named '${name}'`);
   return agent;
 };
 
 /**
- * Whether a call to `cmd` with `argv` is one an agent's runtime makes for
- * itself (see {@link EvalAgent.isOwnCall}), for a double that does not know
- * which agent is running.
+ * Whether a call to `cmd` with `argv` is one the runtime of an agent among
+ * `agents` makes for itself (see {@link EvalAgent.isOwnCall}), for a double
+ * that does not know which agent is running.
  */
-export const isAgentRuntimeCall = (cmd: string, argv: readonly string[]): boolean =>
-  evalAgents.some(agent => agent.isOwnCall(cmd, argv));
+export const isAgentRuntimeCall = (
+  agents: readonly EvalAgent[],
+  cmd: string,
+  argv: readonly string[],
+): boolean =>
+  agents.some(agent => agent.isOwnCall(cmd, argv));

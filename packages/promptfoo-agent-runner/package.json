@@ -19,6 +19,7 @@
     "@gtbuchanan/promptfoo-agent": "workspace:*",
     "@gtbuchanan/promptfoo-agent-claude-code": "workspace:*",
     "cross-spawn": "catalog:",
+    "find-up-simple": "catalog:",
     "valibot": "catalog:",
     "yaml": "catalog:"
   },

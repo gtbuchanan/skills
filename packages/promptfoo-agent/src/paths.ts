@@ -12,8 +12,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { findUpSync } from 'find-up-simple';
 
-const srcDir = path.dirname(fileURLToPath(import.meta.url));
-
 /**
  * The nearest directory at or above `start` holding `marker`.
  *
@@ -34,17 +32,6 @@ const findUp = (start: string, marker: string, purpose: string): string => {
 
   return path.dirname(found);
 };
-
-/**
- * Anchors the shared artifact dir — kept in the repo so call logs stay
- * inspectable — regardless of where a suite's skills live.
- */
-export const repoRoot = findUp(
-  srcDir,
-  'pnpm-workspace.yaml',
-  'the harness anchors the shared artifact directory to the workspace root ' +
-  'and cannot find it.',
-);
 
 /**
  * The skill tree a suite overlays its test doubles onto, named by

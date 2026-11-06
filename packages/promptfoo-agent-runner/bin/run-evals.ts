@@ -13,9 +13,10 @@ import {
   writeFileSync,
 } from 'node:fs';
 import path from 'node:path';
-import { artifactsVar, repoRoot as root } from '@gtbuchanan/promptfoo-agent/paths';
+import { artifactsVar } from '@gtbuchanan/promptfoo-agent/paths';
 import spawn from 'cross-spawn';
 import { evalAgents } from '#src/agents.ts';
+import { repoRoot as root } from '#src/repo-root.ts';
 
 /**
  * `process.argv` leads with the node binary and this script.

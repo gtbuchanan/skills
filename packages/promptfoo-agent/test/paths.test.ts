@@ -17,7 +17,6 @@ import { test, vi } from 'vitest';
 import {
   artifactPath,
   artifactsVar,
-  repoRoot,
   skillsRoot,
   suiteDir,
   suiteName,
@@ -118,15 +117,6 @@ testWithoutWorkspace('skillsRoot points at the fix in its message', ({ expect })
 
 testInWorkspace('skillsRoot returns the workspace verbatim', ({ expect, workspace }) => {
   expect(skillsRoot()).toBe(workspace.dir);
-});
-
-testInWorkspace('skillsRoot is independent of the repo it runs from', ({ expect, workspace }) => {
-  /*
-   * The behaviour this replaced resolved the skill tree by walking up from
-   * this file, so a workspace that is not the repo root is the case to pin.
-   */
-  expect(skillsRoot()).not.toBe(repoRoot);
-  expect(repoRoot.startsWith(workspace.dir)).toBe(false);
 });
 
 /**

@@ -10,8 +10,8 @@
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { repoRoot } from '@gtbuchanan/promptfoo-agent/paths';
 import { test } from 'vitest';
+import { repoRoot } from '#src/repo-root.ts';
 import {
   nodeModulesShadows,
   workspaceGlobs,

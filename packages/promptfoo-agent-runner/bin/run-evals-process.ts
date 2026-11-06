@@ -36,13 +36,13 @@ import {
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import { repoRoot as root } from '@gtbuchanan/promptfoo-agent/paths';
 import { resolveSkillsCli } from '@gtbuchanan/promptfoo-agent/skills-cli';
 import spawn from 'cross-spawn';
 import { agentAuth, agentWorkspaceFiles, authProblem, credentialsIn } from '#src/agent-setup.ts';
 import { evalAgents } from '#src/agents.ts';
 import { beginEphemeralRun } from '#src/ephemeral-run.ts';
 import { evalIsolation } from '#src/eval-isolation.ts';
+import { repoRoot as root } from '#src/repo-root.ts';
 import { buildEvalEnv } from '#src/scrubbed-path.ts';
 import {
   agentsUsedBy,

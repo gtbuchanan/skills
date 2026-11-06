@@ -17,7 +17,7 @@
  *   pnpm eval gtb-gh-reviewer-followup-plan  # filter to one skill
  *   pnpm eval --repeat 3      # flags forwarded to promptfoo
  *
- * Auth: reads each agent's stored login or API key variable (eval-agents),
+ * Auth: reads each agent's stored login or API key variable (see src/agents.ts),
  * exactly like the container path. Only the credentials reach each suite's clean
  * HOME, linked so a refresh persists, so the developer's personal agent config
  * never colours the eval agent. A suite's skills (and any mock overlay) live in

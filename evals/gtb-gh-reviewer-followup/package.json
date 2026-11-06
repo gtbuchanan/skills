@@ -15,10 +15,10 @@
   },
   "dependencies": {
     "@gtbuchanan/cli-doubles": "workspace:*",
-    "@gtbuchanan/eval-agents": "workspace:*",
     "@gtbuchanan/git-fixtures": "workspace:*",
     "@gtbuchanan/github-cli-stub": "workspace:*",
     "@gtbuchanan/promptfoo-agent": "workspace:*",
+    "@gtbuchanan/promptfoo-agent-claude-code": "workspace:*",
     "cross-spawn": "catalog:",
     "valibot": "catalog:"
   },

@@ -35,7 +35,7 @@ export const claudeCode: EvalAgent = {
       (argv.length === 1 && argv[0] === '--exec-path')),
   name: 'claude-code',
   providerId,
-  runProviderId: 'file://node_modules/@gtbuchanan/eval-agents/src/run-provider.ts',
+  runProviderId: 'file://node_modules/@gtbuchanan/promptfoo-agent-claude-code/src/run-provider.ts',
   runsProvider: id => id.startsWith(providerId),
   withEnv: (config, env) => ({ ...config, env: { ...envOf(config), ...env } }),
   /*

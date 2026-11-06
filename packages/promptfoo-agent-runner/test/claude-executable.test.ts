@@ -13,7 +13,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { claudeCode } from '@gtbuchanan/eval-agents/claude-code';
+import { claudeCode } from '@gtbuchanan/promptfoo-agent-claude-code/claude-code';
 import { test } from 'vitest';
 import {
   agentExecutable,

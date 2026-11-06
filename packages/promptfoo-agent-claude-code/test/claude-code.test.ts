@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import * as v from 'valibot';
 import { test } from 'vitest';
-import { claudeCode } from '@gtbuchanan/eval-agents/claude-code';
+import { claudeCode } from '@gtbuchanan/promptfoo-agent-claude-code/claude-code';
 
 const settingsSchema = v.object({ claudeMdExcludes: v.array(v.string()) });
 

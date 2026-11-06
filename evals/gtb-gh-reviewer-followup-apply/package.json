@@ -15,9 +15,9 @@
   },
   "dependencies": {
     "@gtbuchanan/cli-doubles": "workspace:*",
-    "@gtbuchanan/eval-agents": "workspace:*",
     "@gtbuchanan/github-cli-stub": "workspace:*",
     "@gtbuchanan/promptfoo-agent": "workspace:*",
+    "@gtbuchanan/promptfoo-agent-claude-code": "workspace:*",
     "valibot": "catalog:"
   },
   "devDependencies": {

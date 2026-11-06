@@ -15,7 +15,7 @@
  *   pnpm eval:docker gtb-gh-reviewer-followup-apply   # filter to one skill
  *   pnpm eval:docker --repeat 3        # flags forwarded to promptfoo
  *
- * Auth: mounts each agent's stored login (eval-agents; RW for refresh) if
+ * Auth: mounts each agent's stored login (see src/agents.ts; RW for refresh) if
  * present; otherwise forwards its API key variable.
  * Behind a TLS-inspection proxy, drop the proxy root CA at
  * artifacts/ca-bundle.pem and it's trusted automatically.

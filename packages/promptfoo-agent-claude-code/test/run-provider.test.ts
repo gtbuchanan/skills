@@ -1,10 +1,11 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadApiProvider } from 'promptfoo';
 import * as v from 'valibot';
 import { test } from 'vitest';
-import { claudeCode } from '@gtbuchanan/promptfoo-agent-claude-code/claude-code';
-import RunProvider from '@gtbuchanan/promptfoo-agent-claude-code/run-provider';
+import { RunProvider } from '@gtbuchanan/promptfoo-agent-claude-code';
+import { claudeCode } from '@gtbuchanan/promptfoo-agent-claude-code/agent';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const manifest: unknown = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
@@ -14,10 +15,15 @@ test('runs Claude Code', ({ expect }) => {
   expect(new RunProvider({ config: {} }).id()).toBe('run:claude-code');
 });
 
-test('is the module Claude Code\'s run provider id names', ({ expect }) => {
-  const resolved = import.meta.resolve('@gtbuchanan/promptfoo-agent-claude-code/run-provider');
-  const module = fileURLToPath(resolved);
-  const subpath = path.relative(root, module).split(path.sep).join('/');
+test('is named by package, as a consumer installing it would name it', ({ expect }) => {
+  expect(claudeCode.runProviderId).toBe(`package:${name}:RunProvider`);
+});
 
-  expect(claudeCode.runProviderId).toBe(`file://node_modules/${name}/${subpath}`);
+test('loads through promptfoo by its run provider id', async ({ expect }) => {
+  const provider = await loadApiProvider(claudeCode.runProviderId, {
+    basePath: root,
+    options: { config: {} },
+  });
+
+  expect(provider.id()).toBe('run:claude-code');
 });

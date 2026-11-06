@@ -5,7 +5,7 @@
  * that as its provider and nests the agent's own config under it:
  *
  *   providers:
- *     - id: file://node_modules/@gtbuchanan/promptfoo-agent-claude-code/src/run-provider.ts
+ *     - id: package:@gtbuchanan/promptfoo-agent-claude-code:RunProvider
  *       config:
  *         agentConfig: { ... }
  *

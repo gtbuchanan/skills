@@ -2,10 +2,12 @@
   "name": "@gtbuchanan/promptfoo-agent-claude-code",
   "private": true,
   "type": "module",
+  "imports": {
+    "#src/*": "./src/*"
+  },
   "exports": {
-    "./claude-code": "./src/claude-code.ts",
-    "./claude-md-excludes": "./src/claude-md-excludes.ts",
-    "./run-provider": "./src/run-provider.ts"
+    ".": "./src/index.ts",
+    "./agent": "./src/agent.ts"
   },
   "scripts": {
     "coverage:codecov:upload": "gtb task coverage:codecov:upload",
@@ -26,6 +28,7 @@
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
+    "promptfoo": "catalog:",
     "typescript": "catalog:",
     "valibot": "catalog:",
     "vitest": "catalog:"

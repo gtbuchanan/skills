@@ -1036,6 +1036,9 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.14.0(jiti@2.7.0)(supports-color@7.2.0)
+      promptfoo:
+        specifier: 'catalog:'
+        version: 0.125.1(@anthropic-ai/claude-agent-sdk@0.3.316(@anthropic-ai/sdk@0.133.0(zod@4.6.7))(@modelcontextprotocol/sdk@1.32.2(supports-color@7.2.0)(zod@4.6.7))(zod@4.6.7))(@aws-sdk/credential-provider-node@3.972.92)(@aws-sdk/credential-providers@3.1161.0)(@huggingface/transformers@4.2.0)(@ibm-cloud/watsonx-ai@1.7.15(supports-color@7.2.0))(@langfuse/client@5.10.0(@opentelemetry/api@1.9.1))(@openai/agents@0.11.8(@aws-sdk/credential-provider-node@3.972.92)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.5)(supports-color@7.2.0)(ws@8.22.1)(zod@4.6.7))(@openai/codex-sdk@0.144.6)(@slack/web-api@8.0.0)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.5)(@types/json-schema@7.0.15)(@types/node@26.6.6)(ibm-cloud-sdk-core@5.6.0(supports-color@7.2.0))(jks-js@1.1.7)(pg@8.22.0)(playwright-extra@4.3.6(playwright-core@1.61.1)(playwright@1.61.1)(supports-color@7.2.0))(playwright@1.61.1)(socks@2.8.9)(supports-color@7.2.0)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3

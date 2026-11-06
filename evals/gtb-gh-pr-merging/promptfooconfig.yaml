@@ -73,7 +73,7 @@ providers:
         setting_sources: ['project']
         skills: ['gtb-gh-pr-merging', 'gtb-git-commit-conventions']
         working_dir: '{{ env.EVAL_WORKSPACE }}'
-    id: file://node_modules/@gtbuchanan/promptfoo-agent-claude-code/src/run-provider.ts
+    id: package:@gtbuchanan/promptfoo-agent-claude-code:RunProvider
     label: gtb-gh-pr-merging
 tests:
   - description: >-

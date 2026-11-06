@@ -14,7 +14,7 @@ import { test } from 'vitest';
 import {
   ancestorInstructionExcludes,
   workspaceInstructionExcludes,
-} from '@gtbuchanan/promptfoo-agent-claude-code/claude-md-excludes';
+} from '#src/claude-md-excludes.ts';
 
 /**
  * A disposable workspace reached through a link, so the path a caller holds

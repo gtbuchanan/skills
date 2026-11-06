@@ -28,7 +28,7 @@ import path from 'node:path';
 import { test } from 'vitest';
 import { parseJson } from '@gtbuchanan/cli-doubles/calls';
 import type { StubAnswer } from '@gtbuchanan/cli-doubles/dispatch';
-import { runLogPath } from '@gtbuchanan/cli-doubles/run-log';
+import { agentCallVar, runLogPath } from '@gtbuchanan/cli-doubles/run-log';
 import {
   logCallToRun,
   recordOutcome,
@@ -36,29 +36,43 @@ import {
 } from '@gtbuchanan/cli-doubles/stub';
 
 /**
- * A run in flight: $STUB_LOG_DIR and $STUB_RUN set as the run provider sets
- * them for the agent's commands. Disposable because both variables are
- * process-wide, so a failing case would otherwise leave them to the next one.
+ * Sets the variable `name` on the process, or unsets it for `undefined`.
  */
-const activeRun = (runId: string | undefined): Disposable & { readonly logDir: string } => {
+const setVar = (name: string, value: string | undefined): void => {
+  if (value === undefined) Reflect.deleteProperty(process.env, name);
+  else process.env[name] = value;
+};
+
+/**
+ * A run in flight: $STUB_LOG_DIR and $STUB_RUN set as the run provider sets
+ * them for the agent's commands. Disposable because the variables are
+ * process-wide, so a failing case would otherwise leave them to the next one.
+ *
+ * `caller` names a marker for the run, as the run provider does, and says
+ * whether this call carries it; left out, the run names none.
+ */
+const activeRun = (
+  runId: string | undefined,
+  caller?: 'agent' | 'runtime',
+): Disposable & { readonly logDir: string } => {
   const root = mkdtempSync(path.join(tmpdir(), 'run-'));
   const logDir = path.join(root, 'runs');
-  const previous = { dir: process.env['STUB_LOG_DIR'], run: process.env['STUB_RUN'] };
-  process.env['STUB_LOG_DIR'] = logDir;
-  if (runId === undefined) delete process.env['STUB_RUN'];
-  else process.env['STUB_RUN'] = runId;
+  const vars: Record<string, string | undefined> = {
+    AGENT_SESSION: caller === 'agent' ? 's-1' : undefined,
+    STUB_LOG_DIR: logDir,
+    STUB_RUN: runId,
+    [agentCallVar]: caller === undefined ? undefined : 'AGENT_SESSION',
+  };
+  const previous = Object.fromEntries(Object.keys(vars).map(name => [name, process.env[name]]));
+  for (const [name, value] of Object.entries(vars)) setVar(name, value);
 
   return {
     logDir,
     [Symbol.dispose]: () => {
-      if (previous.dir === undefined) delete process.env['STUB_LOG_DIR'];
-      else process.env['STUB_LOG_DIR'] = previous.dir;
-      if (previous.run === undefined) delete process.env['STUB_RUN'];
-      else process.env['STUB_RUN'] = previous.run;
+      for (const [name, value] of Object.entries(previous)) setVar(name, value);
     },
   };
 };
-
 /**
  * The lines in the log at `logPath`, parsed.
  */
@@ -158,6 +172,19 @@ test('a call made outside any run is passed over', ({ expect }) => {
 
   expect(logCallToRun('gh')).toBeUndefined();
   expect(existsSync(run.logDir)).toBe(false);
+});
+
+test('a call the agent\'s runtime made for itself is passed over', ({ expect }) => {
+  using run = activeRun('run-1', 'runtime');
+
+  expect(logCallToRun('git')).toBeUndefined();
+  expect(existsSync(run.logDir)).toBe(false);
+});
+
+test('a call the agent made is recorded', ({ expect }) => {
+  using run = activeRun('run-1', 'agent');
+
+  expect(logCallToRun('git')).toBe(runLogPath(run.logDir, 'run-1'));
 });
 
 /**

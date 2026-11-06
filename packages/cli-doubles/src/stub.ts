@@ -21,7 +21,7 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import type { StubOutcome } from './dispatch.ts';
-import { runLogPath, runVar } from './run-log.ts';
+import { isAgentCall, runLogPath, runVar } from './run-log.ts';
 
 /**
  * `process.argv` leads with the node binary and the stub itself.
@@ -63,7 +63,8 @@ export const runLogInFlight = (): string | undefined => {
 /**
  * Records this invocation into the log of the run it was made in (see
  * {@link runLogInFlight}), tagged with the command it fakes. Records nothing
- * outside a run.
+ * outside a run, nor for a call the agent's runtime made for itself (see
+ * {@link isAgentCall}).
  *
  * `stdin` is what the call was handed on standard input, for the CLIs that take
  * prose there — it never appears in argv, so a log without it cannot tell a
@@ -76,7 +77,7 @@ export const runLogInFlight = (): string | undefined => {
  */
 export const logCallToRun = (cmd: string, stdin?: string): string | undefined => {
   const logPath = runLogInFlight();
-  if (logPath === undefined) return undefined;
+  if (logPath === undefined || !isAgentCall()) return undefined;
   appendJsonl(logPath, stdin === undefined ? { argv, cmd } : { argv, cmd, stdin });
   return logPath;
 };

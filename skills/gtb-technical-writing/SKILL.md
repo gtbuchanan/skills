@@ -30,6 +30,11 @@ inform, restating a point is a tool.
 The tell is a paragraph that states a rule, argues it from another angle, then
 closes by summarising itself.
 
+**Nothing prompts you to compare two passages far apart**, whether they sit in
+one document or in two. `scripts/find-repeated-passages.ts` reads every
+markdown file under a directory and prints the wording any two places share. It
+matches words rather than meaning, so commoratio passes it clean.
+
 ## Prefer the plain word
 
 **"Never use a long word where a short one will do."** (Orwell 1946, rule 2)

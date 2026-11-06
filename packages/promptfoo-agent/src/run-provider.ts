@@ -11,12 +11,14 @@
  *
  * Each call mints a run id, hands it to the agent's commands as $STUB_RUN so
  * the doubles they reach log to that run's file (see run-log in cli-doubles),
- * and returns it in the response metadata, where a checker reads it back as
- * `context.metadata` (see run-log.ts here). Concurrent tests then never share
+ * names the variable that marks the calls the agent made rather than its
+ * runtime (see isAgentCall in cli-doubles), and returns the id in the response
+ * metadata, where a checker reads it back as `context.metadata` (see run-log.ts
+ * here). Concurrent tests then never share
  * a log, whichever world or command their calls came from.
  */
 import { randomUUID } from 'node:crypto';
-import { runVar } from '@gtbuchanan/cli-doubles/run-log';
+import { agentCallVar, runVar } from '@gtbuchanan/cli-doubles/run-log';
 import {
   type ApiProvider,
   type CallApiContextParams,
@@ -60,7 +62,10 @@ export const callAsRun = async (
   const runId = deps.mintRunId();
   const provider = await deps.loadProvider(
     call.agent.providerId,
-    call.agent.withEnv(call.agentConfig, { [runVar]: runId }),
+    call.agent.withEnv(call.agentConfig, {
+      [agentCallVar]: call.agent.agentCallMarker,
+      [runVar]: runId,
+    }),
   );
   const response = await provider.callApi(call.prompt, call.context, call.callOptions);
   return { ...response, metadata: { ...response.metadata, runId } };

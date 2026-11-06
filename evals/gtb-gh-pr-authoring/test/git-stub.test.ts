@@ -26,17 +26,3 @@ test('a call is recorded in the log of the run that made it', ({ expect }) => {
 
   expect(readCommands(runLogPath(logDir, 'run-1'), 'git')).toStrictEqual(['--version']);
 });
-
-test('a call the agent runtime makes for itself is answered, not recorded', ({ expect }) => {
-  /* Claude Code's startup calls are not the agent's, so a rule about what the
-     agent did must not be judged on them. */
-  const logDir = mkdtempSync(path.join(tmpdir(), 'git-stub-runs-'));
-  const result = spawnSync(
-    process.execPath,
-    [stub, '-c', 'core.hooksPath=/dev/null', '--version'],
-    { encoding: 'utf8', env: { ...process.env, STUB_LOG_DIR: logDir, [runVar]: 'run-1' } },
-  );
-
-  expect(result.stdout).toContain('git version');
-  expect(readCommands(runLogPath(logDir, 'run-1'), 'git')).toStrictEqual([]);
-});

@@ -25,7 +25,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { runLogPath, runVar } from '@gtbuchanan/cli-doubles/run-log';
+import { agentCallVar, runLogPath, runVar } from '@gtbuchanan/cli-doubles/run-log';
 import { test } from 'vitest';
 
 const stub = path.join(import.meta.dirname, '..', 'bin', 'git-stub.ts');
@@ -38,15 +38,23 @@ interface Run {
 }
 
 /**
- * One `git` invocation inside a run of its own, so a case can tell whether the
- * call was recorded.
+ * One `git` invocation by `caller` inside a run of its own, so a case can tell
+ * whether the call was recorded. The run names its marker as the run provider
+ * does, and only the agent's call carries it.
  */
-const git = (...args: readonly string[]): Run => {
+const gitBy = (caller: 'agent' | 'runtime', ...args: readonly string[]): Run => {
   const dir = mkdtempSync(path.join(tmpdir(), 'git-stub-'));
   const log = runLogPath(dir, 'run-1');
+  const { AGENT_SESSION: _inherited, ...inherited } = process.env;
   const result = spawnSync(process.execPath, [stub, ...args], {
     encoding: 'utf8',
-    env: { ...process.env, STUB_LOG_DIR: dir, [runVar]: 'run-1' },
+    env: {
+      ...inherited,
+      ...((caller === 'agent') && { AGENT_SESSION: 's-1' }),
+      STUB_LOG_DIR: dir,
+      [agentCallVar]: 'AGENT_SESSION',
+      [runVar]: 'run-1',
+    },
   });
 
   return {
@@ -57,26 +65,28 @@ const git = (...args: readonly string[]): Run => {
   };
 };
 
+/**
+ * One `git` invocation by the agent.
+ */
+const git = (...args: readonly string[]): Run => gitBy('agent', ...args);
+
 test('the agent runtime\'s own git calls are answered, not refused or recorded', ({
   expect,
 }) => {
   /*
-   * Claude Code runs these itself at startup, with hooks disabled. They are
+   * Claude Code runs these itself, at startup and around each turn. They are
    * not the agent's, so refusing and recording them would count against every
    * run a gap the agent never reached.
    */
-  const result = git('-c', 'core.hooksPath=/dev/null', '-c', 'core.fsmonitor=', '--version');
+  const result = gitBy('runtime', '--version');
 
   expect(result).toMatchObject({ logged: false, status: 0 });
   expect(result.stdout).toContain('git version');
 });
 
-test('the runtime\'s exec-path probe is answered too', ({ expect }) => {
-  expect(git('--exec-path')).toMatchObject({ logged: false, status: 0 });
-});
-
-test('a call from the agent is still recorded', ({ expect }) => {
-  expect(git('status').logged).toBe(true);
+test('the same call from the agent is refused and recorded', ({ expect }) => {
+  expect(git('--version')).toMatchObject({ logged: true });
+  expect(git('--version').status).not.toBe(0);
 });
 
 test('a read this suite models nothing for fails loudly', ({ expect }) => {

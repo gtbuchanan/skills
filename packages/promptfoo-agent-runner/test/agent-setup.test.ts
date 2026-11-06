@@ -13,6 +13,7 @@ import {
  * value came from.
  */
 const fakeAgent = (name: string): EvalAgent => ({
+  agentCallMarker: `${name.toUpperCase()}_SESSION`,
   auth: {
     apiKeyVar: `${name.toUpperCase()}_KEY`,
     credentialsFile: `.${name}/login.json`,
@@ -21,7 +22,6 @@ const fakeAgent = (name: string): EvalAgent => ({
   displayName: `Fake ${name}`,
   executable: { command: name, envVar: `${name.toUpperCase()}_EXE`, sdkPackage: `${name}-sdk` },
   gitBashVar: `${name.toUpperCase()}_BASH`,
-  isOwnCall: () => false,
   name,
   providerId: `${name}:provider`,
   runProviderId: `file://${name}/run-provider.ts`,

@@ -1,7 +1,7 @@
 /*
  * Lookups over the agents a caller drives. The caller passes the list, so this
  * package knows no agent: each agent lives in a package of its own, and the
- * runner and the doubles name the ones they use.
+ * runner names the ones it uses.
  */
 import type { EvalAgent } from './eval-agent.ts';
 
@@ -20,15 +20,3 @@ export const evalAgentForProvider = (
     throw new Error(`no agent runs provider '${String(providerId)}'`);
   return agent;
 };
-
-/**
- * Whether a call to `cmd` with `argv` is one the runtime of an agent among
- * `agents` makes for itself (see {@link EvalAgent.isOwnCall}), for a double
- * that does not know which agent is running.
- */
-export const isAgentRuntimeCall = (
-  agents: readonly EvalAgent[],
-  cmd: string,
-  argv: readonly string[],
-): boolean =>
-  agents.some(agent => agent.isOwnCall(cmd, argv));

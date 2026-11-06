@@ -13,6 +13,14 @@ const envOf = (config: Readonly<Record<string, unknown>>): object => {
 };
 
 export const claudeCode: EvalAgent = {
+  /*
+   * Set on every command a tool runs for the agent, and on none of the
+   * runtime's own git calls nor the Bash tool's shell setup. CLAUDECODE marks
+   * the shell instead, so it is also on the git call that setup makes on
+   * Windows. Undocumented; agent-call-marker.test.ts runs the real runtime to
+   * catch an upgrade that moves it.
+   */
+  agentCallMarker: 'CLAUDE_CODE_SESSION_ID',
   auth: {
     apiKeyVar: 'ANTHROPIC_API_KEY',
     credentialsFile: '.claude/.credentials.json',
@@ -25,14 +33,6 @@ export const claudeCode: EvalAgent = {
     sdkPackage: '@anthropic-ai/claude-agent-sdk',
   },
   gitBashVar: 'CLAUDE_CODE_GIT_BASH_PATH',
-  /*
-   * At startup the runtime asks git about the repository with hooks turned
-   * off, and asks where git keeps its helpers. Neither is the agent's.
-   */
-  isOwnCall: (cmd, argv) =>
-    cmd === 'git' &&
-    ((argv[0] === '-c' && argv[1] === 'core.hooksPath=/dev/null') ||
-      (argv.length === 1 && argv[0] === '--exec-path')),
   name: 'claude-code',
   providerId,
   runProviderId: 'package:@gtbuchanan/promptfoo-agent-claude-code:RunProvider',

@@ -8,6 +8,7 @@
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
  */
+import { agentCallVar } from '@gtbuchanan/cli-doubles/run-log';
 import type { ApiProvider, CallApiContextParams } from 'promptfoo';
 import * as v from 'valibot';
 import { test } from 'vitest';
@@ -76,6 +77,16 @@ test('hands the agent\'s commands the run id through its own provider', async ({
     config: { injected: { STUB_RUN: 'run-1' }, skills: ['a'] },
     providerId: 'fake:provider',
   }]);
+});
+
+test('names the marker its doubles tell the agent\'s calls by', async ({ expect }) => {
+  const deps = fakeDeps(['run-1']);
+
+  await callAsRun(call('go'), deps);
+
+  expect(deps.loaded[0]?.config).toMatchObject({
+    injected: { [agentCallVar]: 'FAKE_SESSION' },
+  });
 });
 
 test('returns the run id beside the provider\'s own metadata', async ({ expect }) => {

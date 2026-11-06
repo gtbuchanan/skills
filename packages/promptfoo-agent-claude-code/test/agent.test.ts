@@ -67,28 +67,6 @@ test('leaves the config it was given alone', ({ expect }) => {
   expect(config).toStrictEqual({ env: { KEPT: 'yes' } });
 });
 
-/**
- * How Claude Code's runtime calls git at startup: with hooks and fsmonitor
- * turned off, ahead of whatever it asks.
- */
-const startupFlags = ['-c', 'core.hooksPath=/dev/null', '-c', 'core.fsmonitor='];
-
-test('claims the git calls its runtime makes at startup', ({ expect }) => {
-  expect(claudeCode.isOwnCall('git', [...startupFlags, 'remote', 'get-url', 'origin']))
-    .toBe(true);
-  expect(claudeCode.isOwnCall('git', ['--exec-path'])).toBe(true);
-});
-
-test('leaves the git calls the agent chose to make', ({ expect }) => {
-  // A config override is the agent's own business when it is not this one.
-  expect(claudeCode.isOwnCall('git', ['status'])).toBe(false);
-  expect(claudeCode.isOwnCall('git', ['-c', 'user.name=Taylor', 'commit'])).toBe(false);
-});
-
-test('claims nothing another command was called with', ({ expect }) => {
-  expect(claudeCode.isOwnCall('gh', [...startupFlags, 'pr', 'view'])).toBe(false);
-});
-
 test('runs the agent SDK provider', ({ expect }) => {
   expect(claudeCode.runsProvider('anthropic:claude-agent-sdk')).toBe(true);
 });

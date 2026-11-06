@@ -16,10 +16,8 @@ import { passThrough } from '@gtbuchanan/cli-doubles/passthrough';
 import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import { argv, logCallToRun } from '@gtbuchanan/cli-doubles/stub';
 import { hermeticGitEnv } from '@gtbuchanan/git-fixtures/hermetic-git';
-import { isAgentRuntimeCall } from '@gtbuchanan/promptfoo-agent/agents';
-import { claudeCode } from '@gtbuchanan/promptfoo-agent-claude-code/agent';
 
-// The agent runtime's own calls, such as Claude Code's at startup, are not the agent's.
-if (!isAgentRuntimeCall([claudeCode], 'git', argv)) logCallToRun('git');
+// logCallToRun passes over the agent runtime's own calls.
+logCallToRun('git');
 
 process.exit(passThrough({ argv, binary: requireRealTool('git'), env: hermeticGitEnv() }));

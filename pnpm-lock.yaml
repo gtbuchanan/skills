@@ -1015,6 +1015,9 @@ importers:
         specifier: workspace:*
         version: link:../promptfoo-agent
     devDependencies:
+      '@anthropic-ai/claude-agent-sdk':
+        specifier: 'catalog:'
+        version: 0.3.316(@anthropic-ai/sdk@0.133.0(zod@4.6.7))(@modelcontextprotocol/sdk@1.32.2(supports-color@7.2.0)(zod@4.6.7))(zod@4.6.7)
       '@gtbuchanan/cli':
         specifier: 'catalog:'
         version: 2.0.0(skills-npm@4.1.0)(skills@1.7.5)(turbo@2.11.10)(typescript@6.0.3)

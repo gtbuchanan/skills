@@ -64,6 +64,11 @@ providers:
           - 'gtb-gh-reviewer-followup'
           - 'gtb-gh-reviewer-followup-plan'
           - 'gtb-gh-reviewer-followup-apply'
+        # Claude Code's own tool set. Without it promptfoo derives the tools
+        # from the allowlist, and a scoped rule such as Bash(gh:*) is no tool
+        # name, so the tool would be missing. The append_allowed_tools rules
+        # still decide what runs without approval.
+        tools: { preset: claude_code, type: preset }
         # The runner's workspace, like the other suites; setup.ts overlays the
         # mock plan/apply onto the real skills already installed there.
         working_dir: '{{ env.EVAL_WORKSPACE }}'

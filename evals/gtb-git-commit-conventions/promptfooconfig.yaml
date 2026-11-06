@@ -60,6 +60,11 @@ providers:
       path_to_claude_code_executable: '{{ env.CLAUDE_CODE_EXECUTABLE }}'
       setting_sources: ['project']
       skills: ['gtb-git-commit-conventions']
+      # Claude Code's own tool set. Without it promptfoo derives the tools
+      # from the allowlist, and a scoped rule such as Bash(gh:*) is no tool
+      # name, so the tool would be missing. The append_allowed_tools rules
+      # still decide what runs without approval.
+      tools: { preset: claude_code, type: preset }
       working_dir: '{{ env.EVAL_WORKSPACE }}'
     id: anthropic:claude-agent-sdk
     label: gtb-git-commit-conventions

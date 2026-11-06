@@ -67,10 +67,29 @@ export const skillsRoot = (): string => {
 };
 
 /**
- * A path under the shared eval artifact directory.
+ * The variable naming the eval artifact directory. The runner always sets it.
  */
-export const artifactPath = (...segments: string[]): string =>
-  path.join(repoRoot, 'artifacts', 'skill-evals', ...segments);
+export const artifactsVar = 'EVAL_ARTIFACTS_DIR';
+
+/**
+ * A path under the eval artifact directory the runner names.
+ *
+ * Where artifacts go is the runner's to decide: this package cannot know the
+ * layout of the repository it runs in, and installed from npm the workspace it
+ * would otherwise walk up to is the consumer's, or none. Unset, it fails closed
+ * as skillsRoot does, since a guess would scatter call logs where no checker
+ * reads them.
+ */
+export const artifactPath = (...segments: string[]): string => {
+  const dir = process.env[artifactsVar];
+  if (dir === undefined)
+    throw new Error(
+      `${artifactsVar} is unset: this suite writes its call logs into the ` +
+      'artifact directory the eval runner names. Run it through the runner, ' +
+      'which sets it.',
+    );
+  return path.join(dir, ...segments);
+};
 
 /**
  * The root of the calling file's suite — pass `import.meta.url`.

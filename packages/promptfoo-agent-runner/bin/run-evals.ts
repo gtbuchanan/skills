@@ -13,7 +13,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import path from 'node:path';
-import { repoRoot as root } from '@gtbuchanan/promptfoo-agent/paths';
+import { artifactsVar, repoRoot as root } from '@gtbuchanan/promptfoo-agent/paths';
 import spawn from 'cross-spawn';
 import { evalAgents } from '#src/agents.ts';
 
@@ -75,6 +75,12 @@ const installStubs = (suiteDir: string): void => {
  * own native binary and wants the empty (falsy) default.
  */
 for (const { executable } of evalAgents) process.env[executable.envVar] ??= '';
+
+/*
+ * Where each suite writes its call logs and seeded origins, which promptfoo and
+ * the suite's hooks and checkers inherit. The harness refuses to guess it.
+ */
+process.env[artifactsVar] = outDir;
 
 const args = process.argv.slice(cliArgsIndex);
 const firstFlag = args.findIndex(arg => arg.startsWith('-'));

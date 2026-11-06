@@ -69,8 +69,6 @@ const HookContextSchema = v.object({ test: HookTestSchema });
 export const scenarioSetup = <TScenario extends Keyed>(
   options: ScenarioSetupOptions<TScenario>,
 ): { readonly extensionHook: (hookName: string, context: unknown) => void } => {
-  const logDir = suiteRunDir(options.metaUrl);
-
   const buildOne = (scenario: TScenario, root: string): void => {
     const workspace = path.join(root, ...scenarioPath(scenario.key).split('/'));
     /* A scenario owns its directory outright, so it is removed rather than
@@ -87,12 +85,13 @@ export const scenarioSetup = <TScenario extends Keyed>(
   const extensionHook = (hookName: string, context: unknown): void => {
     /* Building writes into the runner's workspace. Outside the harness there is
        none to write into — skillsRoot() throws rather than guess — and this
-       keeps the failure explicit either way. */
+       keeps the failure explicit either way. The run directory is resolved here
+       too, since its artifact directory is the runner's to name. */
     if (hookName === 'beforeAll') {
       requireHarness('scenario workspaces');
       /* Cleared once for the eval. Each run logs to a file of its own (see
          run-log.ts), so nothing here empties a log another test is writing. */
-      resetRunDir(logDir);
+      resetRunDir(suiteRunDir(options.metaUrl));
       return;
     }
     if (hookName !== 'beforeEach') return;

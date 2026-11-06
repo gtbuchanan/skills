@@ -16,6 +16,7 @@ import { pathToFileURL } from 'node:url';
 import { test, vi } from 'vitest';
 import {
   artifactPath,
+  artifactsVar,
   repoRoot,
   skillsRoot,
   suiteDir,
@@ -128,13 +129,53 @@ testInWorkspace('skillsRoot is independent of the repo it runs from', ({ expect,
   expect(repoRoot.startsWith(workspace.dir)).toBe(false);
 });
 
-testInWorkspace('artifactPath stays anchored to the repo', ({ expect, workspace }) => {
-  const resolved = artifactPath(`${suite}.calls.jsonl`);
+/**
+ * A test running with the artifact directory the runner names, which it
+ * receives rather than repeats.
+ */
+const testWithArtifacts = test.extend<{ artifacts: { readonly dir: string } }>({
+  artifacts: async ({}, use) => {
+    const dir = path.join(path.sep, 'tmp', 'eval-artifacts');
+    vi.stubEnv(artifactsVar, dir);
+    try {
+      await use({ dir });
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  },
+});
 
-  expect(resolved).toBe(
-    path.join(repoRoot, 'artifacts', 'skill-evals', `${suite}.calls.jsonl`),
-  );
-  expect(resolved.startsWith(workspace.dir)).toBe(false);
+/**
+ * A test running with no artifact directory named.
+ */
+const testWithoutArtifacts = test.extend<{ noArtifacts: undefined }>({
+  noArtifacts: [
+    async ({}, use) => {
+      vi.stubEnv(artifactsVar, undefined);
+      try {
+        await use(undefined);
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    },
+    { auto: true },
+  ],
+});
+
+testWithArtifacts('artifactPath resolves under the directory the runner names', ({
+  expect,
+  artifacts,
+}) => {
+  expect(artifactPath(`${suite}.calls.jsonl`))
+    .toBe(path.join(artifacts.dir, `${suite}.calls.jsonl`));
+});
+
+testWithoutArtifacts('artifactPath refuses to guess when unset', ({ expect }) => {
+  /*
+   * Installed from npm, the workspace this used to walk up to is the
+   * consumer's, or none at all.
+   */
+  expect(() => artifactPath(`${suite}.calls.jsonl`)).toThrow(/EVAL_ARTIFACTS_DIR is unset/v);
 });
 
 test('suiteDir resolves a file beside the config to its own directory', ({ expect }) => {

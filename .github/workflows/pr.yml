@@ -25,7 +25,7 @@ jobs:
     # no e2e/ directory or vitest.config.e2e.ts for that job to run.
     # `check` covers the fast tier only, so the slow tier needs its own flag to
     # reach the gate at all.
-    uses: gtbuchanan/tooling/.github/workflows/ci.yml@v1.0.0
+    uses: gtbuchanan/tooling/.github/workflows/ci.yml@cc8db05d356667bcff53d990ecee5a96a527f03c # v1.0.0
     with:
       run-e2e: false
       run-slow-tests: true
@@ -38,7 +38,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: gtbuchanan/tooling/.github/workflows/dependency-review.yml@v1.0.0
+    uses: gtbuchanan/tooling/.github/workflows/dependency-review.yml@cc8db05d356667bcff53d990ecee5a96a527f03c # v1.0.0
 
   eval-image:
     name: Eval Image
@@ -59,7 +59,7 @@ jobs:
     # since the image is where the dependency graph is resolved.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Build the eval image
         run: docker build --tag agent-skills-eval --file Dockerfile .
@@ -67,7 +67,7 @@ jobs:
   pre-commit:
     name: Pre-Commit
     # The eslint step shells out to `pnpm exec`, so it needs node_modules.
-    uses: gtbuchanan/tooling/.github/workflows/pre-commit.yml@v1.0.0
+    uses: gtbuchanan/tooling/.github/workflows/pre-commit.yml@cc8db05d356667bcff53d990ecee5a96a527f03c # v1.0.0
     with:
       use-pnpm: true
 

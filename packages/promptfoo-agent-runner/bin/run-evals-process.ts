@@ -44,6 +44,7 @@ import { beginEphemeralRun } from '#src/ephemeral-run.ts';
 import { buildEvalEnv } from '#src/eval-env.ts';
 import { evalIsolation } from '#src/eval-isolation.ts';
 import { repoRoot as root } from '#src/repo-root.ts';
+import { type LoadedSuiteConfig, loadSuiteConfig } from '#src/suite-config.ts';
 import {
   agentsUsedBy,
   readSuiteConfig,
@@ -158,9 +159,12 @@ const placeCredentials = (source: string, destination: string): void => {
 /**
  * Mints a fresh, isolated environment: its own stub dir (front of a scrubbed
  * PATH) and a clean HOME holding only the credentials, so parallel suites never
- * share STUB_BINDIR, call logs, or the developer's agent config.
+ * share STUB_BINDIR, call logs, or the developer's agent config. `suite` is
+ * what the suite's eval config adds, and none for the preflight.
  */
-const isolatedEnv = (): {
+const noSuiteConfig: LoadedSuiteConfig = { env: [] };
+
+const isolatedEnv = (suite = noSuiteConfig): {
   env: Record<string, string>;
   allow: string[];
   missing: string[];
@@ -177,7 +181,12 @@ const isolatedEnv = (): {
     placeCredentials(credentials, destination);
   }
   const scrubbed = buildScrubbedPath({ stubDir });
-  const env = buildEvalEnv({ scrubbedPath: scrubbed.path, stubDir, homeDir });
+  const env = buildEvalEnv({
+    contributors: suite.env,
+    homeDir,
+    scrubbedPath: scrubbed.path,
+    stubDir,
+  });
   if (process.platform === 'win32') {
     const bashDir = scrubbed.allow.find(dir =>
       existsSync(path.join(dir, 'bash.exe')),
@@ -327,16 +336,17 @@ interface SuiteResult {
  * Runs one suite's isolated process, streaming a tagged per-test progress line
  * as each test finishes while capturing the full output for a failure dump.
  */
-const runSuite = async (name: string): Promise<SuiteResult> =>
-  new Promise<SuiteResult>((resolve) => {
-    const { env } = isolatedEnv();
-    const workspace = mintDir('skills-eval-ws-');
-    try {
-      populateWorkspace(workspace, name, env);
-    } catch (error) {
-      resolve({ name, code: unknownExitCode, out: String(error), workspace });
-      return;
-    }
+const runSuite = async (name: string): Promise<SuiteResult> => {
+  const workspace = mintDir('skills-eval-ws-');
+  let env: Record<string, string>;
+  try {
+    ({ env } = isolatedEnv(await loadSuiteConfig(root, name)));
+    populateWorkspace(workspace, name, env);
+  } catch (error) {
+    return { name, code: unknownExitCode, out: String(error), workspace };
+  }
+
+  return new Promise<SuiteResult>((resolve) => {
     const child = spawn(
       'node',
       [path.join(import.meta.dirname, 'run-evals.ts'), name, ...passthrough],
@@ -354,6 +364,7 @@ const runSuite = async (name: string): Promise<SuiteResult> =>
       resolve({ name, code: code ?? unknownExitCode, out, workspace });
     });
   });
+};
 
 // Bounded-parallel: each suite is a fully isolated process; suite-level start/
 // done lines are the progress (interleaved per-suite stdio would be unreadable).

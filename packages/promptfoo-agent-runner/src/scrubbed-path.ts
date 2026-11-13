@@ -30,6 +30,7 @@ import { resolveRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import { hermeticGitConfig } from '@gtbuchanan/git-fixtures/hermetic-git';
 import type { EvalAgent } from '@gtbuchanan/promptfoo-agent/eval-agent';
 import { evalAgents } from './agents.ts';
+import { miseShimsDir } from './mise-shims.ts';
 
 /*
  * Aggregator dirs re-export danger CLIs via shims; never admit them wholesale.
@@ -512,7 +513,9 @@ const winDrivePrefixLength = 2;
  * names one outright.
  */
 const realGhVar = (sourceEnv: NodeJS.ProcessEnv): Record<string, string> => {
-  const realGh = sourceEnv['GH_REAL'] ?? resolveRealTool('gh', sourceEnv);
+  const shims = miseShimsDir(sourceEnv, process.platform);
+  const realGh = sourceEnv['GH_REAL'] ??
+    resolveRealTool('gh', sourceEnv, shims === undefined ? [] : [shims]);
   return realGh === undefined ? {} : { GH_REAL: realGh };
 };
 

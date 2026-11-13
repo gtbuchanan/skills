@@ -24,6 +24,7 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
+    "@faker-js/faker": "catalog:",
     "@gtbuchanan/cli": "catalog:",
     "@gtbuchanan/eslint-config": "catalog:",
     "@gtbuchanan/tsconfig": "catalog:",

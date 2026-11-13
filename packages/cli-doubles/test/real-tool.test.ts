@@ -2,9 +2,7 @@
  * Tests for finding the real binary for a tool while a double shadows it.
  *
  * Whatever hands a call on runs what this finds. Finding the double runs the
- * call in a loop through itself; finding a mise shim runs mise, which cannot
- * start under the bare environment a double gives the tool. Either way the
- * call fails before the tool sees it.
+ * call in a loop through itself, so the call fails before the tool sees it.
  *
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
@@ -15,7 +13,6 @@ import path from 'node:path';
 import { faker } from '@faker-js/faker';
 import { test } from 'vitest';
 import {
-  miseShimsDir,
   pathWithout,
   requireRealTool,
   resolveRealTool,
@@ -27,16 +24,6 @@ const windowsLocalAppData = path.win32.join(
   'AppData',
   'Local',
 );
-
-/**
- * A POSIX home directory for someone who does not exist.
- */
-const posixHome = (): string => `/home/${faker.internet.username()}`;
-
-/**
- * A POSIX directory somewhere off the home directory.
- */
-const posixDir = (): string => `/srv/${faker.system.fileName({ extensionCount: 0 })}`;
 
 /**
  * rwxr-xr-x, so `which` takes a file written here for an executable.
@@ -71,36 +58,6 @@ const hostOnDisk = (
   };
 };
 
-test('puts the shims under MISE_DATA_DIR where it is set', ({ expect }) => {
-  const dataDir = posixDir();
-  const env = { HOME: posixHome(), MISE_DATA_DIR: dataDir };
-
-  expect(miseShimsDir(env, 'linux')).toBe(`${dataDir}/shims`);
-});
-
-test('puts the shims under XDG_DATA_HOME where it is set', ({ expect }) => {
-  const dataHome = posixDir();
-  const env = { HOME: posixHome(), XDG_DATA_HOME: dataHome };
-
-  expect(miseShimsDir(env, 'linux')).toBe(`${dataHome}/mise/shims`);
-});
-
-test('puts the shims under the home directory by default', ({ expect }) => {
-  const home = posixHome();
-
-  expect(miseShimsDir({ HOME: home }, 'linux')).toBe(`${home}/.local/share/mise/shims`);
-});
-
-test('puts the shims under LOCALAPPDATA on Windows', ({ expect }) => {
-  const env = { LOCALAPPDATA: windowsLocalAppData, XDG_DATA_HOME: posixDir() };
-
-  expect(miseShimsDir(env, 'win32')).toBe(String.raw`${windowsLocalAppData}\mise\shims`);
-});
-
-test('names no shims directory where nothing locates mise', ({ expect }) => {
-  expect(miseShimsDir({}, 'linux')).toBeUndefined();
-});
-
 test('drops a directory from PATH', ({ expect }) => {
   expect(pathWithout('/stubs:/usr/bin', ['/stubs'], 'linux')).toBe('/usr/bin');
 });
@@ -128,14 +85,31 @@ test('finds the tool behind the double', ({ expect }) => {
   expect(path.dirname(resolveRealTool(tool, env) ?? '')).toBe(host.dir('bin'));
 });
 
-test('finds the tool behind mise shims', ({ expect }) => {
+test('finds the tool behind a directory the caller skips', ({ expect }) => {
+  using host = hostOnDisk(['shims', 'bin']);
+  const shims = host.dir('shims');
+  const env = { PATH: [shims, host.dir('bin')].join(path.delimiter) };
+
+  expect(path.dirname(resolveRealTool(tool, env, [shims]) ?? '')).toBe(host.dir('bin'));
+});
+
+test('takes a version manager shim for the tool unless the caller skips it', ({ expect }) => {
+  // Which directories hold shims is the caller's to know.
   using host = hostOnDisk([path.join('mise', 'shims'), 'bin']);
   const env = {
     MISE_DATA_DIR: host.dir('mise'),
     PATH: [host.dir(path.join('mise', 'shims')), host.dir('bin')].join(path.delimiter),
   };
 
-  expect(path.dirname(resolveRealTool(tool, env) ?? '')).toBe(host.dir('bin'));
+  expect(path.dirname(resolveRealTool(tool, env) ?? '')).toBe(host.dir(path.join('mise', 'shims')));
+});
+
+test('requires the tool behind a directory the caller skips', ({ expect }) => {
+  using host = hostOnDisk(['shims', 'bin']);
+  const shims = host.dir('shims');
+  const env = { PATH: [shims, host.dir('bin')].join(path.delimiter) };
+
+  expect(path.dirname(requireRealTool(tool, env, [shims]))).toBe(host.dir('bin'));
 });
 
 test('finds nothing when only the double has the tool', ({ expect }) => {

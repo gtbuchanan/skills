@@ -2,8 +2,10 @@
  * What the fake's tests share: a world to answer from, and two ways to reach
  * a fake started for one test alone.
  *
- * The real gh is `GH_REAL` where the runner names one, and the first gh on PATH
- * outside mise's shims otherwise.
+ * The real gh is `GH_REAL` where the runner or the developer names one, and the
+ * first gh on PATH otherwise. A version manager's shim is not one: mise's
+ * cannot start under the bare environment gh runs in here, so a host whose
+ * PATH reaches gh only through shims names it in `GH_REAL`.
  */
 import { spawn } from 'node:child_process';
 import { existsSync, mkdtempSync } from 'node:fs';

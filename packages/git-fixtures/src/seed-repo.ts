@@ -35,6 +35,16 @@ export interface GitRunner {
 }
 
 /**
+ * A checkout once its history is seeded and pushed, for whatever finishes it
+ * off: the branch it is on, and the bare repository its origin pushes to.
+ */
+export interface SeededCheckout {
+  readonly branch: string;
+  readonly origin: string;
+  readonly runner: GitRunner;
+}
+
+/**
  * Extra process wiring for one invocation.
  */
 export interface GitOptions {

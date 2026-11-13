@@ -13,7 +13,7 @@
  * shows the rewritten URL, so gh never sees a GitHub host.
  */
 import { fileURLToPath } from 'node:url';
-import { type GitRunner, runGit } from './seed-repo.ts';
+import { type GitRunner, type SeededCheckout, captureGit, runGit } from './seed-repo.ts';
 
 const localSsh = fileURLToPath(new URL('../bin/local-ssh.ts', import.meta.url));
 
@@ -56,10 +56,40 @@ export const localSshCall = (args: readonly string[]): LocalSshCall | undefined 
 };
 
 /**
+ * A repository on `github.localhost` for an origin to be named after.
+ */
+export interface GitHubRepository {
+  /**
+   * The branch pull requests merge into. Put on the origin at the checkout's
+   * first commit, because gh checks it out after a merge that deletes the
+   * head.
+   */
+  readonly base: string;
+  /**
+   * `<owner>/<repo>`.
+   */
+  readonly slug: string;
+}
+
+/**
+ * Makes a seeded checkout's origin `repository` on GitHub: the base branch on
+ * the origin, and the origin named on `github.localhost`.
+ */
+export const gitHubOrigin = (repository: GitHubRepository) =>
+  ({ branch, origin, runner }: SeededCheckout): void => {
+    // A checkout on the base branch has already pushed it.
+    if (repository.base !== branch) {
+      const root = captureGit(runner, ['rev-list', '--max-parents=0', 'HEAD']);
+      runGit(runner, ['push', '-q', 'origin', `${root}:refs/heads/${repository.base}`]);
+    }
+    useGitHubOrigin(runner, { bare: origin, slug: repository.slug });
+  };
+
+/**
  * Names `runner`'s origin `git@github.localhost:<slug>.git`, while every fetch
  * and push through it reaches the bare repository at `bare`.
  */
-export const useGitHubOrigin = (
+const useGitHubOrigin = (
   runner: GitRunner,
   options: { readonly bare: string; readonly slug: string },
 ): void => {

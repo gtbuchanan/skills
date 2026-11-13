@@ -21,7 +21,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import { markerFile } from '@gtbuchanan/cli-doubles/scenario';
-import { captureGit } from '@gtbuchanan/git-fixtures/seed-repo';
+import { type SeededCheckout, captureGit, runGit } from '@gtbuchanan/git-fixtures/seed-repo';
 import * as v from 'valibot';
 import { test } from 'vitest';
 import { fakeSuite } from './fake-suite.ts';
@@ -48,8 +48,6 @@ const rejectCommit = {
   subject: 'Count a rejection against its window',
   tree: { 'src/limiter.ts': 'export const allow = (): boolean => false;\n' },
 };
-
-const remote = { base: 'main', slug: 'acme/widgets' };
 
 /**
  * A workspace to seed into. Named for a scenario key that no other test uses,
@@ -190,53 +188,62 @@ test('a teammate authors their own commit, and trailers survive onto it', ({ exp
   );
 });
 
-test('a remote names the origin on github.localhost', ({ expect }) => {
+test('prepareOrigin is handed the seeded checkout and its origin', ({ expect }) => {
   /*
-   * gh reads which repository it is in from this URL. A local path is no
-   * repository it knows.
+   * What a suite needs to dress the origin up as some forge's: the branch the
+   * scenario is on, where the checkout is, and the bare repository behind it.
    */
   const workspace = scratch();
-  repoScenarioSeeding<RepoScenario>({ author, metaUrl: fakeSuite().metaUrl, remote })
-    .seed({ branch: 'add-rate-limiter', commits: [baseCommit], key: 'repo-remote-url' }, workspace);
+  const handed: SeededCheckout[] = [];
+  repoScenarioSeeding<RepoScenario>({
+    author,
+    metaUrl: fakeSuite().metaUrl,
+    prepareOrigin: (checkout) => {
+      handed.push(checkout);
+    },
+  }).seed({ branch: 'add-rate-limiter', commits: [baseCommit], key: 'repo-prepare' }, workspace);
 
-  expect(captureGit({ cwd: workspace, git }, ['remote', 'get-url', 'origin']))
-    .toBe('git@github.localhost:acme/widgets.git');
+  const [checkout] = handed;
+
+  expect({
+    branch: checkout?.branch,
+    cwd: checkout?.runner.cwd,
+    originTip: checkout === undefined
+      ? undefined
+      : captureGit({ cwd: checkout.origin, git }, ['log', '-1', '--format=%s', 'add-rate-limiter']),
+  }).toStrictEqual({
+    branch: 'add-rate-limiter',
+    cwd: workspace,
+    originTip: 'Add the rate limiter',
+  });
 });
 
-test('a remote puts the base branch on the origin at the first commit', ({ expect }) => {
+test('the extra commit is pushed through the origin prepareOrigin left', ({ expect }) => {
   /*
-   * gh checks the base branch out after a merge that deletes the head, and
-   * fails where the origin has none.
+   * An origin dressed up as a forge's has to be the one the scenario's own
+   * push goes through, or that push skips whatever the dressing set up.
    */
   const workspace = scratch();
-  repoScenarioSeeding<RepoScenario>({ author, metaUrl: fakeSuite().metaUrl, remote }).seed(
+  const elsewhere = path.join(scratch(), 'elsewhere.git');
+  repoScenarioSeeding<RepoScenario>({
+    author,
+    metaUrl: fakeSuite().metaUrl,
+    prepareOrigin: ({ runner }) => {
+      runGit({ cwd: path.dirname(elsewhere), git }, ['init', '--bare', '-q', elsewhere]);
+      runGit(runner, ['remote', 'set-url', 'origin', elsewhere]);
+    },
+  }).seed(
     {
       branch: 'add-rate-limiter',
-      commits: [baseCommit, rejectCommit],
-      key: 'repo-remote-base',
+      commits: [baseCommit],
+      extra: { push: true, subject: rejectCommit.subject, trailers: [], tree: rejectCommit.tree },
+      key: 'repo-prepare-push',
     },
     workspace,
   );
 
-  const runner = { cwd: workspace, git };
-
-  expect(captureGit(runner, ['log', '-1', '--format=%s', 'origin/main']))
-    .toBe('Add the rate limiter');
-});
-
-test('a remote leaves the base branch at its tip when the scenario is on it', ({ expect }) => {
-  /*
-   * A scenario whose work sits on the base branch has already pushed it, and
-   * moving it back to the first commit is a push git refuses.
-   */
-  const workspace = scratch();
-  repoScenarioSeeding<RepoScenario>({ author, metaUrl: fakeSuite().metaUrl, remote }).seed(
-    { branch: 'main', commits: [baseCommit, rejectCommit], key: 'repo-remote-on-base' },
-    workspace,
-  );
-
-  expect(captureGit({ cwd: workspace, git }, ['log', '-1', '--format=%s', 'origin/main']))
-    .toBe('Count a rejection against its window');
+  expect(captureGit({ cwd: elsewhere, git }, ['log', '-1', '--format=%s', 'add-rate-limiter']))
+    .toBe(rejectCommit.subject);
 });
 
 test('the marker is excluded before it exists', ({ expect }) => {

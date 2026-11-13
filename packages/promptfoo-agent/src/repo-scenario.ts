@@ -19,11 +19,11 @@ import path from 'node:path';
 import { parseJson } from '@gtbuchanan/cli-doubles/calls';
 import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import { markerFile } from '@gtbuchanan/cli-doubles/scenario';
-import { useGitHubOrigin } from '@gtbuchanan/git-fixtures/github-origin';
 import {
   type GitRunner,
   type SeedCommit,
   type SeedIdentity,
+  type SeededCheckout,
   captureGit,
   runGit,
   seedHistory,
@@ -72,27 +72,12 @@ export interface RepoScenarioOptions {
    */
   readonly metaUrl: string;
   /**
-   * The repository the origin claims to be, for a suite whose gh is real and
-   * decides which repository it is in from the origin's URL. Left out, the
-   * origin is the bare repository's own path.
+   * Runs once the history is seeded and pushed, before the extra commit, for a
+   * suite whose origin has to pass for some forge's: named on its host, say,
+   * with the branches the forge would hold. Left out, the origin is the bare
+   * repository's own path.
    */
-  readonly remote?: SeedRemote | undefined;
-}
-
-/**
- * A GitHub repository for the origin to be named after, and its base branch.
- */
-export interface SeedRemote {
-  /**
-   * The branch pull requests merge into. Seeded on the origin at the first
-   * planned commit, because gh checks it out after a merge that deletes the
-   * head.
-   */
-  readonly base: string;
-  /**
-   * `<owner>/<repo>` on `github.localhost`.
-   */
-  readonly slug: string;
+  readonly prepareOrigin?: ((checkout: SeededCheckout) => void) | undefined;
 }
 
 /**
@@ -163,7 +148,7 @@ export interface RepoScenarioSeeding<TScenario extends RepoScenario> {
 export const repoScenarioSeeding = <TScenario extends RepoScenario>(
   options: RepoScenarioOptions,
 ): RepoScenarioSeeding<TScenario> => {
-  const { author, metaUrl, remote } = options;
+  const { author, metaUrl, prepareOrigin } = options;
   const suite = suiteName(metaUrl);
 
   const baselinesPath = (): string => artifactPath(`${suite}.baselines.json`);
@@ -207,14 +192,7 @@ export const repoScenarioSeeding = <TScenario extends RepoScenario>(
     });
 
     const runner = { cwd: workspace, git };
-    if (remote !== undefined) {
-      // A scenario on the base branch has already pushed it.
-      if (remote.base !== scenario.branch) {
-        const root = captureGit(runner, ['rev-list', '--max-parents=0', 'HEAD']);
-        runGit(runner, ['push', '-q', 'origin', `${root}:refs/heads/${remote.base}`]);
-      }
-      useGitHubOrigin(runner, { bare: origin, slug: remote.slug });
-    }
+    prepareOrigin?.({ branch: scenario.branch, origin, runner });
     if (scenario.extra) writeExtra(runner, scenario.extra, scenario.branch, author);
 
     /* The marker is written by the hook after this returns, and committing it

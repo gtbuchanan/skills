@@ -40,7 +40,7 @@ includes = ["mise.tasks.toml"]
 gh = "2.103.3"
 hk = "2.11.1"
 jactionlint = "v2.4.0"
-node = "26.13.0"
+node = "26.13.1"
 # renovate transitively pulls `@yarnpkg/libzip`, whose latest is a manual
 # maintainer publish lacking the provenance its CI releases had — aube's
 # no-downgrade policy fails the install. Verified benign on npmjs.org (same

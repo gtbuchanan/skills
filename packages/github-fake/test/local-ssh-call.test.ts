@@ -8,7 +8,7 @@
  * setup's per-test assertion count sees it.
  */
 import { test } from 'vitest';
-import { localSshCall } from '@gtbuchanan/git-fixtures/github-origin';
+import { localSshCall } from '@gtbuchanan/github-fake/origin';
 
 test('names the git service and bare repository git asked for', ({ expect }) => {
   const args = [

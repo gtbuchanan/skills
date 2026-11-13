@@ -922,6 +922,9 @@ importers:
 
   packages/github-fake:
     dependencies:
+      '@gtbuchanan/git-fixtures':
+        specifier: workspace:*
+        version: link:../git-fixtures
       graphql:
         specifier: 'catalog:'
         version: 17.1.0

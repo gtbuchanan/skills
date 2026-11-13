@@ -13,8 +13,8 @@
  * keeps the transport's calls out of that record.
  */
 import { spawnSync } from 'node:child_process';
-import { localSshCall } from '../src/github-origin.ts';
-import { hermeticGitEnv } from '../src/hermetic-git.ts';
+import { hermeticGitEnv } from '@gtbuchanan/git-fixtures/hermetic-git';
+import { localSshCall } from '../src/origin.ts';
 
 /**
  * `process.argv` leads with the node binary and this script.

@@ -4,7 +4,6 @@
   "type": "module",
   "exports": {
     "./checkout": "./src/checkout.ts",
-    "./github-origin": "./src/github-origin.ts",
     "./hermetic-git": "./src/hermetic-git.ts",
     "./seed-repo": "./src/seed-repo.ts"
   },

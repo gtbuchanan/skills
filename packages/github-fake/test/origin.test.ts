@@ -15,8 +15,6 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { test } from 'vitest';
-import { gitHubOrigin } from '@gtbuchanan/git-fixtures/github-origin';
 import {
   type GitRunner,
   captureGit,
@@ -24,6 +22,8 @@ import {
   seedHistory,
   writeCommit,
 } from '@gtbuchanan/git-fixtures/seed-repo';
+import { test } from 'vitest';
+import { gitHubOrigin } from '@gtbuchanan/github-fake/origin';
 
 // Nothing shadows git while these run, so it is reached by name.
 const git = 'git';

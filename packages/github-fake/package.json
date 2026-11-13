@@ -6,6 +6,7 @@
   "exports": {
     "./caller": "./src/caller.ts",
     "./gh-env": "./src/gh-env.ts",
+    "./origin": "./src/origin.ts",
     "./server": "./src/server.ts",
     "./world": "./src/world.ts"
   },
@@ -19,6 +20,7 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
+    "@gtbuchanan/git-fixtures": "workspace:*",
     "graphql": "catalog:",
     "valibot": "catalog:"
   },

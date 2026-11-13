@@ -23,6 +23,18 @@ const env = {
 
 Don't copy your whole `process.env` into `gh`'s environment. Pass only the few variables it needs to start, such as `PATH`. If you pass everything and one of the fake's variables goes missing, `gh` will quietly use your real GitHub login instead.
 
+## Giving a checkout an origin on the fake GitHub
+
+`gh` works out which repository it is in from the checkout's `origin` URL, so a checkout pushed to a local bare repository is no repository `gh` knows. `gitHubOrigin` fixes that for a checkout you have already seeded and pushed: it names the origin `git@github.localhost:<owner>/<repo>.git`, puts the base branch on the bare repository at the checkout's first commit, and routes every fetch and push to the bare repository without touching the network.
+
+```ts
+gitHubOrigin({ base: 'main', slug: 'acme/widgets' })({
+  branch,
+  origin: bare,
+  runner,
+});
+```
+
 ## Writing a world for the fake GitHub API
 
 A world holds data, not output. Its `graphql` object mirrors GitHub's GraphQL schema:

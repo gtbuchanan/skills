@@ -13,7 +13,12 @@
  * shows the rewritten URL, so gh never sees a GitHub host.
  */
 import { fileURLToPath } from 'node:url';
-import { type GitRunner, type SeededCheckout, captureGit, runGit } from './seed-repo.ts';
+import {
+  type GitRunner,
+  type SeededCheckout,
+  captureGit,
+  runGit,
+} from '@gtbuchanan/git-fixtures/seed-repo';
 
 const localSsh = fileURLToPath(new URL('../bin/local-ssh.ts', import.meta.url));
 

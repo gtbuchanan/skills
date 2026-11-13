@@ -41,9 +41,9 @@ import spawn from 'cross-spawn';
 import { agentAuth, agentWorkspaceFiles, authProblem, credentialsIn } from '#src/agent-setup.ts';
 import { evalAgents } from '#src/agents.ts';
 import { beginEphemeralRun } from '#src/ephemeral-run.ts';
+import { buildEvalEnv } from '#src/eval-env.ts';
 import { evalIsolation } from '#src/eval-isolation.ts';
 import { repoRoot as root } from '#src/repo-root.ts';
-import { buildEvalEnv } from '#src/scrubbed-path.ts';
 import {
   agentsUsedBy,
   readSuiteConfig,

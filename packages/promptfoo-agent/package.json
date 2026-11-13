@@ -16,7 +16,8 @@
     "./run-provider": "./src/run-provider.ts",
     "./scenario-setup": "./src/scenario-setup.ts",
     "./setup": "./src/setup.ts",
-    "./skills-cli": "./src/skills-cli.ts"
+    "./skills-cli": "./src/skills-cli.ts",
+    "./suite-config": "./src/suite-config.ts"
   },
   "scripts": {
     "coverage:codecov:upload": "gtb task coverage:codecov:upload",

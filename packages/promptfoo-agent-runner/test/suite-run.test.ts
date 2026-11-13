@@ -32,11 +32,12 @@ interface FakeSuite {
   readonly progress: string[];
   readonly steps: SuiteRunSteps;
   /**
-   * Writes `chunks` to the process's stdout, in order, then closes it with `code`.
+   * Writes `chunks` to the process's stdout, in order, then closes it with `code`,
+   * once the suite has launched.
    */
   readonly finish: (code: number | null, chunks?: readonly string[]) => void;
   /**
-   * Writes `chunk` to the process's stderr.
+   * Writes `chunk` to the process's stderr, once the suite has launched.
    */
   readonly writeStderr: (chunk: string) => void;
 }
@@ -51,6 +52,14 @@ const fakeSuite = (
   const stdout = new PassThrough();
   const stderr = new PassThrough();
   let onClose: (code: number | null) => void = notListening;
+  /* A real process writes nothing before it starts, so this one holds each write
+   * until the runner has launched it and is listening. */
+  const held: (() => void)[] = [];
+  let isLaunched = false;
+  const afterLaunch = (write: () => void): void => {
+    if (isLaunched) write();
+    else held.push(write);
+  };
   const child: SuiteProcess = {
     on: (_event, listener) => {
       onClose = listener;
@@ -60,17 +69,24 @@ const fakeSuite = (
   };
   return {
     finish: (code, chunks = []) => {
-      for (const chunk of chunks) stdout.write(chunk);
-      setImmediate(() => {
-        onClose(code);
+      afterLaunch(() => {
+        for (const chunk of chunks) stdout.write(chunk);
+        setImmediate(() => {
+          onClose(code);
+        });
       });
     },
     launches,
     progress,
     steps: {
       isolatedEnv: () => ({ env }),
+      loadConfig: () => Promise.resolve({ env: [] }),
       launch: (launchEnv) => {
         launches.push(launchEnv);
+        isLaunched = true;
+        setImmediate(() => {
+          for (const write of held) write();
+        });
         return child;
       },
       mintWorkspace: () => workspace,
@@ -80,7 +96,9 @@ const fakeSuite = (
       },
     },
     writeStderr: (chunk) => {
-      stderr.write(chunk);
+      afterLaunch(() => {
+        stderr.write(chunk);
+      });
     },
   };
 };

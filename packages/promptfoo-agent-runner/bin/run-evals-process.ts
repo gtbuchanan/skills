@@ -44,6 +44,7 @@ import { beginEphemeralRun } from '#src/ephemeral-run.ts';
 import { buildEvalEnv } from '#src/eval-env.ts';
 import { evalIsolation } from '#src/eval-isolation.ts';
 import { repoRoot as root } from '#src/repo-root.ts';
+import { type LoadedSuiteConfig, loadSuiteConfig } from '#src/suite-config.ts';
 import { type SuiteResult, type SuiteRunSteps, runSuite } from '#src/suite-run.ts';
 import {
   agentsUsedBy,
@@ -159,9 +160,12 @@ const placeCredentials = (source: string, destination: string): void => {
 /**
  * Mints a fresh, isolated environment: its own stub dir (front of a scrubbed
  * PATH) and a clean HOME holding only the credentials, so parallel suites never
- * share STUB_BINDIR, call logs, or the developer's agent config.
+ * share STUB_BINDIR, call logs, or the developer's agent config. `suite` is
+ * what the suite's eval config adds, and none for the preflight.
  */
-const isolatedEnv = (): {
+const noSuiteConfig: LoadedSuiteConfig = { env: [] };
+
+const isolatedEnv = (suite = noSuiteConfig): {
   env: Record<string, string>;
   allow: string[];
   missing: string[];
@@ -178,7 +182,12 @@ const isolatedEnv = (): {
     placeCredentials(credentials, destination);
   }
   const scrubbed = buildScrubbedPath({ stubDir });
-  const env = buildEvalEnv({ scrubbedPath: scrubbed.path, stubDir, homeDir });
+  const env = buildEvalEnv({
+    contributors: suite.env,
+    homeDir,
+    scrubbedPath: scrubbed.path,
+    stubDir,
+  });
   if (process.platform === 'win32') {
     const bashDir = scrubbed.allow.find(dir =>
       existsSync(path.join(dir, 'bash.exe')),
@@ -302,6 +311,7 @@ const suiteSteps = (name: string): SuiteRunSteps => ({
     [path.join(import.meta.dirname, 'run-evals.ts'), name, ...passthrough],
     { cwd: root, env },
   ),
+  loadConfig: async suiteName => loadSuiteConfig(root, suiteName),
   mintWorkspace: () => mintDir('skills-eval-ws-'),
   populateWorkspace,
   progress: (line) => {

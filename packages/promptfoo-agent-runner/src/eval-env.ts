@@ -4,10 +4,10 @@
  * Kept apart from scrubbed-path.ts, which narrows PATH: this decides every
  * other variable, and takes the narrowed PATH as given.
  */
-import path from 'node:path';
 import { resolveRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import { hermeticGitConfig } from '@gtbuchanan/git-fixtures/hermetic-git';
 import type { EvalAgent } from '@gtbuchanan/promptfoo-agent/eval-agent';
+import type { EnvContributor } from '@gtbuchanan/promptfoo-agent/suite-config';
 import { evalAgents } from './agents.ts';
 import { miseShimsDir } from './mise-shims.ts';
 import { agentExecutable } from './scrubbed-path.ts';
@@ -45,55 +45,66 @@ const networkVars = [
 const winDrivePrefixLength = 2;
 
 /**
- * GH_REAL, naming the real gh, where the caller has one.
- *
- * gh stays shadowed on the scrubbed PATH, so an agent's `gh` always reaches a
- * double. A double that hands calls on to the real gh, against a fake GitHub,
- * finds it here instead: the first gh on the caller's PATH outside mise's
- * shims, which is mise's pinned one wherever mise is active, unless the caller
- * names one outright.
+ * The real binary for `name` on `sourceEnv`'s PATH, past the doubles and
+ * mise's shims: a shim is mise itself, which cannot start under the bare
+ * environment a double gives the tool. Where mise has the tool active, its
+ * pinned binary already comes before the shims.
  */
-const realGhVar = (sourceEnv: NodeJS.ProcessEnv): Record<string, string> => {
+const realToolIn = (sourceEnv: NodeJS.ProcessEnv) => (name: string): string | undefined => {
   const shims = miseShimsDir(sourceEnv, process.platform);
-  const realGh = sourceEnv['GH_REAL'] ??
-    resolveRealTool('gh', sourceEnv, shims === undefined ? [] : [shims]);
-  return realGh === undefined ? {} : { GH_REAL: realGh };
+  return resolveRealTool(name, sourceEnv, shims === undefined ? [] : [shims]);
 };
 
 /**
- * Constructs the eval env from scratch (allowlist), rather than inheriting the
- * caller's. Only OS plumbing, auth/network config, PATH/STUB_BINDIR, and a clean
- * HOME go in — so behavioral vars from the surrounding session never reach the
- * eval agent. Policy-free: nothing here depends on which tools are admitted.
- *
- * Git's config files sit outside that allowlist: it reads a system config from
- * a path it compiled in, and Git for Windows ships one naming a credential
- * helper. Left readable, a `git push` to a live remote would authenticate as
- * the developer, so the agent's git reads its repository's config and nothing
- * else.
+ * The variables `contributors` add. A contributor sees only the caller
+ * variables it declared, and may not set one in `taken`: what the runner sets
+ * is the isolation, and a suite does not get to move it.
  */
-export const buildEvalEnv = ({
+const contributedEnv = (
+  contributors: readonly EnvContributor[],
+  context: {
+    readonly homeDir: string;
+    readonly sourceEnv: NodeJS.ProcessEnv;
+    readonly taken: ReadonlySet<string>;
+  },
+): Record<string, string> => {
+  const realTool = realToolIn(context.sourceEnv);
+  const added = contributors.flatMap((contributor) => {
+    const source = Object.fromEntries(
+      contributor.reads.map(name => [name, context.sourceEnv[name]]),
+    );
+    return Object.entries(contributor.env({ homeDir: context.homeDir, realTool, source }));
+  });
+  const clash = added.find(([name]) => context.taken.has(name));
+  if (clash !== undefined)
+    throw new Error(`a suite's eval config may not set ${clash[0]}: the runner sets it`);
+
+  return Object.fromEntries(added);
+};
+
+interface EvalEnvOptions {
+  readonly scrubbedPath: string;
+  readonly stubDir: string;
+  readonly homeDir: string;
+  readonly sourceEnv?: NodeJS.ProcessEnv;
+  readonly agents?: readonly EvalAgent[];
+  readonly contributors?: readonly EnvContributor[];
+}
+
+/**
+ * What the runner itself puts in the eval env; see {@link buildEvalEnv}.
+ */
+const runnerEnv = ({
   scrubbedPath,
   stubDir,
   homeDir,
   sourceEnv = process.env,
   agents = evalAgents,
-}: {
-  scrubbedPath: string;
-  stubDir: string;
-  homeDir: string;
-  sourceEnv?: NodeJS.ProcessEnv;
-  agents?: readonly EvalAgent[];
-}): Record<string, string> => {
+}: EvalEnvOptions): Record<string, string> => {
   const env: Record<string, string> = {
     ...hermeticGitConfig,
     ...Object.fromEntries(agents.map(({ executable }) =>
       [executable.envVar, agentExecutable(executable, sourceEnv)])),
-    ...realGhVar(sourceEnv),
-    /* An agent can run GH_REAL itself, past the double. Left to its default,
-       gh on Windows reads its config from APPDATA, which is passed on below,
-       and finds the developer's login there. */
-    GH_CONFIG_DIR: path.join(homeDir, '.config', 'gh'),
     HOME: homeDir,
     PATH: scrubbedPath,
     STUB_BINDIR: stubDir,
@@ -112,4 +123,30 @@ export const buildEvalEnv = ({
     env['HOMEPATH'] = homeDir.slice(winDrivePrefixLength);
   }
   return env;
+};
+
+/**
+ * Constructs the eval env from scratch (allowlist), rather than inheriting the
+ * caller's. Only OS plumbing, auth/network config, PATH/STUB_BINDIR, and a clean
+ * HOME go in — so behavioral vars from the surrounding session never reach the
+ * eval agent. Policy-free: nothing here depends on which tools are admitted.
+ *
+ * Git's config files sit outside that allowlist: it reads a system config from
+ * a path it compiled in, and Git for Windows ships one naming a credential
+ * helper. Left readable, a `git push` to a live remote would authenticate as
+ * the developer, so the agent's git reads its repository's config and nothing
+ * else.
+ *
+ * Whatever a suite's tools need beyond that, its eval config contributes; see
+ * {@link EnvContributor}.
+ */
+export const buildEvalEnv = (options: EvalEnvOptions): Record<string, string> => {
+  const env = runnerEnv(options);
+  const added = contributedEnv(options.contributors ?? [], {
+    homeDir: options.homeDir,
+    sourceEnv: options.sourceEnv ?? process.env,
+    taken: new Set(Object.keys(env)),
+  });
+
+  return { ...env, ...added };
 };

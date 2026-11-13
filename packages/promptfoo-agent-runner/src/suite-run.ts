@@ -69,7 +69,7 @@ const perTestStreamer = (
  * without launching.
  */
 export const runSuite = async (name: string, steps: SuiteRunSteps): Promise<SuiteResult> => {
-  const setup = setUpSuite(name, steps);
+  const setup = await setUpSuite(name, steps);
   if (setup.kind === 'failed')
     return { code: failedExitCode, name, out: setup.out, workspace: setup.workspace };
 

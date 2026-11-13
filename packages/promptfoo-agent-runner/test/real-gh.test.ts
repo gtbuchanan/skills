@@ -12,7 +12,7 @@ import { chmodSync, mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } 
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { buildEvalEnv } from '#src/scrubbed-path.ts';
+import { buildEvalEnv } from '#src/eval-env.ts';
 
 /**
  * rwxr-xr-x, so the stand-in gh is found as an executable.

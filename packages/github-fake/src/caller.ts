@@ -3,26 +3,24 @@
  *
  * HTTP carries no working directory and no argv, so the token is the one
  * channel from a gh call to the fake. It names the world the call is answered
- * from, and the call and run a refusal is recorded against, so a refusal lands
- * beside the call that caused it rather than in the answer the agent reads.
+ * from, and the call a refusal is reported against, so a refusal lands beside
+ * the call that caused it rather than in the answer the agent reads.
  *
  * Encoded rather than joined with a separator, because argv may hold anything.
  *
- * Unsigned, because anything that reaches the fake's port can mint one. What
- * keeps that harmless is that a token names a run, never a path: the fake
- * finds the run's log itself, so a forged token can at most add a refusal to
- * some run's log.
+ * Unsigned, because anything that reaches the fake's port can mint one. The
+ * fake acts on nothing in it but the world key; the context is the host's,
+ * handed back with each refusal for the host to check before acting on it.
  */
 import * as v from 'valibot';
 
-/**
- * A run id: one path segment, so the log it names stays in the log directory.
- */
-const RunIdSchema = v.pipe(v.string(), v.regex(/^[\w\-]+$/v));
-
 const CallerSchema = v.object({
   argv: v.array(v.string()),
-  run: v.optional(RunIdSchema),
+  /**
+   * Whatever the host attaches to a call to find it again, such as the run
+   * that made it. The fake hands it back with a refusal and never reads it.
+   */
+  context: v.optional(v.string()),
   world: v.string(),
 });
 

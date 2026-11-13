@@ -14,17 +14,14 @@
  *
  * What the fake cannot answer it refuses twice over. gh gets an error GitHub
  * itself could send, so nothing an agent reads says it is talking to a
- * double. The calling run's log gets the refusal, naming the field or route,
- * beside the call that reached it, which is where a suite reports what its
- * doubles refused. The caller and its run travel in the token gh sends; see
- * caller.ts.
+ * double. The host gets the refusal, naming the field or route, with the
+ * call that reached it, and decides where it goes. The caller travels in the
+ * token gh sends; see caller.ts.
  */
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { text } from 'node:stream/consumers';
-import { runLogPath } from '@gtbuchanan/cli-doubles/run-log';
-import { appendJsonl } from '@gtbuchanan/cli-doubles/stub';
 import {
   GraphQLError,
   OverlappingFieldsCanBeMergedRule,
@@ -51,12 +48,24 @@ export interface FakeGitHub {
   readonly port: number;
 }
 
+/**
+ * Why the fake could not answer a request, and who sent it.
+ */
+export interface Refusal {
+  /**
+   * The caller the request's token named, or `undefined` for a request that
+   * carried none gh would have sent.
+   */
+  readonly caller: Caller | undefined;
+  readonly reason: string;
+}
+
 export interface FakeGitHubOptions {
   /**
-   * Where run logs are kept, read each time a refusal is recorded:
-   * `STUB_LOG_DIR` unless given. Unset, refusals are recorded nowhere.
+   * Called with each refusal once its request is answered. Left out,
+   * refusals go nowhere.
    */
-  readonly logDir?: () => string | undefined;
+  readonly onRefusal?: (refusal: Refusal) => void;
   /**
    * The world a caller names, or `undefined` for a key naming none.
    */
@@ -298,7 +307,7 @@ const answer = async (
   const world = caller === undefined ? undefined : options.worlds(caller.world);
   if (world === undefined) {
     /* A token naming a world that does not exist is the suite's mistake, and
-       the agent sees only an auth failure, so the run log says which. */
+       the agent sees only an auth failure, so the refusal says which. */
     if (caller !== undefined) refusals.push(`no world named ${caller.world}`);
     return {
       body: { documentation_url: 'https://docs.github.com/rest', message: 'Bad credentials' },
@@ -310,21 +319,6 @@ const answer = async (
   return method === 'POST' && url.pathname === '/graphql'
     ? answerGraphql(body, world, refusals)
     : answerRest({ body, method, path: url.pathname }, world, refusals);
-};
-
-/**
- * Records each refusal in the caller's run log, the way a stub records its
- * own. A caller outside a run records nothing, as a stub outside one does.
- */
-const recordRefusals = (
-  caller: Caller | undefined,
-  refusals: Refusals,
-  options: FakeGitHubOptions,
-): void => {
-  const logDir = (options.logDir ?? (() => process.env['STUB_LOG_DIR']))();
-  if (logDir === undefined || logDir === '' || caller?.run === undefined) return;
-  for (const refusal of refusals)
-    appendJsonl(runLogPath(logDir, caller.run), { argv: caller.argv, cmd: 'gh', refusal });
 };
 
 /**
@@ -356,7 +350,7 @@ const respond = async (
     refusals.push(`fault answering ${target.method} ${target.url.pathname}: ${String(error)}`);
     send(res, serverError);
   }
-  recordRefusals(caller, refusals, options);
+  for (const reason of refusals) options.onRefusal?.({ caller, reason });
 };
 
 export const startFakeGitHub = async (options: FakeGitHubOptions): Promise<FakeGitHub> => {

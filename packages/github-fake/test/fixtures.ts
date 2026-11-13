@@ -8,23 +8,24 @@
  * PATH reaches gh only through shims names it in `GH_REAL`.
  */
 import { spawn } from 'node:child_process';
-import { existsSync, mkdtempSync } from 'node:fs';
+import { mkdtempSync } from 'node:fs';
 import { request } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { readRefusals } from '@gtbuchanan/cli-doubles/calls';
 import { resolveRealTool } from '@gtbuchanan/cli-doubles/real-tool';
-import { runLogPath } from '@gtbuchanan/cli-doubles/run-log';
-import { vi } from 'vitest';
 import { callerToken } from '@gtbuchanan/github-fake/caller';
 import { fakeGhEnv } from '@gtbuchanan/github-fake/gh-env';
 import { startFakeGitHub } from '@gtbuchanan/github-fake/server';
+import type { Refusal } from '@gtbuchanan/github-fake/server';
 import { GitHubError } from '@gtbuchanan/github-fake/world';
 import type { World } from '@gtbuchanan/github-fake/world';
 
 const gh = process.env['GH_REAL'] ?? resolveRealTool('gh') ?? 'gh';
 
-const run = 'run-1';
+/**
+ * What the host attaches to each call, and the fake hands back with a refusal.
+ */
+const context = 'run-1';
 
 /**
  * How long one gh call may take before it is killed: far longer than any
@@ -140,15 +141,28 @@ const worlds: Readonly<Record<string, World>> = {
 };
 
 /**
- * The reasons the fake recorded in a test's run log.
+ * A fake serving {@link worlds} that keeps every refusal it hands its host.
  */
-const refusalsIn = (dir: string): readonly string[] => {
-  const log = runLogPath(dir, run);
-  return existsSync(log) ? readRefusals(log, 'gh').map(refused => refused.reason) : [];
+const startCollecting = async (): Promise<{
+  readonly fake: Awaited<ReturnType<typeof startFakeGitHub>>;
+  readonly refused: readonly Refusal[];
+}> => {
+  const refused: Refusal[] = [];
+  const fake = await startFakeGitHub({
+    onRefusal: (refusal) => {
+      refused.push(refusal);
+    },
+    worlds: key => worlds[key],
+  });
+  return { fake, refused };
 };
 
 export interface Run {
+  /**
+   * The reasons the fake refused for, in the order it refused.
+   */
   readonly refusals: readonly string[];
+  readonly refused: readonly Refusal[];
   readonly status: number | undefined;
   readonly stderr: string;
   readonly stdout: string;
@@ -157,15 +171,9 @@ export interface Run {
 export interface Against {
   readonly args: readonly string[];
   /**
-   * Whether the call is made inside a run, so the fake has a log to record a
-   * refusal in.
+   * Whether the host attaches a context to the call.
    */
-  readonly inRun?: boolean;
-  /**
-   * How the fake learns where run logs go: from its options, or from
-   * `STUB_LOG_DIR`, as it does when a suite hosts it.
-   */
-  readonly logDirFrom?: 'environment' | 'options';
+  readonly withContext?: boolean;
   readonly world: string;
 }
 
@@ -177,16 +185,12 @@ export interface Against {
  */
 export const ghAgainst = async ({
   args,
-  inRun = true,
-  logDirFrom = 'options',
+  withContext = true,
   world,
 }: Against): Promise<Run> => {
   const dir = mkdtempSync(path.join(tmpdir(), 'github-fake-'));
-  if (logDirFrom === 'environment') vi.stubEnv('STUB_LOG_DIR', dir);
-  const fake = await startFakeGitHub(logDirFrom === 'environment'
-    ? { worlds: key => worlds[key] }
-    : { logDir: () => dir, worlds: key => worlds[key] });
-  const caller = inRun ? { argv: [...args], run, world } : { argv: [...args], world };
+  const { fake, refused } = await startCollecting();
+  const caller = withContext ? { argv: [...args], context, world } : { argv: [...args], world };
   try {
     const child = spawn(gh, [...args], {
       env: {
@@ -209,7 +213,13 @@ export const ghAgainst = async ({
       child.on('close', resolve);
     });
 
-    return { refusals: refusalsIn(dir), status: status ?? undefined, stderr, stdout };
+    return {
+      refusals: refused.map(refusal => refusal.reason),
+      refused,
+      status: status ?? undefined,
+      stderr,
+      stdout,
+    };
   } finally {
     await fake.close();
   }
@@ -228,12 +238,13 @@ export interface Proxied {
 export interface ProxiedReply {
   readonly body: string;
   readonly refusals: readonly string[];
+  readonly refused: readonly Refusal[];
   readonly status: number;
 }
 
 /**
- * Sends one plain-HTTP request through the fake as its proxy, inside a run,
- * and reads back what it answered and recorded.
+ * Sends one plain-HTTP request through the fake as its proxy, and reads back
+ * what it answered and refused.
  *
  * Direct rather than through gh, for requests gh will not make: plain HTTP to
  * a host other than `github.localhost`, and request bodies gh never sends.
@@ -244,11 +255,11 @@ export const proxied = async ({
   signed = true,
   url,
 }: Proxied): Promise<ProxiedReply> => {
-  const dir = mkdtempSync(path.join(tmpdir(), 'github-fake-'));
-  const fake = await startFakeGitHub({ logDir: () => dir, worlds: key => worlds[key] });
-  const token = callerToken({ argv: ['api'], run, world: 'rate-limiter' });
+  const { fake, refused } = await startCollecting();
+  const token = callerToken({ argv: ['api'], context, world: 'rate-limiter' });
   try {
-    const reply = await new Promise<Omit<ProxiedReply, 'refusals'>>((resolve, reject) => {
+    type Reply = Omit<ProxiedReply, 'refusals' | 'refused'>;
+    const reply = await new Promise<Reply>((resolve, reject) => {
       const outgoing = request({
         headers: {
           ...(signed && { authorization: `token ${token}` }),
@@ -271,7 +282,7 @@ export const proxied = async ({
       outgoing.end(body);
     });
 
-    return { ...reply, refusals: refusalsIn(dir) };
+    return { ...reply, refusals: refused.map(refusal => refusal.reason), refused };
   } finally {
     await fake.close();
   }

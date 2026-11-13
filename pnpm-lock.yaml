@@ -922,9 +922,6 @@ importers:
 
   packages/github-fake:
     dependencies:
-      '@gtbuchanan/cli-doubles':
-        specifier: workspace:*
-        version: link:../cli-doubles
       graphql:
         specifier: 'catalog:'
         version: 17.1.0
@@ -938,6 +935,9 @@ importers:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
         version: 2.0.0(skills-npm@4.1.0)(skills@1.7.6)(turbo@2.11.10)(typescript@6.0.3)
+      '@gtbuchanan/cli-doubles':
+        specifier: workspace:*
+        version: link:../cli-doubles
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.6.0(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.72.1(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.1.0)

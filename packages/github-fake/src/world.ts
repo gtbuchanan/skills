@@ -13,7 +13,7 @@ import { GraphQLError } from 'graphql';
  * resolve to a PullRequest", which a world throws to send it as written.
  *
  * Anything else a world throws is a fault in the world: gh gets the error
- * GitHub sends when it fails, and the run log gets the fault.
+ * GitHub sends when it fails, and the host hears of the fault.
  */
 export interface GitHubErrorOptions {
   /**

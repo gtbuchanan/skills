@@ -4,8 +4,8 @@
  *
  * The fake exists so gh can be the thing that formats, validates and exits,
  * so a test that called the fake directly would test the half nobody relies
- * on. Each case runs gh against a fake started for it alone, with a run log of
- * its own.
+ * on. Each case runs gh against a fake started for it alone, keeping the
+ * refusals it hands back.
  *
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
@@ -26,6 +26,7 @@ test('a field the world models is answered', async ({ expect }) => {
 
   expect(result).toStrictEqual({
     refusals: [],
+    refused: [],
     status: 0,
     stderr: '',
     stdout: '{"title":"Add the rate limiter"}\n',
@@ -100,21 +101,29 @@ test('a field the world does not model is recorded as refused', async ({ expect 
   expect(result.refusals).toStrictEqual(['no model for GraphQL field PullRequest.files']);
 });
 
-test('a refusal is recorded under STUB_LOG_DIR by default', async ({ expect }) => {
-  // A suite hosting the fake names the log directory the way it does for stubs.
+test('a refusal names the call that reached it', async ({ expect }) => {
+  // The host files a refusal beside the call that caused it, by the context it attached.
+  const result = await ghAgainst({ args: viewUnmodelled, world: 'rate-limiter' });
+
+  expect(result.refused).toStrictEqual([{
+    caller: { argv: viewUnmodelled, context: 'run-1', world: 'rate-limiter' },
+    reason: 'no model for GraphQL field PullRequest.files',
+  }]);
+});
+
+test('a refusal from a call the host attached no context to names a caller without one', async ({
+  expect,
+}) => {
   const result = await ghAgainst({
     args: viewUnmodelled,
-    logDirFrom: 'environment',
+    withContext: false,
     world: 'rate-limiter',
   });
 
-  expect(result.refusals).toStrictEqual(['no model for GraphQL field PullRequest.files']);
-});
-
-test('a refusal outside a run is recorded nowhere', async ({ expect }) => {
-  const result = await ghAgainst({ args: viewUnmodelled, inRun: false, world: 'rate-limiter' });
-
-  expect(result.refusals).toStrictEqual([]);
+  expect(result.refused).toStrictEqual([{
+    caller: { argv: viewUnmodelled, world: 'rate-limiter' },
+    reason: 'no model for GraphQL field PullRequest.files',
+  }]);
 });
 
 test('a REST route the world models is answered', async ({ expect }) => {

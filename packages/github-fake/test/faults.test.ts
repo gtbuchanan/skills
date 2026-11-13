@@ -3,7 +3,7 @@
  * real gh.
  *
  * A world's mistake is the double's, not the caller's, so it reaches gh as
- * the error GitHub sends when it fails and reaches the run log as a fault. An
+ * the error GitHub sends when it fails and reaches the host as a fault. An
  * error the world means to send, as GitHub would, goes through as written.
  *
  * `expect` comes from the test context rather than the import, so the shared

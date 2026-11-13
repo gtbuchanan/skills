@@ -4,14 +4,17 @@ A fake GitHub API for the eval suites. Instead of faking the `gh` command, the s
 
 ## Running gh against the fake GitHub API
 
-Start the server with `startFakeGitHub`, giving it a way to look up a world by name. Then run `gh` with the environment variables from `fakeGhEnv`, which send its requests to the server and tell the server which world to answer from.
+Start the server with `startFakeGitHub`, giving it a way to look up a world by name and somewhere to send the calls it refuses. Then run `gh` with the environment variables from `fakeGhEnv`, which send its requests to the server and tell the server which world to answer from.
 
 ```ts
-const fake = await startFakeGitHub({ worlds: (key) => worlds.get(key) });
+const fake = await startFakeGitHub({
+  onRefusal: (refusal) => refusals.push(refusal),
+  worlds: (key) => worlds.get(key),
+});
 const env = {
   ...startupEnv,
   ...fakeGhEnv({
-    caller: { argv, run, world: 'merge-stacked' },
+    caller: { argv, context: runId, world: 'merge-stacked' },
     dir,
     port: fake.port,
   }),
@@ -50,9 +53,9 @@ If a world throws anything else, the server treats it as a bug in the world.
 When the server can't answer a request, it does two things:
 
 1. It sends `gh` the same vague error GitHub sends when something breaks on its end. The agent being tested never sees anything suggesting GitHub is fake.
-1. It writes the real reason, such as which field or route was missing, to the test run's log next to the command that caused it. A suite reports these alongside its results, the same way it reports what its other stand-ins couldn't handle.
+1. It passes the real reason, such as which field or route was missing, to your `onRefusal` with the command that caused it. What happens next is up to you: a suite might write it to a log and report it alongside its results.
 
-The server can only write to the log when the command ran as part of a test run, and only into the directory named by `STUB_LOG_DIR`.
+Each refusal carries the `context` you gave `fakeGhEnv`, so you can tell which run made the call. The fake never reads `context`, and anything that can reach its port can send any value, so check it before you use it to build a file path.
 
 ## Refreshing the vendored GitHub schema
 

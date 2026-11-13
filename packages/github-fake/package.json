@@ -19,13 +19,13 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
-    "@gtbuchanan/cli-doubles": "workspace:*",
     "graphql": "catalog:",
     "valibot": "catalog:"
   },
   "devDependencies": {
     "@faker-js/faker": "catalog:",
     "@gtbuchanan/cli": "catalog:",
+    "@gtbuchanan/cli-doubles": "workspace:*",
     "@gtbuchanan/eslint-config": "catalog:",
     "@gtbuchanan/tsconfig": "catalog:",
     "@gtbuchanan/vitest-config": "catalog:",

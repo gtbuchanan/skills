@@ -49,6 +49,16 @@ test('a request with no token is refused as bad credentials', async ({ expect })
   expect(result.status).toBe(401);
 });
 
+test('a refusal of a request with no token names no caller', async ({ expect }) => {
+  // The host still hears of it, and decides what a refusal from nobody is worth.
+  const result = await proxied({ signed: false, url: foreignUrl });
+
+  expect(result.refused).toStrictEqual([{
+    caller: undefined,
+    reason: 'request to a host other than api.github.localhost: example.com',
+  }]);
+});
+
 const unparsedQuery = ['api', 'graphql', '-f', 'query={ viewer {'];
 
 test('a query that does not parse is answered as a syntax error', async ({ expect }) => {

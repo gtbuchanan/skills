@@ -18,7 +18,7 @@ import type { Caller } from './caller.ts';
 
 export interface FakeGhEnvOptions {
   /**
-   * The call, its run and the world it is answered from.
+   * The call, the context its host attaches, and the world it is answered from.
    */
   readonly caller: Caller;
   /**

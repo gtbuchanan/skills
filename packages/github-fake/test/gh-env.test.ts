@@ -15,7 +15,7 @@ import { callerOf } from '@gtbuchanan/github-fake/caller';
 import { fakeGhEnv } from '@gtbuchanan/github-fake/gh-env';
 
 const dir = path.join('runs', 'run-1');
-const caller = { argv: ['pr', 'view', '7'], run: 'run-1', world: 'merge-stacked' };
+const caller = { argv: ['pr', 'view', '7'], context: 'run-1', world: 'merge-stacked' };
 const env = fakeGhEnv({ caller, dir, port: 8766 });
 
 test('gh is pointed at the local GitHub host', ({ expect }) => {

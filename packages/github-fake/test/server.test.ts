@@ -1,47 +1,42 @@
 /*
- * Tests for how the fake GitHub answers from a world, driven through the real
- * gh.
+ * Tests for how the fake GitHub answers from a world.
  *
- * The fake exists so gh can be the thing that formats, validates and exits,
- * so a test that called the fake directly would test the half nobody relies
- * on. Each case runs gh against a fake started for it alone, keeping the
- * refusals it hands back.
+ * Each case sends the request gh would send straight to the fake, and checks
+ * what it answered and what it handed its host. What gh makes of an answer is
+ * gh's, and the slow tier runs gh itself.
  *
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
- *
- * @module-tag slow
  */
 import { test } from 'vitest';
-import { ghAgainst } from './fixtures.ts';
+import { answered, askedArgv, errorsOf, githubBug, graphql, restUrl } from './fixtures.ts';
 
-const viewTitle = ['pr', 'view', '7', '--json', 'title'];
-const viewUnmodelled = ['pr', 'view', '7', '--json', 'files'];
-const unmodelledRoute = ['api', 'user'];
-const faultyRoute = ['api', 'repos/acme/widgets/fault'];
-const unserializableRoute = ['api', 'repos/acme/widgets/unserializable'];
+/**
+ * A query for pull request 7 of acme/widgets, selecting `fields`.
+ */
+const pullRequest = (fields: string): string => graphql(
+  `{ repository(owner: "acme", name: "widgets") { pullRequest(number: 7) { ${fields} } } }`,
+);
+
+const unmodelled = pullRequest('files(first: 1) { nodes { path } }');
 
 test('a field the world models is answered', async ({ expect }) => {
-  const result = await ghAgainst({ args: viewTitle, world: 'rate-limiter' });
+  const answer = await answered({ body: pullRequest('title') });
 
-  expect(result).toStrictEqual({
-    refusals: [],
-    refused: [],
-    status: 0,
-    stderr: '',
-    stdout: '{"title":"Add the rate limiter"}\n',
+  expect(answer.body).toStrictEqual({
+    data: { repository: { pullRequest: { title: 'Add the rate limiter' } } },
   });
 });
 
 test('a field the world models as undefined is answered as null', async ({ expect }) => {
   /* GitHub sends explicit nulls, and a world states one without breaking the
      no-null rule. */
-  const result = await ghAgainst({
-    args: ['pr', 'view', '7', '--json', 'milestone'],
-    world: 'rate-limiter',
-  });
+  const answer = await answered({ body: pullRequest('milestone { title }') });
 
-  expect(result.stdout).toBe('{"milestone":null}\n');
+  expect(answer.body).toStrictEqual({
+    // eslint-disable-next-line unicorn/no-null -- GitHub's answer carries a null
+    data: { repository: { pullRequest: { milestone: null } } },
+  });
 });
 
 test('a query selecting one field typed differently by union members is answered', async ({
@@ -50,63 +45,74 @@ test('a query selecting one field typed differently by union members is answered
   /* gh selects `name` from both User (String) and Team (String!) when it
      reads review requests. graphql-js refuses that by default, and GitHub
      answers it. */
-  const result = await ghAgainst({
-    args: ['pr', 'view', '7', '--json', 'reviewRequests'],
-    world: 'rate-limiter',
+  const answer = await answered({
+    body: pullRequest(
+      'reviewRequests(first: 10) { nodes { requestedReviewer { ' +
+      '... on User { name } ... on Team { name } } } }',
+    ),
   });
 
-  expect(result.status).toBe(0);
+  expect(answer.body).toStrictEqual({
+    data: {
+      repository: {
+        pullRequest: {
+          reviewRequests: {
+            nodes: [
+              { requestedReviewer: { name: 'Dana Reyes' } },
+              { requestedReviewer: { name: 'Platform' } },
+            ],
+          },
+        },
+      },
+    },
+  });
 });
 
 test('the token chooses which world answers', async ({ expect }) => {
-  const result = await ghAgainst({ args: viewTitle, world: 'tokenizer' });
+  const answer = await answered({ body: pullRequest('title'), world: 'tokenizer' });
 
-  expect(result.stdout).toBe('{"title":"Split the tokenizer"}\n');
+  expect(answer.body).toStrictEqual({
+    data: { repository: { pullRequest: { title: 'Split the tokenizer' } } },
+  });
 });
 
 test('a token naming no world is refused as bad credentials', async ({ expect }) => {
-  const result = await ghAgainst({ args: viewTitle, world: 'no-such-world' });
+  const answer = await answered({ body: pullRequest('title'), world: 'no-such-world' });
 
-  expect(result.stderr).toContain('Bad credentials');
+  expect({ body: answer.body, status: answer.status })
+    .toStrictEqual({ body: { documentation_url: 'https://docs.github.com/rest', message: 'Bad credentials' }, status: 401 });
 });
 
 test('a token naming no world is recorded as refused', async ({ expect }) => {
   // A misspelt world key otherwise reads as an auth failure and nothing else.
-  const result = await ghAgainst({ args: viewTitle, world: 'no-such-world' });
+  const answer = await answered({ body: pullRequest('title'), world: 'no-such-world' });
 
-  expect(result.refusals).toStrictEqual(['no world named no-such-world']);
-});
-
-test('a field the world does not model fails', async ({ expect }) => {
-  /* Answering null would read to an agent as "this pull request changes no
-     files", which is an answer. */
-  const result = await ghAgainst({ args: viewUnmodelled, world: 'rate-limiter' });
-
-  expect(result.status).toBe(1);
+  expect(answer.refusals).toStrictEqual(['no world named no-such-world']);
 });
 
 test('a field the world does not model fails as GitHub fails', async ({ expect }) => {
-  // Nothing the agent reads may say it is talking to a double.
-  const result = await ghAgainst({ args: viewUnmodelled, world: 'rate-limiter' });
+  /* Answering null would read to an agent as "this pull request changes no
+     files", which is an answer; and nothing the agent reads may say it is
+     talking to a double. */
+  const answer = await answered({ body: unmodelled });
 
-  expect(result.stderr).toBe(
-    'GraphQL: Something went wrong while executing your query. This may be the result of a ' +
-    'timeout, or it could be a GitHub bug. (repository.pullRequest.files)\n',
-  );
+  expect(errorsOf(answer)).toStrictEqual([
+    { message: githubBug, path: ['repository', 'pullRequest', 'files'] },
+  ]);
 });
 
 test('a field the world does not model is recorded as refused', async ({ expect }) => {
-  const result = await ghAgainst({ args: viewUnmodelled, world: 'rate-limiter' });
+  const answer = await answered({ body: unmodelled });
 
-  expect(result.refusals).toStrictEqual(['no model for GraphQL field PullRequest.files']);
+  expect(answer.refusals).toStrictEqual(['no model for GraphQL field PullRequest.files']);
 });
 
 test('a refusal names the call that reached it', async ({ expect }) => {
   // The host files a refusal beside the call that caused it, by the context it attached.
-  const result = await ghAgainst({ args: viewUnmodelled, world: 'rate-limiter' });
+  const answer = await answered({ body: unmodelled });
 
-  expect(result.refused).toStrictEqual([{
-    caller: { argv: viewUnmodelled, context: 'run-1', world: 'rate-limiter' },
+  expect(answer.refused).toStrictEqual([{
+    caller: { argv: askedArgv, context: 'run-1', world: 'rate-limiter' },
     reason: 'no model for GraphQL field PullRequest.files',
   }]);
 });
@@ -114,57 +120,51 @@ test('a refusal names the call that reached it', async ({ expect }) => {
 test('a refusal from a call the host attached no context to names a caller without one', async ({
   expect,
 }) => {
-  const result = await ghAgainst({
-    args: viewUnmodelled,
-    withContext: false,
-    world: 'rate-limiter',
-  });
+  const answer = await answered({ body: unmodelled, withContext: false });
 
-  expect(result.refused).toStrictEqual([{
-    caller: { argv: viewUnmodelled, world: 'rate-limiter' },
+  expect(answer.refused).toStrictEqual([{
+    caller: { argv: askedArgv, world: 'rate-limiter' },
     reason: 'no model for GraphQL field PullRequest.files',
   }]);
 });
 
 test('a REST route the world models is answered', async ({ expect }) => {
-  const result = await ghAgainst({
-    args: ['api', '--method', 'PUT', 'repos/acme/widgets/pulls/7/merge-async'],
-    world: 'rate-limiter',
+  const answer = await answered({
+    body: '',
+    method: 'PUT',
+    url: restUrl('/repos/acme/widgets/pulls/7/merge-async'),
   });
 
-  expect(result.stdout).toBe('{"status":"pending"}');
-});
-
-test('a REST route the world does not model fails', async ({ expect }) => {
-  const result = await ghAgainst({ args: unmodelledRoute, world: 'rate-limiter' });
-
-  expect(result.status).toBe(1);
+  expect({ body: answer.body, status: answer.status })
+    .toStrictEqual({ body: { status: 'pending' }, status: 202 });
 });
 
 test('a REST route the world does not model fails as GitHub fails', async ({ expect }) => {
   /* A server error rather than 404: gh reads a 404 as an answer in places,
      and deleting a branch that 404s counts as already deleted. */
-  const result = await ghAgainst({ args: unmodelledRoute, world: 'rate-limiter' });
+  const answer = await answered({ url: restUrl('/user') });
 
-  expect(result.stderr).toBe('gh: Server Error (HTTP 500)\n');
+  expect({ body: answer.body, status: answer.status })
+    .toStrictEqual({ body: { message: 'Server Error' }, status: 500 });
 });
 
 test('a REST route the world does not model is recorded as refused', async ({ expect }) => {
-  const result = await ghAgainst({ args: unmodelledRoute, world: 'rate-limiter' });
+  const answer = await answered({ url: restUrl('/user') });
 
-  expect(result.refusals).toStrictEqual(['no model for REST route GET /user']);
+  expect(answer.refusals).toStrictEqual(['no model for REST route GET /user']);
 });
 
 test('a world that throws answering a route fails as GitHub fails', async ({ expect }) => {
-  const result = await ghAgainst({ args: faultyRoute, world: 'rate-limiter' });
+  const answer = await answered({ url: restUrl('/repos/acme/widgets/fault') });
 
-  expect(result.stderr).toBe('gh: Server Error (HTTP 500)\n');
+  expect({ body: answer.body, status: answer.status })
+    .toStrictEqual({ body: { message: 'Server Error' }, status: 500 });
 });
 
 test('a world that throws answering a route is recorded as refused', async ({ expect }) => {
-  const result = await ghAgainst({ args: faultyRoute, world: 'rate-limiter' });
+  const answer = await answered({ url: restUrl('/repos/acme/widgets/fault') });
 
-  expect(result.refusals).toStrictEqual([
+  expect(answer.refusals).toStrictEqual([
     'fault answering GET /repos/acme/widgets/fault: Error: the world broke',
   ]);
 });
@@ -172,17 +172,18 @@ test('a world that throws answering a route is recorded as refused', async ({ ex
 test('a world answering with a body JSON cannot carry fails as GitHub fails', async ({
   expect,
 }) => {
-  const result = await ghAgainst({ args: unserializableRoute, world: 'rate-limiter' });
+  const answer = await answered({ url: restUrl('/repos/acme/widgets/unserializable') });
 
-  expect(result.stderr).toBe('gh: Server Error (HTTP 500)\n');
+  expect({ body: answer.body, status: answer.status })
+    .toStrictEqual({ body: { message: 'Server Error' }, status: 500 });
 });
 
 test('a world answering with a body JSON cannot carry is recorded as refused', async ({
   expect,
 }) => {
-  const result = await ghAgainst({ args: unserializableRoute, world: 'rate-limiter' });
+  const answer = await answered({ url: restUrl('/repos/acme/widgets/unserializable') });
 
-  expect(result.refusals).toStrictEqual([
+  expect(answer.refusals).toStrictEqual([
     'fault answering GET /repos/acme/widgets/unserializable: ' +
     'TypeError: Do not know how to serialize a BigInt',
   ]);

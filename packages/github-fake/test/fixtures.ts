@@ -1,6 +1,6 @@
 /*
- * What the fake's tests share: a world to answer from, and two ways to reach
- * a fake started for one test alone.
+ * What the fake's tests share: worlds to answer from, and two ways to reach a
+ * fake made for one test alone: asking it directly, or running gh against it.
  *
  * The real gh is `GH_REAL` where the runner or the developer names one, and the
  * first gh on PATH otherwise. A version manager's shim is not one: mise's
@@ -9,13 +9,13 @@
  */
 import { spawn } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
-import { request } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import * as v from 'valibot';
 import which from 'which';
 import { callerToken } from '@gtbuchanan/github-fake/caller';
 import { fakeGhEnv } from '@gtbuchanan/github-fake/gh-env';
-import { startFakeGitHub } from '@gtbuchanan/github-fake/server';
+import { fakeGitHub, startFakeGitHub } from '@gtbuchanan/github-fake/server';
 import type { Refusal } from '@gtbuchanan/github-fake/server';
 import { GitHubError } from '@gtbuchanan/github-fake/world';
 import type { World } from '@gtbuchanan/github-fake/world';
@@ -145,21 +145,15 @@ const worlds: Readonly<Record<string, World>> = {
 };
 
 /**
- * A fake serving {@link worlds} that keeps every refusal it hands its host.
+ * Options for a fake serving {@link worlds} that keeps every refusal it hands
+ * its host in `refused`.
  */
-const startCollecting = async (): Promise<{
-  readonly fake: Awaited<ReturnType<typeof startFakeGitHub>>;
-  readonly refused: readonly Refusal[];
-}> => {
-  const refused: Refusal[] = [];
-  const fake = await startFakeGitHub({
-    onRefusal: (refusal) => {
-      refused.push(refusal);
-    },
-    worlds: key => worlds[key],
-  });
-  return { fake, refused };
-};
+const collecting = (refused: Refusal[]) => ({
+  onRefusal: (refusal: Refusal) => {
+    refused.push(refusal);
+  },
+  worlds: (key: string) => worlds[key],
+});
 
 export interface Run {
   /**
@@ -193,7 +187,8 @@ export const ghAgainst = async ({
   world,
 }: Against): Promise<Run> => {
   const dir = mkdtempSync(path.join(tmpdir(), 'github-fake-'));
-  const { fake, refused } = await startCollecting();
+  const refused: Refusal[] = [];
+  const fake = await startFakeGitHub(collecting(refused));
   const caller = withContext ? { argv: [...args], context, world } : { argv: [...args], world };
   try {
     const child = spawn(gh, [...args], {
@@ -229,65 +224,98 @@ export const ghAgainst = async ({
   }
 };
 
-export interface Proxied {
+/**
+ * Where gh sends GraphQL for `github.localhost`.
+ */
+export const graphqlUrl = 'http://api.github.localhost/graphql';
+
+/**
+ * Where gh sends a REST call to `route` for `github.localhost`.
+ */
+export const restUrl = (route: string): string => new URL(route, graphqlUrl).href;
+
+/**
+ * A GraphQL request body as gh sends one.
+ */
+export const graphql = (query: string, extra: Readonly<Record<string, unknown>> = {}): string =>
+  JSON.stringify({ query, ...extra });
+
+export interface Asked {
   readonly body?: string;
   readonly method?: string;
   /**
    * Whether the request carries a token, as every request gh sends does.
    */
   readonly signed?: boolean;
-  readonly url: string;
+  readonly url?: string;
+  /**
+   * Whether the host attaches a context to the call.
+   */
+  readonly withContext?: boolean;
+  readonly world?: string;
 }
 
-export interface ProxiedReply {
-  readonly body: string;
+export interface Answer {
+  readonly body: unknown;
+  /**
+   * The reasons the fake refused for, in the order it refused.
+   */
   readonly refusals: readonly string[];
   readonly refused: readonly Refusal[];
   readonly status: number;
 }
 
 /**
- * Sends one plain-HTTP request through the fake as its proxy, and reads back
- * what it answered and refused.
- *
- * Direct rather than through gh, for requests gh will not make: plain HTTP to
- * a host other than `github.localhost`, and request bodies gh never sends.
+ * The argv a request's token names: the call that sent it.
  */
-export const proxied = async ({
-  body,
-  method = 'GET',
-  signed = true,
-  url,
-}: Proxied): Promise<ProxiedReply> => {
-  const { fake, refused } = await startCollecting();
-  const token = callerToken({ argv: ['api'], context, world: 'rate-limiter' });
-  try {
-    type Reply = Omit<ProxiedReply, 'refusals' | 'refused'>;
-    const reply = await new Promise<Reply>((resolve, reject) => {
-      const outgoing = request({
-        headers: {
-          ...(signed && { authorization: `token ${token}` }),
-          host: new URL(url).host,
-        },
-        host: '127.0.0.1',
-        method,
-        path: url,
-        port: fake.port,
-      }, (response) => {
-        let received = '';
-        response.on('data', (chunk: Buffer) => {
-          received += String(chunk);
-        });
-        response.on('end', () => {
-          resolve({ body: received, status: response.statusCode ?? 0 });
-        });
-      });
-      outgoing.on('error', reject);
-      outgoing.end(body);
-    });
+export const askedArgv = ['api', 'graphql'];
 
-    return { ...reply, refusals: refused.map(refusal => refusal.reason), refused };
-  } finally {
-    await fake.close();
-  }
+/**
+ * Asks a fake serving {@link worlds} one question directly, as a caller with
+ * the token gh would send, and reads back what it answered and refused.
+ */
+export const answered = async ({
+  body,
+  method = body === undefined ? 'GET' : 'POST',
+  signed = true,
+  url = graphqlUrl,
+  withContext = true,
+  world = 'rate-limiter',
+}: Asked): Promise<Answer> => {
+  const refused: Refusal[] = [];
+  const caller = withContext ? { argv: askedArgv, context, world } : { argv: askedArgv, world };
+  const response = await fakeGitHub(collecting(refused)).request(new Request(url, {
+    headers: signed ? { authorization: `token ${callerToken(caller)}` } : {},
+    method,
+    ...(body !== undefined && { body }),
+  }));
+
+  return {
+    body: JSON.parse(await response.text()),
+    refusals: refused.map(refusal => refusal.reason),
+    refused,
+    status: response.status,
+  };
 };
+
+const PathSchema = v.array(v.union([v.string(), v.number()]));
+const ErrorSchema = v.object({
+  message: v.string(),
+  path: v.optional(PathSchema),
+  type: v.optional(v.string()),
+});
+const ErrorsSchema = v.object({ errors: v.array(ErrorSchema) });
+
+/**
+ * The GraphQL errors an answer carries: each one's message, path and type.
+ */
+export const errorsOf = (answer: Answer): v.InferOutput<typeof ErrorsSchema>['errors'] =>
+  v.parse(ErrorsSchema, answer.body).errors.map(({ message, path: at, type }) =>
+    ({ message, ...(at !== undefined && { path: at }), ...(type !== undefined && { type }) }));
+
+/**
+ * What GitHub says when a query fails on its side.
+ */
+export const githubBug =
+  'Something went wrong while executing your query. This may be the result of a timeout, ' +
+  'or it could be a GitHub bug.';

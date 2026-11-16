@@ -49,6 +49,15 @@ export interface FakeGitHub {
 }
 
 /**
+ * The fake GitHub as a function from request to response, for a caller that
+ * needs no socket: a test that checks what the fake answers rather than what
+ * gh makes of it.
+ */
+export interface FakeGitHubHandler {
+  readonly request: (request: Request) => Promise<Response>;
+}
+
+/**
  * Why the fake could not answer a request, and who sent it.
  */
 export interface Refusal {
@@ -179,8 +188,8 @@ const tokenPattern = /^token (?<token>.+)$/v;
 /**
  * The caller the token gh sent names, if it names one.
  */
-const callerFrom = (req: IncomingMessage): Caller | undefined => {
-  const token = tokenPattern.exec(req.headers.authorization ?? '')?.groups?.['token'];
+const callerFrom = (headers: Headers): Caller | undefined => {
+  const token = tokenPattern.exec(headers.get('authorization') ?? '')?.groups?.['token'];
   return token === undefined ? undefined : callerOf(token);
 };
 
@@ -265,37 +274,9 @@ const answerRest = (request: RestRequest, world: World, refusals: Refusals): Res
   return serverError;
 };
 
-/**
- * The method and URL a request names.
- */
-interface Target {
-  readonly method: string;
-  readonly url: URL;
-}
-
-/**
- * Reads a request's target. Proxied requests arrive with an absolute URL;
- * anything else is resolved against its Host header.
- */
-const targetOf = (req: IncomingMessage): Target => {
-  /* v8 ignore next -- Node sets the method and URL of every request a server
-     receives, and HTTP/1.1 requires a Host header: the fallbacks are only
-     there because the types allow undefined. */
-  return { method: req.method ?? 'GET', url: new URL(req.url ?? '/', `http://${req.headers.host ?? apiHost}`) };
-};
-
-/**
- * What the fake reads from a request before answering it: who sent it, and
- * what it asks for.
- */
-interface Received {
-  readonly caller: Caller | undefined;
-  readonly target: Target;
-}
-
 const answer = async (
-  req: IncomingMessage,
-  { caller, target: { method, url } }: Received,
+  request: Request,
+  { caller, url }: { readonly caller: Caller | undefined; readonly url: URL },
   options: FakeGitHubOptions,
   refusals: Refusals,
 ): Promise<RestAnswer> => {
@@ -315,48 +296,101 @@ const answer = async (
     };
   }
 
-  const body = await text(req);
-  return method === 'POST' && url.pathname === '/graphql'
+  const body = await request.text();
+  return request.method === 'POST' && url.pathname === '/graphql'
     ? answerGraphql(body, world, refusals)
-    : answerRest({ body, method, path: url.pathname }, world, refusals);
+    : answerRest({ body, method: request.method, path: url.pathname }, world, refusals);
 };
 
 /**
- * Writes `reply`, serialized before anything is sent: a body JSON cannot
- * carry throws here, while the response can still be answered with an error
- * instead.
+ * Statuses whose response may not carry a body, such as GitHub's 204 for a
+ * deleted branch. A fetch response refuses to build one with a body.
  */
-const send = (res: ServerResponse, reply: RestAnswer): void => {
-  const body = JSON.stringify(reply.body);
-  res.writeHead(reply.status, { 'content-type': 'application/json' });
-  res.end(body);
-};
+const noContent = 204;
+const resetContent = 205;
+const notModified = 304;
+const badRequest = 400;
+const bodiless = new Set([noContent, notModified, resetContent]);
+
+/**
+ * `reply` as a response, serialized here: a body JSON cannot carry throws
+ * before anything is sent, while the request can still be answered with an
+ * error instead.
+ */
+const toResponse = (reply: RestAnswer): Response =>
+  bodiless.has(reply.status)
+    ? new Response(undefined, { status: reply.status })
+    : Response.json(reply.body, { status: reply.status });
 
 /**
  * Answers one request. Never rejects: a fault in a world is a 500, recorded
  * as a refusal, rather than a dropped connection gh retries.
  */
 const respond = async (
-  req: IncomingMessage,
-  res: ServerResponse,
+  request: Request,
+  received: { readonly caller: Caller | undefined; readonly url: URL },
   options: FakeGitHubOptions,
-): Promise<void> => {
-  const target = targetOf(req);
-  const caller = callerFrom(req);
-  const refusals: Refusals = [];
+  refusals: Refusals,
+): Promise<Response> => {
   try {
-    send(res, await answer(req, { caller, target }, options, refusals));
+    return toResponse(await answer(request, received, options, refusals));
   } catch (error) {
-    refusals.push(`fault answering ${target.method} ${target.url.pathname}: ${String(error)}`);
-    send(res, serverError);
+    refusals.push(`fault answering ${request.method} ${received.url.pathname}: ${String(error)}`);
+    return toResponse(serverError);
   }
-  for (const reason of refusals) options.onRefusal?.({ caller, reason });
+};
+
+export const fakeGitHub = (options: FakeGitHubOptions): FakeGitHubHandler => ({
+  request: async (request) => {
+    const caller = callerFrom(request.headers);
+    const refusals: Refusals = [];
+    const received = { caller, url: new URL(request.url) };
+    const response = await respond(request, received, options, refusals);
+    for (const reason of refusals) options.onRefusal?.({ caller, reason });
+    return response;
+  },
+});
+
+/**
+ * `req` as a fetch request. Proxied requests arrive with an absolute URL;
+ * anything else is resolved against its Host header.
+ */
+const asRequest = async (req: IncomingMessage): Promise<Request> => {
+  /* v8 ignore next 2 -- Node sets the method and URL of every request a server
+     receives, and HTTP/1.1 requires a Host header: the fallbacks are only
+     there because the types allow undefined. */
+  const method = req.method ?? 'GET';
+  const url = new URL(req.url ?? '/', `http://${req.headers.host ?? apiHost}`);
+  const headers = new Headers();
+  for (const [name, value] of Object.entries(req.headers))
+    if (typeof value === 'string') headers.set(name, value);
+  // A fetch request refuses a body on a GET or a HEAD, and gh sends none.
+  const hasBody = method !== 'GET' && method !== 'HEAD';
+
+  return new Request(url, { headers, method, ...(hasBody && { body: await text(req) }) });
+};
+
+/**
+ * Writes `response` back to the socket it answers.
+ */
+const send = async (res: ServerResponse, response: Response): Promise<void> => {
+  const body = await response.text();
+  res.writeHead(response.status, Object.fromEntries(response.headers));
+  res.end(body);
 };
 
 export const startFakeGitHub = async (options: FakeGitHubOptions): Promise<FakeGitHub> => {
+  const handler = fakeGitHub(options);
   const server = createServer((req, res) => {
-    // Not awaited: the listener returns nothing, and respond never rejects.
-    void respond(req, res, options);
+    /* Not awaited: the listener returns nothing. The handler never rejects, but
+       a request the fetch API refuses (a TRACE, say) never reaches it, and is
+       answered here instead. */
+    void asRequest(req)
+      .then(async request => send(res, await handler.request(request)))
+      .catch(() => {
+        if (!res.headersSent) res.writeHead(badRequest);
+        res.end();
+      });
   });
 
   /* A tunnel is gh trying to reach a real host over HTTPS. Refused, so the

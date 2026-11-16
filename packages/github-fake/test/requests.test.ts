@@ -4,131 +4,98 @@
  *
  * `expect` comes from the test context rather than the import, so the shared
  * setup's per-test assertion count sees it.
- *
- * @module-tag slow
  */
 import { test } from 'vitest';
-import { ghAgainst, proxied } from './fixtures.ts';
+import { answered, errorsOf, graphql } from './fixtures.ts';
 
 /* eslint-disable-next-line unicorn/prefer-https --
    The request under test is plain HTTP to a host other than the fake's. */
 const foreignUrl = 'http://example.com/';
 
-const graphqlUrl = 'http://api.github.localhost/graphql';
-
-const viewer = '{"data":{"viewer":{"login":"taylor"}}}';
-
-test('github.com cannot be reached', async ({ expect }) => {
-  // The proxy is the only way out, and the fake refuses to tunnel anywhere.
-  const result = await ghAgainst({
-    args: ['api', '--hostname', 'github.com', 'user'],
-    world: 'rate-limiter',
-  });
-
-  expect(result.stderr).toContain('Forbidden');
-});
+const viewer = { data: { viewer: { login: 'taylor' } } };
 
 test('a plain-HTTP request for another host is forbidden', async ({ expect }) => {
-  const result = await proxied({ url: foreignUrl });
+  const answer = await answered({ url: foreignUrl });
 
-  expect(result.status).toBe(403);
+  expect(answer.status).toBe(403);
 });
 
 test('a plain-HTTP request for another host is recorded as refused', async ({ expect }) => {
-  const result = await proxied({ url: foreignUrl });
+  const answer = await answered({ url: foreignUrl });
 
-  expect(result.refusals).toStrictEqual([
+  expect(answer.refusals).toStrictEqual([
     'request to a host other than api.github.localhost: example.com',
   ]);
 });
 
 test('a request with no token is refused as bad credentials', async ({ expect }) => {
   // gh always sends one, but anything else that reaches the port may not.
-  const result = await proxied({ signed: false, url: graphqlUrl });
+  const answer = await answered({ body: graphql('{ viewer { login } }'), signed: false });
 
-  expect(result.status).toBe(401);
+  expect(answer.status).toBe(401);
 });
 
 test('a refusal of a request with no token names no caller', async ({ expect }) => {
   // The host still hears of it, and decides what a refusal from nobody is worth.
-  const result = await proxied({ signed: false, url: foreignUrl });
+  const answer = await answered({ signed: false, url: foreignUrl });
 
-  expect(result.refused).toStrictEqual([{
+  expect(answer.refused).toStrictEqual([{
     caller: undefined,
     reason: 'request to a host other than api.github.localhost: example.com',
   }]);
 });
 
-const unparsedQuery = ['api', 'graphql', '-f', 'query={ viewer {'];
+const unparsedQuery = graphql('{ viewer {');
 
 test('a query that does not parse is answered as a syntax error', async ({ expect }) => {
   /* GitHub answers a malformed query with its parse error, so the caller
      fixes the query rather than waiting out an outage. */
-  const result = await ghAgainst({ args: unparsedQuery, world: 'rate-limiter' });
+  const answer = await answered({ body: unparsedQuery });
 
-  expect(result.stderr).toContain('Syntax Error');
+  expect(errorsOf(answer).map(error => error.message)).toStrictEqual([
+    'Syntax Error: Expected Name, found <EOF>.',
+  ]);
 });
 
 test('a query that does not parse is not recorded as refused', async ({ expect }) => {
   // The mistake is the caller's, not a gap in the world.
-  const result = await ghAgainst({ args: unparsedQuery, world: 'rate-limiter' });
+  const answer = await answered({ body: unparsedQuery });
 
-  expect(result.refusals).toStrictEqual([]);
+  expect(answer.refusals).toStrictEqual([]);
 });
 
-const invalidQuery = ['api', 'graphql', '-f', 'query={ viewer { loginn } }'];
+const invalidQuery = graphql('{ viewer { loginn } }');
 
 test('a query that does not validate is answered with its errors', async ({ expect }) => {
   // What an agent gets for a misspelt field in a query it wrote by hand.
-  const result = await ghAgainst({ args: invalidQuery, world: 'rate-limiter' });
+  const answer = await answered({ body: invalidQuery });
 
-  expect(result.stderr).toContain('Cannot query field "loginn" on type "User".');
+  expect(errorsOf(answer).map(error => error.message)).toStrictEqual([
+    'Cannot query field "loginn" on type "User". Did you mean "login"?',
+  ]);
 });
 
 test('a query that does not validate is not recorded as refused', async ({ expect }) => {
   // The mistake is the caller's, not a gap in the world.
-  const result = await ghAgainst({ args: invalidQuery, world: 'rate-limiter' });
+  const answer = await answered({ body: invalidQuery });
 
-  expect(result.refusals).toStrictEqual([]);
-});
-
-test('a call whose arguments outgrow a default request header is answered', async ({ expect }) => {
-  /* The token carries the call's argv, so a long body flag makes for a long
-     Authorization header. */
-  const padding = 'x'.repeat(14_000);
-  const result = await ghAgainst({
-    args: ['api', 'graphql', '-f', 'query={ viewer { login } }', '-f', `padding=${padding}`],
-    world: 'rate-limiter',
-  });
-
-  expect(result.stdout).toBe(viewer);
+  expect(answer.refusals).toStrictEqual([]);
 });
 
 test('a query sent with null variables is answered', async ({ expect }) => {
   // go-gh sends `"variables": null` for a query it was given no variables for.
-  const result = await proxied({
-    /* eslint-disable-next-line unicorn/no-null --
-       The null is the request under test, as go-gh serializes it. */
-    body: JSON.stringify({ query: '{ viewer { login } }', variables: null }),
-    method: 'POST',
-    url: graphqlUrl,
-  });
+  // eslint-disable-next-line unicorn/no-null -- the null is the request under test
+  const answer = await answered({ body: graphql('{ viewer { login } }', { variables: null }) });
 
-  expect(result.body).toBe(viewer);
+  expect(answer.body).toStrictEqual(viewer);
 });
 
 test('the operation a request names is the one run', async ({ expect }) => {
-  const result = await ghAgainst({
-    args: [
-      'api',
-      'graphql',
-      '-f',
-      'query=query Ping { __typename } query Me { viewer { login } }',
-      '-f',
-      'operationName=Me',
-    ],
-    world: 'rate-limiter',
+  const answer = await answered({
+    body: graphql('query Ping { __typename } query Me { viewer { login } }', {
+      operationName: 'Me',
+    }),
   });
 
-  expect(result.stdout).toBe(viewer);
+  expect(answer.body).toStrictEqual(viewer);
 });

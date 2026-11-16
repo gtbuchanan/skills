@@ -32,6 +32,13 @@ local allSteps = new Mapping<String, Step> {
     glob = List("mise.toml", "mise.tasks.toml", "package.json", "tsconfig*.json", "turbo.json")
     check = "pnpm exec gtb verify"
   }
+
+  // Each package's turbo.json lists the tags it may not depend on. Runs on
+  // every commit rather than on matching files, because a dependency added to
+  // any package can break another package's rule, and the check takes a second.
+  ["boundaries"] {
+    check = "pnpm exec gtb turbo boundaries"
+  }
 }
 
 hooks = Defaults.hooksFor(allSteps)

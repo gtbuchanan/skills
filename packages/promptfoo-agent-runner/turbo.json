@@ -1,0 +1,17 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "boundaries": {
+    "dependencies": {
+      "deny": [
+        "github"
+      ]
+    }
+  },
+  "extends": [
+    "//"
+  ],
+  "tags": [
+    "mise",
+    "promptfoo"
+  ]
+}

@@ -50,7 +50,7 @@ Don't try to model everything up front. Add a field when a test run reports that
 
 ## Sending GitHub's own errors from a world
 
-Sometimes the right answer is an error, such as asking for a pull request that doesn't exist. Throw a `GitHubError` and `gh` receives it exactly as GitHub would send it. Include GitHub's `type` when it has one, because `gh` sometimes acts on it:
+Sometimes the right answer is an error, such as asking for a pull request that doesn't exist. Throw a `GitHubError` and `gh` receives it exactly as GitHub would send it. Include GitHub's `type` when it has one, because `gh` sometimes acts on it. `type` accepts only the types `gh` reads (`GitHubErrorType`); if GitHub sends one that isn't there, it has to be added in `github-fake`:
 
 ```ts
 throw new GitHubError('Could not resolve to an Issue with the number of 7.', {

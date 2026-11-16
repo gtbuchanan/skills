@@ -15,17 +15,25 @@ import { GraphQLError } from 'graphql';
  * Anything else a world throws is a fault in the world: gh gets the error
  * GitHub sends when it fails, and the host hears of the fault.
  */
+/**
+ * GitHub's classification of an error, sent beside the message. gh branches on
+ * these three: `NOT_FOUND` to tell a missing issue from a disabled tracker,
+ * `FORBIDDEN` as an SSO or auth problem, `INSUFFICIENT_SCOPES` to name the
+ * scopes a token lacks. A type outside them is a misspelling until GitHub is
+ * seen sending it, so it fails to compile rather than quietly changing what
+ * gh does; add it here with where it was seen.
+ */
+export type GitHubErrorType = 'FORBIDDEN' | 'INSUFFICIENT_SCOPES' | 'NOT_FOUND';
+
 export interface GitHubErrorOptions {
   /**
-   * GitHub's classification of the error, sent beside the message: gh
-   * branches on it, so an issue lookup that comes back `NOT_FOUND` is retried
-   * as a pull request.
+   * Left out where GitHub sends none.
    */
-  readonly type?: string;
+  readonly type?: GitHubErrorType;
 }
 
 export class GitHubError extends GraphQLError {
-  public readonly type: string | undefined;
+  public readonly type: GitHubErrorType | undefined;
 
   public constructor(message: string, options: GitHubErrorOptions = {}) {
     super(message);

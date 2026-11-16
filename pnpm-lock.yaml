@@ -987,9 +987,6 @@ importers:
       '@gtbuchanan/cli':
         specifier: 'catalog:'
         version: 2.0.0(skills-npm@4.1.0)(skills@1.7.6)(turbo@2.11.10)(typescript@6.0.3)
-      '@gtbuchanan/cli-doubles':
-        specifier: workspace:*
-        version: link:../cli-doubles
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.6.0(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.72.1(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.1.0)
@@ -1002,6 +999,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
+      '@types/which':
+        specifier: 'catalog:'
+        version: 3.0.4
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.1.0(vitest@5.1.0)
@@ -1014,6 +1014,9 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 5.1.0(@opentelemetry/api@1.9.1)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(vite@8.2.1(@types/node@26.6.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+      which:
+        specifier: 'catalog:'
+        version: 7.0.0
 
   packages/promptfoo-agent:
     dependencies:

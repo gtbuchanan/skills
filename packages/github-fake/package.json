@@ -27,15 +27,16 @@
   "devDependencies": {
     "@faker-js/faker": "catalog:",
     "@gtbuchanan/cli": "catalog:",
-    "@gtbuchanan/cli-doubles": "workspace:*",
     "@gtbuchanan/eslint-config": "catalog:",
     "@gtbuchanan/tsconfig": "catalog:",
     "@gtbuchanan/vitest-config": "catalog:",
     "@types/node": "catalog:",
+    "@types/which": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "which": "catalog:"
   },
   "engines": {
     "node": ">=24.0.0"

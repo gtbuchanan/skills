@@ -12,7 +12,7 @@ import { mkdtempSync } from 'node:fs';
 import { request } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { resolveRealTool } from '@gtbuchanan/cli-doubles/real-tool';
+import which from 'which';
 import { callerToken } from '@gtbuchanan/github-fake/caller';
 import { fakeGhEnv } from '@gtbuchanan/github-fake/gh-env';
 import { startFakeGitHub } from '@gtbuchanan/github-fake/server';
@@ -20,7 +20,11 @@ import type { Refusal } from '@gtbuchanan/github-fake/server';
 import { GitHubError } from '@gtbuchanan/github-fake/world';
 import type { World } from '@gtbuchanan/github-fake/world';
 
-const gh = process.env['GH_REAL'] ?? resolveRealTool('gh') ?? 'gh';
+/* Only an .exe on Windows: gh is spawned without a shell, which refuses a .cmd
+   and cannot run an extensionless file. */
+const gh = process.env['GH_REAL'] ??
+  which.sync('gh', { nothrow: true, ...(process.platform === 'win32' && { pathExt: '.exe' }) }) ??
+  'gh';
 
 /**
  * What the host attaches to each call, and the fake hands back with a refusal.

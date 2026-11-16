@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./env": "./src/env.ts",
     "./hosting": "./src/hosting.ts"
   },
   "scripts": {

@@ -19,6 +19,7 @@ import {
   locateScenario,
   markerFile,
   scenarioByKey,
+  scenarioKeyAt,
   scenarioPath,
 } from '@gtbuchanan/cli-doubles/scenario';
 
@@ -98,4 +99,24 @@ test('a workspace lives under the scenarios directory, keyed by name', ({ expect
   /* The seed writes here and the checker reads here; they agree only because
      both ask this. */
   expect(scenarioPath('merge-stacked')).toBe('scenarios/merge-stacked');
+});
+
+test('a workspace names its key from a subdirectory', ({ expect }) => {
+  const { nested } = seeded('open-draft');
+
+  expect(scenarioKeyAt(nested)).toBe('open-draft');
+});
+
+test('a workspace names its key without the suite defining it', ({ expect }) => {
+  /* For a double that hands the key on, such as to a fake that holds the
+     worlds, rather than answering from the suite's scenarios itself. */
+  const { nested } = seeded('defined-elsewhere');
+
+  expect(scenarioKeyAt(nested)).toBe('defined-elsewhere');
+});
+
+test('no key is named outside every workspace', ({ expect }) => {
+  const outside = mkdtempSync(path.join(tmpdir(), 'unseeded-'));
+
+  expect(scenarioKeyAt(outside)).toBeUndefined();
 });

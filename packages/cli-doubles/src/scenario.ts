@@ -74,6 +74,29 @@ export const scenarioByKey = <TScenario extends Keyed>(
 };
 
 /**
+ * The workspace containing `start` and the key its marker names, or
+ * `undefined` when no workspace does.
+ */
+const markedAt = (start: string): { readonly dir: string; readonly key: string } | undefined => {
+  let dir = path.resolve(start);
+  for (;;) {
+    const marker = path.join(dir, markerFile);
+    if (existsSync(marker)) return { dir, key: readFileSync(marker, 'utf8').trim() };
+
+    const parent = path.dirname(dir);
+    if (parent === dir) return undefined;
+    dir = parent;
+  }
+};
+
+/**
+ * The key of the workspace containing `start`, or `undefined` when no
+ * workspace does. For a double that hands the key on rather than answering
+ * from the suite's scenarios itself.
+ */
+export const scenarioKeyAt = (start: string): string | undefined => markedAt(start)?.key;
+
+/**
  * The scenario whose workspace contains `start`, or `undefined` when no
  * workspace does.
  */
@@ -81,19 +104,11 @@ export const findScenario = <TScenario extends Keyed>(
   scenarios: readonly TScenario[],
   start: string,
 ): Located<TScenario> | undefined => {
-  let dir = path.resolve(start);
-  for (;;) {
-    const marker = path.join(dir, markerFile);
-    if (existsSync(marker))
-      return {
-        dir,
-        scenario: scenarioByKey(scenarios, readFileSync(marker, 'utf8').trim()),
-      };
+  const marked = markedAt(start);
 
-    const parent = path.dirname(dir);
-    if (parent === dir) return undefined;
-    dir = parent;
-  }
+  return marked === undefined
+    ? undefined
+    : { dir: marked.dir, scenario: scenarioByKey(scenarios, marked.key) };
 };
 
 /**

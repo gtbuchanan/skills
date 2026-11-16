@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./body": "./src/body.ts"
+    "./body": "./src/body.ts",
+    "./refusals": "./src/refusals.ts"
   },
   "scripts": {
     "coverage:codecov:upload": "gtb task coverage:codecov:upload",
@@ -12,6 +13,10 @@
     "test:vitest:fast": "gtb task test:vitest:fast",
     "test:vitest:slow": "gtb task test:vitest:slow",
     "typecheck:ts": "gtb task typecheck:ts"
+  },
+  "dependencies": {
+    "@gtbuchanan/cli-doubles": "workspace:*",
+    "@gtbuchanan/github-fake": "workspace:*"
   },
   "devDependencies": {
     "@gtbuchanan/cli": "catalog:",

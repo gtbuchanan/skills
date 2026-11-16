@@ -31,7 +31,7 @@ import { requireRealTool } from '@gtbuchanan/cli-doubles/real-tool';
 import { locateScenario } from '@gtbuchanan/cli-doubles/scenario';
 import { argv, emit, joined, logCallToRun } from '@gtbuchanan/cli-doubles/stub';
 import { branchAt } from '@gtbuchanan/git-fixtures/checkout';
-import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
+import { stdinBody } from '@gtbuchanan/github-cli-spy/body';
 import { checksAnswer } from '@gtbuchanan/github-cli-stub/checks';
 import { prRecords, toWireComment } from '@gtbuchanan/github-cli-stub/pr-records';
 import {

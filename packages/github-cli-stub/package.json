@@ -3,7 +3,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./body": "./src/body.ts",
     "./checks": "./src/checks.ts",
     "./pr-records": "./src/pr-records.ts",
     "./pulls": "./src/pulls.ts",

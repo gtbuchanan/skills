@@ -10,7 +10,7 @@ import {
   logCallToRun,
   runLogInFlight,
 } from '@gtbuchanan/cli-doubles/stub';
-import { stdinBody } from '@gtbuchanan/github-cli-stub/body';
+import { stdinBody } from '@gtbuchanan/github-cli-spy/body';
 import { scenarios } from '#src/scenarios.ts';
 
 // Undefined for a call made outside every scenario, which is refused below.

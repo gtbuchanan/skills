@@ -303,12 +303,23 @@ const answer = async (
 };
 
 /**
+ * Statuses whose response may not carry a body, such as GitHub's 204 for a
+ * deleted branch. A fetch response refuses to build one with a body.
+ */
+const noContent = 204;
+const resetContent = 205;
+const notModified = 304;
+const bodiless = new Set([noContent, notModified, resetContent]);
+
+/**
  * `reply` as a response, serialized here: a body JSON cannot carry throws
  * before anything is sent, while the request can still be answered with an
  * error instead.
  */
 const toResponse = (reply: RestAnswer): Response =>
-  Response.json(reply.body, { status: reply.status });
+  bodiless.has(reply.status)
+    ? new Response(undefined, { status: reply.status })
+    : Response.json(reply.body, { status: reply.status });
 
 /**
  * Answers one request. Never rejects: a fault in a world is a 500, recorded

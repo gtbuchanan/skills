@@ -83,9 +83,9 @@ const pullRequest = (title: string): Record<string, unknown> => ({
 
 /**
  * A world with one repository, acme/widgets, holding pull request 7; a viewer;
- * a REST route for merging the pull request asynchronously; and two routes a
- * world gets wrong, one by throwing and one by answering with a body JSON
- * cannot carry.
+ * REST routes for merging the pull request asynchronously and for deleting
+ * its branch, which GitHub answers with no body; and two routes a world gets
+ * wrong, one by throwing and one by answering with a body JSON cannot carry.
  */
 const worldWithTitle = (title: string): World => ({
   graphql: {
@@ -99,6 +99,8 @@ const worldWithTitle = (title: string): World => ({
     if (route === '/repos/acme/widgets/fault') throw new Error('the world broke');
     if (route === '/repos/acme/widgets/unserializable')
       return { body: { count: 1n }, status: 200 };
+    if (method === 'DELETE' && route === '/repos/acme/widgets/git/refs/heads/rate-limiter')
+      return { body: undefined, status: 204 };
     const isMergeAsync = method === 'PUT' && route === '/repos/acme/widgets/pulls/7/merge-async';
     return isMergeAsync ? { body: { status: 'pending' }, status: 202 } : undefined;
   },
@@ -266,6 +268,14 @@ export interface Answer {
 }
 
 /**
+ * A response's JSON body, or `undefined` for one that carries none.
+ */
+const bodyOf = async (response: Response): Promise<unknown> => {
+  const text = await response.text();
+  return text === '' ? undefined : JSON.parse(text);
+};
+
+/**
  * The argv a request's token names: the call that sent it.
  */
 export const askedArgv = ['api', 'graphql'];
@@ -291,7 +301,7 @@ export const answered = async ({
   }));
 
   return {
-    body: JSON.parse(await response.text()),
+    body: await bodyOf(response),
     refusals: refused.map(refusal => refusal.reason),
     refused,
     status: response.status,

@@ -139,6 +139,17 @@ test('a REST route the world models is answered', async ({ expect }) => {
     .toStrictEqual({ body: { status: 'pending' }, status: 202 });
 });
 
+test('a REST route the world answers with no body is answered with none', async ({ expect }) => {
+  // GitHub answers deleting a branch with 204, which may not carry a body.
+  const answer = await answered({
+    method: 'DELETE',
+    url: restUrl('/repos/acme/widgets/git/refs/heads/rate-limiter'),
+  });
+
+  expect({ body: answer.body, status: answer.status })
+    .toStrictEqual({ body: undefined, status: 204 });
+});
+
 test('a REST route the world does not model fails as GitHub fails', async ({ expect }) => {
   /* A server error rather than 404: gh reads a 404 as an answer in places,
      and deleting a branch that 404s counts as already deleted. */

@@ -4,6 +4,9 @@
   "type": "module",
   "exports": {
     "./body": "./src/body.ts",
+    "./env": "./src/env.ts",
+    "./gh": "./bin/gh.ts",
+    "./handoff": "./src/handoff.ts",
     "./refusals": "./src/refusals.ts"
   },
   "scripts": {
@@ -16,6 +19,7 @@
   },
   "dependencies": {
     "@gtbuchanan/cli-doubles": "workspace:*",
+    "@gtbuchanan/git-fixtures": "workspace:*",
     "@gtbuchanan/github-fake": "workspace:*"
   },
   "devDependencies": {

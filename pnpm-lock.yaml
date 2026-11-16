@@ -894,6 +894,9 @@ importers:
       '@gtbuchanan/cli-doubles':
         specifier: workspace:*
         version: link:../cli-doubles
+      '@gtbuchanan/git-fixtures':
+        specifier: workspace:*
+        version: link:../git-fixtures
       '@gtbuchanan/github-fake':
         specifier: workspace:*
         version: link:../github-fake

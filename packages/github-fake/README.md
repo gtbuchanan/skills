@@ -78,3 +78,7 @@ pnpm -C packages/github-fake run schema:refresh
 ```
 
 Look over the diff before committing it: it shows what GitHub changed. The schema is saved in the repository rather than downloaded during install because GitHub only publishes the current version, so two installs a day apart could get different schemas.
+
+## Package boundaries
+
+It's meant to fake GitHub for any test, not just these evals, so it can't depend on agents, fake tools, mise or promptfoo. Its `turbo.json` holds the rule that enforces this. When it can't answer a request, it tells whoever started it through `onRefusal` instead of writing to a run log. Its tests find the real `gh` with `which` instead of through `cli-doubles`, because the rule counts test-only dependencies too.

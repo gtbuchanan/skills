@@ -253,9 +253,6 @@ importers:
       '@gtbuchanan/eslint-config':
         specifier: 'catalog:'
         version: 0.6.0(@typescript-eslint/eslint-plugin@8.64.0(@typescript-eslint/parser@8.64.0(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(@typescript-eslint/utils@8.72.1(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))(postcss@8.5.26)(supports-color@7.2.0)(typescript@6.0.3)(vitest@5.1.0)
-      '@gtbuchanan/promptfoo-agent':
-        specifier: workspace:*
-        version: link:packages/promptfoo-agent
       '@gtbuchanan/tsconfig':
         specifier: 'catalog:'
         version: 0.2.0(typescript@6.0.3)

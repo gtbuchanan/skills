@@ -29,8 +29,6 @@ const posixEssentialVars = [
   'ANDROID_DATA', 'ANDROID_ROOT', 'LANG', 'LANGUAGE', 'LD_LIBRARY_PATH',
   'LD_PRELOAD', 'LOGNAME', 'PREFIX', 'SHELL', 'TERM', 'TMPDIR', 'TZ', 'USER',
 ];
-const osEssentialVars =
-  process.platform === 'win32' ? windowsEssentialVars : posixEssentialVars;
 /**
  * Network config the SDK needs to reach the API; forwarded only if set, as is
  * each agent's auth.
@@ -89,7 +87,44 @@ interface EvalEnvOptions {
   readonly sourceEnv?: NodeJS.ProcessEnv;
   readonly agents?: readonly EvalAgent[];
   readonly contributors?: readonly EnvContributor[];
+  /**
+   * The platform the agent runs on; the host's unless a test names another.
+   */
+  readonly platform?: NodeJS.Platform;
 }
+
+/**
+ * The variables of `sourceEnv` among `names` that are set.
+ */
+const forwarded = (
+  names: readonly string[],
+  sourceEnv: NodeJS.ProcessEnv,
+): Record<string, string> => Object.fromEntries(names.flatMap((name): [string, string][] => {
+  const value = sourceEnv[name];
+  return value === undefined ? [] : [[name, value]];
+}));
+
+/**
+ * What `platform` needs beyond the common variables: its OS plumbing, plus on
+ * Windows the clean HOME under the names Windows reads it by, and elsewhere
+ * the locale categories.
+ */
+const platformEnv = (
+  platform: NodeJS.Platform,
+  homeDir: string,
+  sourceEnv: NodeJS.ProcessEnv,
+): Record<string, string> => {
+  if (platform === 'win32')
+    return {
+      ...forwarded(windowsEssentialVars, sourceEnv),
+      HOMEDRIVE: homeDir.slice(0, winDrivePrefixLength),
+      HOMEPATH: homeDir.slice(winDrivePrefixLength),
+      USERPROFILE: homeDir,
+    };
+
+  const localeVars = Object.keys(sourceEnv).filter(name => name.startsWith('LC_'));
+  return forwarded([...posixEssentialVars, ...localeVars], sourceEnv);
+};
 
 /**
  * What the runner itself puts in the eval env; see {@link buildEvalEnv}.
@@ -100,31 +135,17 @@ const runnerEnv = ({
   homeDir,
   sourceEnv = process.env,
   agents = evalAgents,
-}: EvalEnvOptions): Record<string, string> => {
-  const env: Record<string, string> = {
-    ...hermeticGitConfig,
-    ...Object.fromEntries(agents.map(({ executable }) =>
-      [executable.envVar, agentExecutable(executable, sourceEnv)])),
-    HOME: homeDir,
-    PATH: scrubbedPath,
-    STUB_BINDIR: stubDir,
-  };
-  const authVars = agents.flatMap(agent => agent.auth.envVars);
-  for (const name of [...osEssentialVars, ...networkVars, ...authVars]) {
-    const value = sourceEnv[name];
-    if (value !== undefined) env[name] = value;
-  }
-  if (process.platform !== 'win32')
-    for (const [name, value] of Object.entries(sourceEnv))
-      if (value !== undefined && name.startsWith('LC_')) env[name] = value;
-  if (process.platform === 'win32') {
-    env['USERPROFILE'] = homeDir;
-    env['HOMEDRIVE'] = homeDir.slice(0, winDrivePrefixLength);
-    env['HOMEPATH'] = homeDir.slice(winDrivePrefixLength);
-  }
-  return env;
-};
-
+  platform = process.platform,
+}: EvalEnvOptions): Record<string, string> => ({
+  ...hermeticGitConfig,
+  ...Object.fromEntries(agents.map(({ executable }) =>
+    [executable.envVar, agentExecutable(executable, sourceEnv)])),
+  ...forwarded([...networkVars, ...agents.flatMap(agent => agent.auth.envVars)], sourceEnv),
+  ...platformEnv(platform, homeDir, sourceEnv),
+  HOME: homeDir,
+  PATH: scrubbedPath,
+  STUB_BINDIR: stubDir,
+});
 /**
  * Constructs the eval env from scratch (allowlist), rather than inheriting the
  * caller's. Only OS plumbing, auth/network config, PATH/STUB_BINDIR, and a clean

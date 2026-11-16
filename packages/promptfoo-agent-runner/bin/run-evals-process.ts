@@ -44,6 +44,7 @@ import { beginEphemeralRun } from '#src/ephemeral-run.ts';
 import { evalIsolation } from '#src/eval-isolation.ts';
 import { repoRoot as root } from '#src/repo-root.ts';
 import { buildEvalEnv } from '#src/scrubbed-path.ts';
+import { type SuiteResult, type SuiteRunSteps, runSuite } from '#src/suite-run.ts';
 import {
   agentsUsedBy,
   readSuiteConfig,
@@ -228,17 +229,9 @@ console.log(
  * Suites at once; mirrors run-evals-docker.ts — the agent work is the cost.
  */
 const concurrency = 4;
-/**
- * Exit code stood in for a spawn that never reported one.
- */
-const unknownExitCode = 1;
 // Lines of the (debug-verbose) capture to show on failure — enough for the
 // results table + tally at the tail, without dumping the whole debug log.
 const failTailLines = 120;
-// promptfoo logs one of these per finished test — but only at debug level in a
-// non-TTY run (otherwise it's the TTY bar). We stream just this line so each
-// suite reports per-test progress without the rest of the debug noise.
-const perTestLog = /Eval #\d+ complete \((?<done>\d+) of (?<total>\d+)\)/v;
 const newline = /\r?\n/v;
 
 /**
@@ -298,62 +291,23 @@ const populateWorkspace = (
       installSkills({ workspace, suiteName, agent, names: [...names], env });
 };
 
-/* Builds a stdout/stderr handler that prints a tagged per-test line as each
- * finishes, buffering partial lines across chunks. */
-const perTestStreamer = (name: string): ((chunk: Buffer) => void) => {
-  let pending = '';
-  return (chunk) => {
-    pending += String(chunk);
-    const lines = pending.split(newline);
-    pending = lines.pop() ?? '';
-    for (const line of lines) {
-      const groups = perTestLog.exec(stripVTControlCharacters(line))?.groups;
-      if (groups !== undefined)
-        console.log(
-          dim(`    [${name}] ${groups['done'] ?? ''}/${groups['total'] ?? ''}`),
-        );
-    }
-  };
-};
-
-interface SuiteResult {
-  name: string;
-  code: number;
-  out: string;
-  workspace: string;
-}
-
 /**
- * Runs one suite's isolated process, streaming a tagged per-test progress line
- * as each test finishes while capturing the full output for a failure dump.
+ * What running suite `name` takes on this host: its own isolated env and
+ * workspace, and a node process running promptfoo against them.
  */
-const runSuite = async (name: string): Promise<SuiteResult> =>
-  new Promise<SuiteResult>((resolve) => {
-    const { env } = isolatedEnv();
-    const workspace = mintDir('skills-eval-ws-');
-    try {
-      populateWorkspace(workspace, name, env);
-    } catch (error) {
-      resolve({ name, code: unknownExitCode, out: String(error), workspace });
-      return;
-    }
-    const child = spawn(
-      'node',
-      [path.join(import.meta.dirname, 'run-evals.ts'), name, ...passthrough],
-      { cwd: root, env: { ...env, EVAL_WORKSPACE: workspace, LOG_LEVEL: 'debug' } },
-    );
-    let out = '';
-    const stream = perTestStreamer(name);
-    const onData = (chunk: Buffer): void => {
-      out += String(chunk);
-      stream(chunk);
-    };
-    child.stdout?.on('data', onData);
-    child.stderr?.on('data', onData);
-    child.on('close', (code) => {
-      resolve({ name, code: code ?? unknownExitCode, out, workspace });
-    });
-  });
+const suiteSteps = (name: string): SuiteRunSteps => ({
+  isolatedEnv,
+  launch: env => spawn(
+    'node',
+    [path.join(import.meta.dirname, 'run-evals.ts'), name, ...passthrough],
+    { cwd: root, env },
+  ),
+  mintWorkspace: () => mintDir('skills-eval-ws-'),
+  populateWorkspace,
+  progress: (line) => {
+    console.log(dim(`    ${line}`));
+  },
+});
 
 // Bounded-parallel: each suite is a fully isolated process; suite-level start/
 // done lines are the progress (interleaved per-suite stdio would be unreadable).
@@ -368,7 +322,7 @@ const queue = [...suites];
 const workers = Array.from({ length: Math.min(concurrency, queue.length) }, async () => {
   for (let name = queue.shift(); name !== undefined; name = queue.shift()) {
     console.log(`  ${cyan('→')} ${name} ${dim('started')}`);
-    const result = await runSuite(name);
+    const result = await runSuite(name, suiteSteps(name));
     console.log(`  ${result.code === 0 ? green('✓') : red('✗')} ${name}`);
     results.push(result);
   }

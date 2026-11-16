@@ -309,6 +309,7 @@ const answer = async (
 const noContent = 204;
 const resetContent = 205;
 const notModified = 304;
+const badRequest = 400;
 const bodiless = new Set([noContent, notModified, resetContent]);
 
 /**
@@ -381,8 +382,15 @@ const send = async (res: ServerResponse, response: Response): Promise<void> => {
 export const startFakeGitHub = async (options: FakeGitHubOptions): Promise<FakeGitHub> => {
   const handler = fakeGitHub(options);
   const server = createServer((req, res) => {
-    // Not awaited: the listener returns nothing, and the handler never rejects.
-    void asRequest(req).then(handler.request).then(async response => send(res, response));
+    /* Not awaited: the listener returns nothing. The handler never rejects, but
+       a request the fetch API refuses (a TRACE, say) never reaches it, and is
+       answered here instead. */
+    void asRequest(req)
+      .then(async request => send(res, await handler.request(request)))
+      .catch(() => {
+        if (!res.headersSent) res.writeHead(badRequest);
+        res.end();
+      });
   });
 
   /* A tunnel is gh trying to reach a real host over HTTPS. Refused, so the

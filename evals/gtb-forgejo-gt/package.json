@@ -1,5 +1,5 @@
 {
-  "name": "@gtbuchanan/eval-gtb-forgejo-tea",
+  "name": "@gtbuchanan/eval-gtb-forgejo-gt",
   "private": true,
   "type": "module",
   "imports": {
@@ -14,8 +14,9 @@
     "typecheck:ts": "gtb task typecheck:ts"
   },
   "dependencies": {
-    "@gtbuchanan/agent-skills-harness": "workspace:*",
-    "@gtbuchanan/stub-runtime": "workspace:*",
+    "@gtbuchanan/cli-doubles": "workspace:*",
+    "@gtbuchanan/promptfoo-agent": "workspace:*",
+    "@gtbuchanan/promptfoo-agent-claude-code": "workspace:*",
     "valibot": "catalog:"
   },
   "devDependencies": {

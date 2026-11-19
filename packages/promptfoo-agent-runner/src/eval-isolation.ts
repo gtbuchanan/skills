@@ -23,7 +23,7 @@ export const evalPolicy: IsolationPolicy = {
    * action is a bundled PowerShell script. Those are exactly what a suite must
    * never touch for real, so they are the ones to shadow.
    */
-  dangerTools: ['az', 'gh', 'powershell', 'pwsh', 'tea'],
+  dangerTools: ['az', 'gh', 'gt', 'powershell', 'pwsh'],
   /*
    * The runner spawns node, pnpm and git itself, and runs bash for the
    * fail-safe probe and as every agent's shell; on Windows that is Git Bash,

@@ -2,10 +2,10 @@
  * promptfoo beforeAll/beforeEach extension for this suite.
  *
  * Seeds nothing: a workspace is an empty directory holding only the marker,
- * which is the point. Outside a checkout tea cannot infer a login or a
+ * which is the point. Outside a checkout gt cannot infer an instance or a
  * repository, and the skill's rule about passing both is only tested there.
  */
-import { scenarioSetup } from '@gtbuchanan/agent-skills-harness/scenario-setup';
+import { scenarioSetup } from '@gtbuchanan/promptfoo-agent/scenario-setup';
 import { scenarios } from './scenarios.ts';
 
 const setup = scenarioSetup({
